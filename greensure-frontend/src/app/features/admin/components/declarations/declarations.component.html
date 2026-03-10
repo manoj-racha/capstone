@@ -1,0 +1,81 @@
+<div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-gs-text">Declaration Logs</h2>
+            <p class="text-gs-muted mt-1">Global view of all user carbon footprint declarations.</p>
+        </div>
+        <button routerLink="/admin/dashboard" class="text-sm text-gs-green hover:underline">
+            &larr; Back to Dashboard
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-gs-card border border-green-900/20 p-4 rounded-lg mb-6 flex flex-wrap gap-6 items-center">
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-gs-muted">Overall Status:</span>
+            <select #statusSelect (change)="onFilterChange(statusSelect.value)"
+                class="bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-1 text-sm focus:outline-none focus:border-gs-green">
+                <option value="ALL">All Status</option>
+                <option value="DRAFT">Draft</option>
+                <option value="SUBMITTED">Submitted</option>
+                <option value="VERIFIED">Verified</option>
+                <option value="REJECTED">Rejected</option>
+            </select>
+        </div>
+    </div>
+
+    @if (error()) {
+    <div class="bg-red-900/20 border border-red-500 text-red-400 p-4 rounded-lg">
+        {{ error() }}
+    </div>
+    } @else if (declarations().length === 0) {
+    <div class="bg-gs-card border border-green-900/20 rounded-lg p-10 text-center text-gs-muted">
+        No declarations found matching the selected criteria.
+    </div>
+    } @else {
+    <div class="bg-gs-card border border-green-900/20 rounded-lg overflow-x-auto">
+        <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="bg-gs-bg border-b border-green-900/20 text-gs-muted text-xs uppercase">
+                <tr>
+                    <th class="px-6 py-4 font-medium">Declaration ID</th>
+                    <th class="px-6 py-4 font-medium">User ID</th>
+                    <th class="px-6 py-4 font-medium">Year</th>
+                    <th class="px-6 py-4 font-medium">Status</th>
+                    <th class="px-6 py-4 font-medium">Submission Date</th>
+                    <th class="px-6 py-4 font-medium text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-green-900/10">
+                @for (dec of declarations(); track dec.declarationId) {
+                <tr class="hover:bg-gs-bg/50 transition-colors">
+                    <td class="px-6 py-4 font-mono text-gs-text font-bold">
+                        #{{ dec.declarationId }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-gs-text">User #{{ dec.userId }}</span>
+                    </td>
+                    <td class="px-6 py-4 text-gs-muted font-medium">
+                        {{ dec.declarationYear }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-0.5 rounded text-xs font-medium border"
+                            [ngClass]="getStatusBadgeClass(dec.status)">
+                            {{ dec.status }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-gs-muted">
+                        {{ dec.submittedAt ? (dec.submittedAt | date:'mediumDate') : 'Not Submitted' }}
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button routerLink="/admin/declarations/{{dec.declarationId}}"
+                            class="px-3 py-1.5 border border-gs-green/50 text-gs-green hover:bg-gs-green/10 rounded transition-colors text-xs font-semibold">
+                            View Data
+                        </button>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    }
+</div>

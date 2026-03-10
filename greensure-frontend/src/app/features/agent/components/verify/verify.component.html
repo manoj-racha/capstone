@@ -1,0 +1,228 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-6 flex justify-between items-end">
+        <div>
+            <h2 class="text-2xl font-bold text-gs-text">Physical Verification</h2>
+            <p class="text-gs-muted mt-1">Review applicant's declaration and submit physical audit findings.</p>
+        </div>
+        <button routerLink="/agent/task/{{assignmentId()}}" class="text-sm text-gs-green hover:underline">
+            &larr; Back to Task details
+        </button>
+    </div>
+
+    @if (error()) {
+    <div class="bg-red-900/20 border border-red-500 text-red-400 p-4 rounded-lg">
+        {{ error() }}
+    </div>
+    } @else if (declaration() && task()) {
+
+    <div class="space-y-6">
+        <!-- Original Declaration Review List -->
+        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gs-text border-b border-green-900/20 pb-2 mb-4">Applicant's Declared
+                Data</h3>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-4 text-sm">
+
+                <div>
+                    <span class="block text-gs-muted mb-1 text-xs uppercase tracking-wider">Electricity</span>
+                    <span class="text-gs-text font-medium text-lg">{{ declaration()?.electricityUnits || 0 }}</span>
+                    <span class="text-gs-muted text-xs ml-1">units/mo</span>
+                </div>
+
+                <div>
+                    <span class="block text-gs-muted mb-1 text-xs uppercase tracking-wider">Solar Generated</span>
+                    <span class="text-gs-text font-medium text-lg">{{ declaration()?.hasSolar ?
+                        declaration()?.solarUnits : '0' }}</span>
+                    <span class="text-gs-muted text-xs ml-1">units/mo</span>
+                </div>
+
+                <div>
+                    <span class="block text-gs-muted mb-1 text-xs uppercase tracking-wider">Ac / Generator</span>
+                    <span class="text-gs-text font-medium text-lg">{{ declaration()?.numAcUnits || 0 }} AC</span>
+                    <span class="text-gs-muted text-xs ml-1">| {{ declaration()?.hasGenerator ?
+                        declaration()?.generatorHoursPerMonth + ' hrs Gen' : 'No Gen' }}</span>
+                </div>
+
+                <div>
+                    <span class="block text-gs-muted mb-1 text-xs uppercase tracking-wider">Public Transport</span>
+                    <span class="text-gs-text font-medium text-lg">{{ declaration()?.usesPublicTransport ?
+                        declaration()?.publicTransportKm : '0' }}</span>
+                    <span class="text-gs-muted text-xs ml-1">km/mo</span>
+                </div>
+
+                <div>
+                    <span class="block text-gs-muted mb-1 text-xs uppercase tracking-wider">Shopping / Lifestyle</span>
+                    <span class="text-gs-text font-medium text-sm">{{
+                        declaration()?.shoppingOrdersPerMonth?.replace('_', ' ') }} orders/mo</span>
+                </div>
+
+                <div>
+                    <span class="block text-gs-muted mb-1 text-xs uppercase tracking-wider">Private Vehicles</span>
+                    <span class="text-gs-text font-medium text-sm">
+                        {{ declaration()?.vehicles ? declaration()?.vehicles?.length + ' Registered' : 'None' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Form -->
+        <form [formGroup]="verifyForm" (ngSubmit)="onSubmit()"
+            class="bg-gs-card border border-green-900/20 rounded-lg p-6 space-y-8">
+
+            <div>
+                <h3 class="text-lg font-semibold text-gs-text mb-4">Verification Corrections</h3>
+                <p class="text-sm text-gs-muted mb-6">If you find discrepancies during your physical audit, check the
+                    box and provide the corrected value. Blank fields indicate the declared value is confirmed.</p>
+
+                <div class="space-y-4">
+                    <!-- Corrections Toggles -->
+
+                    <!-- Electricity -->
+                    <div
+                        class="flex flex-col md:flex-row md:items-center gap-4 bg-gs-bg p-3 border border-green-900/10 rounded">
+                        <div class="flex items-center gap-2 md:w-1/3">
+                            <input type="checkbox" formControlName="correctElectricity" id="ce" class="accent-gs-green">
+                            <label for="ce" class="text-gs-text text-sm cursor-pointer whitespace-nowrap">Correct
+                                Electricity</label>
+                        </div>
+                        <!-- Show input instantly when checked using switch on condition -->
+                        @if (verifyForm.get('correctElectricity')?.value) {
+                        <div class="flex-1">
+                            <input type="number" formControlName="correctedElectricityUnits"
+                                class="w-full bg-black/20 border border-green-900/30 text-gs-text rounded px-3 py-1.5 focus:outline-none focus:border-yellow-500 text-sm"
+                                placeholder="Enter true value">
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Solar -->
+                    <div
+                        class="flex flex-col md:flex-row md:items-center gap-4 bg-gs-bg p-3 border border-green-900/10 rounded">
+                        <div class="flex items-center gap-2 md:w-1/3">
+                            <input type="checkbox" formControlName="correctSolar" id="cs" class="accent-gs-green">
+                            <label for="cs" class="text-gs-text text-sm cursor-pointer whitespace-nowrap">Correct Solar
+                                Units</label>
+                        </div>
+                        @if (verifyForm.get('correctSolar')?.value) {
+                        <div class="flex-1">
+                            <input type="number" formControlName="correctedSolarUnits"
+                                class="w-full bg-black/20 border border-green-900/30 text-gs-text rounded px-3 py-1.5 focus:outline-none focus:border-yellow-500 text-sm"
+                                placeholder="Enter true value">
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Generator -->
+                    <div
+                        class="flex flex-col md:flex-row md:items-center gap-4 bg-gs-bg p-3 border border-green-900/10 rounded">
+                        <div class="flex items-center gap-2 md:w-1/3">
+                            <input type="checkbox" formControlName="correctGenerator" id="cg" class="accent-gs-green">
+                            <label for="cg" class="text-gs-text text-sm cursor-pointer whitespace-nowrap">Correct Gen.
+                                Hours</label>
+                        </div>
+                        @if (verifyForm.get('correctGenerator')?.value) {
+                        <div class="flex-1">
+                            <input type="number" formControlName="correctedGeneratorHours"
+                                class="w-full bg-black/20 border border-green-900/30 text-gs-text rounded px-3 py-1.5 focus:outline-none focus:border-yellow-500 text-sm"
+                                placeholder="Enter true value">
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Public Transport -->
+                    <div
+                        class="flex flex-col md:flex-row md:items-center gap-4 bg-gs-bg p-3 border border-green-900/10 rounded">
+                        <div class="flex items-center gap-2 md:w-1/3">
+                            <input type="checkbox" formControlName="correctPublicTransport" id="cpt"
+                                class="accent-gs-green">
+                            <label for="cpt" class="text-gs-text text-sm cursor-pointer whitespace-nowrap">Correct
+                                Public Transport</label>
+                        </div>
+                        @if (verifyForm.get('correctPublicTransport')?.value) {
+                        <div class="flex-1">
+                            <input type="number" formControlName="correctedPublicTransportKm"
+                                class="w-full bg-black/20 border border-green-900/30 text-gs-text rounded px-3 py-1.5 focus:outline-none focus:border-yellow-500 text-sm"
+                                placeholder="Enter true km distance">
+                        </div>
+                        }
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Overall Action -->
+            <div class="border-t border-green-900/20 pt-6">
+                <h3 class="text-lg font-semibold text-gs-text mb-4">Overall Verdict</h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <label
+                        class="cursor-pointer border rounded-lg p-4 flex flex-col gap-2 items-center text-center transition-colors {{ verifyForm.get('overallAction')?.value === 'CONFIRMED' ? 'border-gs-green bg-gs-green/10' : 'border-green-900/30 bg-gs-bg hover:border-gs-green/50' }}">
+                        <input type="radio" formControlName="overallAction" value="CONFIRMED" class="sr-only">
+                        <span class="font-semibold text-gs-text">Confirmed</span>
+                        <span class="text-xs text-gs-muted">All details look accurate. Minor discrepancies are
+                            acceptable.</span>
+                    </label>
+
+                    <label
+                        class="cursor-pointer border rounded-lg p-4 flex flex-col gap-2 items-center text-center transition-colors {{ verifyForm.get('overallAction')?.value === 'MODIFIED' ? 'border-yellow-500 bg-yellow-500/10' : 'border-green-900/30 bg-gs-bg hover:border-yellow-500/50' }}">
+                        <input type="radio" formControlName="overallAction" value="MODIFIED" class="sr-only">
+                        <span class="font-semibold text-gs-text">Modified</span>
+                        <span class="text-xs text-gs-muted">I have entered corrections above but the overall declaration
+                            holds.</span>
+                    </label>
+
+                    <label
+                        class="cursor-pointer border rounded-lg p-4 flex flex-col gap-2 items-center text-center transition-colors {{ verifyForm.get('overallAction')?.value === 'REJECTED' ? 'border-red-500 bg-red-500/10' : 'border-green-900/30 bg-gs-bg hover:border-red-500/50' }}">
+                        <input type="radio" formControlName="overallAction" value="REJECTED" class="sr-only">
+                        <span class="font-semibold text-gs-text">Rejected</span>
+                        <span class="text-xs text-gs-muted">Fraudulent or wildly inaccurate declaration. Applicant must
+                            resubmit.</span>
+                    </label>
+                </div>
+
+                <div>
+                    <label class="block text-gs-muted mb-1 text-sm">Agent Remarks <span
+                            *ngIf="verifyForm.get('overallAction')?.value !== 'CONFIRMED'"
+                            class="text-red-400">*</span></label>
+                    <textarea formControlName="agentRemarks" rows="3"
+                        class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green placeholder-gs-muted/50"
+                        placeholder="Provide context regarding modifications or reasons for rejection..."></textarea>
+                    @if (verifyForm.get('agentRemarks')?.touched && verifyForm.get('agentRemarks')?.invalid) {
+                    <div class="text-red-400 text-xs mt-1">Remarks are required when modifying or rejecting (min 10
+                        characters).</div>
+                    }
+                </div>
+            </div>
+
+            <!-- Submit Footer -->
+            <div
+                class="mt-8 flex flex-col md:flex-row justify-between items-center bg-gs-bg p-4 rounded-lg border border-green-900/40 gap-4">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-gs-green animate-pulse" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
+                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <p class="text-xs text-gs-muted">
+                        @if (submitting()) { {{ gpsStatus() }} }
+                        @else { GPS coordinates will be captured upon submission. }
+                    </p>
+                </div>
+
+                <div class="w-full md:w-auto">
+                    <button type="submit" [disabled]="submitting() || verifyForm.invalid"
+                        class="w-full md:w-auto px-8 py-2.5 bg-gs-green text-gs-bg font-bold rounded hover:bg-gs-green-hover transition-colors disabled:opacity-50">
+                        {{ submitting() ? 'Processing...' : 'Submit Verification' }}
+                    </button>
+                </div>
+            </div>
+
+        </form>
+
+    </div>
+
+    }
+</div>

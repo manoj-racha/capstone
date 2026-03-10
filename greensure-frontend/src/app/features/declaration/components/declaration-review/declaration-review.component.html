@@ -1,0 +1,188 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gs-text">Review Declaration</h2>
+        <p class="text-gs-muted mt-1">Please verify all the details before final submission.</p>
+    </div>
+
+    @if (error()) {
+    <div class="bg-red-900/20 border border-red-500 text-red-400 p-4 rounded-lg">
+        {{ error() }}
+    </div>
+    } @else if (declaration()) {
+
+    <div class="space-y-6">
+
+        <!-- Energy Overview -->
+        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
+            <h3 class="font-semibold text-lg text-gs-text border-b border-green-900/20 pb-2 mb-4">Energy Consumption
+            </h3>
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-6 text-sm">
+                <div>
+                    <span class="block text-gs-muted">Electricity Units</span>
+                    <span class="text-gs-text font-medium">{{ declaration()?.electricityUnits || '0' }} / month</span>
+                </div>
+                <div>
+                    <span class="block text-gs-muted">Has Solar</span>
+                    <span class="text-gs-text font-medium">{{ declaration()?.hasSolar ? 'Yes' : 'No' }}</span>
+                </div>
+                @if (declaration()?.hasSolar) {
+                <div>
+                    <span class="block text-gs-muted">Solar Units</span>
+                    <span class="text-gs-text font-medium">{{ declaration()?.solarUnits || '0' }} / month</span>
+                </div>
+                }
+                <div>
+                    <span class="block text-gs-muted">Cooking Fuel</span>
+                    <span class="text-gs-text font-medium">{{ declaration()?.cookingFuelType }}</span>
+                </div>
+                @if (declaration()?.cookingFuelType === 'LPG') {
+                <div><span class="block text-gs-muted">LPG Cylinders</span><span class="text-gs-text font-medium">{{
+                        declaration()?.lpgCylinders || '0' }} / month</span></div>
+                }
+                @if (declaration()?.cookingFuelType === 'PNG') {
+                <div><span class="block text-gs-muted">PNG Units</span><span class="text-gs-text font-medium">{{
+                        declaration()?.pngUnits || '0' }} / month</span></div>
+                }
+                @if (declaration()?.cookingFuelType === 'BIOMASS') {
+                <div><span class="block text-gs-muted">Biomass</span><span class="text-gs-text font-medium">{{
+                        declaration()?.biomassKgPerDay || '0' }} kg/day</span></div>
+                }
+                <div>
+                    <span class="block text-gs-muted">AC Units</span>
+                    <span class="text-gs-text font-medium">{{ declaration()?.numAcUnits || '0' }}</span>
+                </div>
+                <div>
+                    <span class="block text-gs-muted">AC Usage</span>
+                    <span class="text-gs-text font-medium">{{ declaration()?.acHoursPerDay || '0' }} hours/day</span>
+                </div>
+                <div>
+                    <span class="block text-gs-muted">Has Generator</span>
+                    <span class="text-gs-text font-medium">{{ declaration()?.hasGenerator ? 'Yes' : 'No' }}</span>
+                </div>
+                @if (declaration()?.hasGenerator) {
+                <div>
+                    <span class="block text-gs-muted">Generator Usage</span>
+                    <span class="text-gs-text font-medium">{{ declaration()?.generatorHoursPerMonth || '0' }}
+                        hours/month</span>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Transport Overview -->
+        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
+            <h3 class="font-semibold text-lg text-gs-text border-b border-green-900/20 pb-2 mb-4">Transport & Vehicles
+            </h3>
+            <div class="grid grid-cols-2 gap-y-4 gap-x-6 text-sm mb-6">
+                <div>
+                    <span class="block text-gs-muted">Uses Public Transport?</span>
+                    <span class="text-gs-text font-medium">{{ declaration()?.usesPublicTransport ? 'Yes (' +
+                        declaration()?.publicTransportKm + ' km/m)' : 'No' }}</span>
+                </div>
+            </div>
+
+            @if (declaration()?.vehicles && declaration()!.vehicles!.length > 0) {
+            <h4 class="text-gs-text mb-2 text-sm font-semibold">Registered Vehicles:</h4>
+            <div class="space-y-2">
+                @for (veh of declaration()?.vehicles; track veh.vehicleId) {
+                <div class="bg-gs-bg border border-green-900/30 p-3 rounded text-sm flex justify-between items-center">
+                    <span class="text-gs-text">{{ veh.quantity }}x {{ veh.vehicleType.replace('_', ' ') }}</span>
+                    <span class="text-gs-muted">{{ veh.fuelType }} | {{ veh.kmPerMonth }} km/m</span>
+                </div>
+                }
+            </div>
+            } @else {
+            <p class="text-sm text-gs-muted">No private vehicles registered.</p>
+            }
+        </div>
+
+        <!-- Specific Overview based on Household/MSME -->
+        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
+            <div class="flex items-center justify-between border-b border-green-900/20 pb-2 mb-4">
+                <h3 class="font-semibold text-lg text-gs-text">Other Details</h3>
+                <a routerLink="/declaration/fill/{{declarationId()}}" class="text-xs text-gs-green hover:underline">Edit
+                    Fields</a>
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-6 text-sm">
+                <!-- Household only -->
+                @if (declaration()?.dietaryPattern) {
+                <div>
+                    <span class="block text-gs-muted">Dietary Pattern</span>
+                    <span class="text-gs-text font-medium">{{ declaration()?.dietaryPattern?.replace('_', ' ') }}</span>
+                </div>
+                <div>
+                    <span class="block text-gs-muted">Shopping Orders</span>
+                    <span class="text-gs-text font-medium">{{ declaration()?.shoppingOrdersPerMonth?.replace('_', ' ')
+                        }}</span>
+                </div>
+                }
+
+                <!-- MSME only -->
+                @if (declaration()?.commercialVehicleKm !== undefined || declaration()?.hasCommercialVehicles) {
+                <div>
+                    <span class="block text-gs-muted">Commercial Vehicles</span>
+                    <span class="text-gs-text font-medium">{{ declaration()?.hasCommercialVehicles ?
+                        declaration()?.commercialVehicleKm + ' km/m' : 'No' }}</span>
+                </div>
+                <div><span class="block text-gs-muted">Third Party Shipments</span><span
+                        class="text-gs-text font-medium">{{ declaration()?.thirdPartyShipments || '0' }} / month</span>
+                </div>
+                <div><span class="block text-gs-muted">Emp. Private Vehicles</span><span
+                        class="text-gs-text font-medium">{{ declaration()?.employeesPrivateVehicle || '0' }}</span>
+                </div>
+                <div><span class="block text-gs-muted">Emp. Public Transport</span><span
+                        class="text-gs-text font-medium">{{ declaration()?.employeesPublicTransport || '0' }}</span>
+                </div>
+                <div><span class="block text-gs-muted">Generator Liters (MSME)</span><span
+                        class="text-gs-text font-medium">{{ declaration()?.generatorLitersPerMonth || '0' }}
+                        L/month</span></div>
+                <div>
+                    <span class="block text-gs-muted">Boiler usage</span>
+                    <span class="text-gs-text font-medium">{{ declaration()?.hasBoiler ? declaration()?.boilerFuelType :
+                        'No Boiler' }}</span>
+                </div>
+                @if (declaration()?.boilerFuelType === 'COAL') {
+                <div><span class="block text-gs-muted">Boiler Coal</span><span class="text-gs-text font-medium">{{
+                        declaration()?.boilerCoalKg || '0' }} kg</span></div>
+                }
+                @if (declaration()?.boilerFuelType === 'NATURAL_GAS') {
+                <div><span class="block text-gs-muted">Boiler Gas</span><span class="text-gs-text font-medium">{{
+                        declaration()?.boilerGasScm || '0' }} SCM</span></div>
+                }
+                <div><span class="block text-gs-muted">Paper Reams</span><span class="text-gs-text font-medium">{{
+                        declaration()?.paperReamsPerMonth || '0' }} / month</span></div>
+                <div><span class="block text-gs-muted">Uses Recycled Paper?</span><span
+                        class="text-gs-text font-medium">{{ declaration()?.usesRecycledPaper ? 'Yes' : 'No' }}</span>
+                </div>
+                <div><span class="block text-gs-muted">Raw Material Type</span><span class="text-gs-text font-medium">{{
+                        declaration()?.rawMaterialType }}</span></div>
+                <div><span class="block text-gs-muted">Raw Material Quantity</span><span
+                        class="text-gs-text font-medium">{{ declaration()?.rawMaterialKg || '0' }} kg</span></div>
+                }
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Actions -->
+    <div class="mt-8 flex justify-between items-center bg-gs-card p-4 rounded-lg border border-green-900/40">
+        <div>
+            <p class="text-sm text-gs-muted mb-1">Make sure all details are completely accurate.</p>
+            <p class="text-xs text-red-400">Once submitted, this will be verified by an assigned field agent.</p>
+        </div>
+
+        <div class="flex gap-4">
+            <button routerLink="/declaration/vehicles/{{declarationId()}}"
+                class="px-6 py-2 border border-gs-muted text-gs-muted bg-transparent font-semibold rounded hover:bg-white/5 transition-colors disabled:opacity-50">
+                Back
+            </button>
+            <button (click)="onSubmit()"
+                class="px-6 py-2 bg-gs-green text-gs-bg font-semibold rounded hover:bg-gs-green-hover transition-colors shadow-[0_0_15px_rgba(0,200,90,0.3)] hover:shadow-[0_0_20px_rgba(0,200,90,0.5)]">
+                Submit Declaration
+            </button>
+        </div>
+    </div>
+
+    }
+</div>

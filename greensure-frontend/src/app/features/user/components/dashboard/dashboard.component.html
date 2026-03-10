@@ -1,0 +1,136 @@
+<div class="max-w-4xl mx-auto px-4 py-8 space-y-6">
+
+    @if (error()) {
+    <div class="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-lg">
+        {{ error() }}
+    </div>
+    }
+
+    @if (dashboard()) {
+    <!-- Header -->
+    <div class="flex items-center justify-between pb-4 border-b border-green-900/20">
+        <div>
+            <h1 class="text-2xl font-bold text-gs-text">Dashboard</h1>
+            <p class="text-gs-muted">Welcome back, {{ dashboard()?.fullName }}</p>
+        </div>
+        <span class="px-3 py-1 rounded-full text-xs font-bold leading-tight"
+            [class.bg-blue-500]="dashboard()?.userType === 'MSME'"
+            [class.bg-purple-500]="dashboard()?.userType === 'HOUSEHOLD'" [class.text-white]="true">
+            {{ dashboard()?.userType }}
+        </span>
+    </div>
+
+    <!-- Renewal Alert -->
+    @if (dashboard()?.renewalDue) {
+    <div class="bg-amber-500/10 border border-amber-500/30 p-4 rounded-lg flex items-center justify-between">
+        <p class="text-amber-500 text-sm font-medium">It's a new year! Your carbon footprint declaration is due for
+            renewal.</p>
+        <a routerLink="/declaration/start"
+            class="text-sm bg-amber-500 text-gs-bg px-4 py-2 font-bold rounded hover:bg-amber-400 transition-colors">Renew</a>
+    </div>
+    }
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+
+        <!-- Declaration Status Card -->
+        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6 flex flex-col justify-between">
+            <div>
+                <h2 class="text-lg font-semibold text-gs-text mb-2">Declaration Status</h2>
+
+                @if (!dashboard()?.hasDeclaration) {
+                <p class="text-sm text-gs-muted mb-4">No declaration submitted yet.</p>
+                } @else {
+                <div class="mb-4">
+                    <span class="inline-block px-2 py-1 text-xs font-semibold rounded"
+                        [class.bg-amber-500/20]="dashboard()?.declarationStatus === 'DRAFT' || dashboard()?.declarationStatus === 'UNDER_VERIFICATION'"
+                        [class.text-amber-500]="dashboard()?.declarationStatus === 'DRAFT' || dashboard()?.declarationStatus === 'UNDER_VERIFICATION'"
+                        [class.bg-blue-500/20]="dashboard()?.declarationStatus === 'SUBMITTED'"
+                        [class.text-blue-500]="dashboard()?.declarationStatus === 'SUBMITTED'"
+                        [class.bg-green-500/20]="dashboard()?.declarationStatus === 'VERIFIED'"
+                        [class.text-green-500]="dashboard()?.declarationStatus === 'VERIFIED'"
+                        [class.bg-red-500/20]="dashboard()?.declarationStatus === 'REJECTED'"
+                        [class.text-red-500]="dashboard()?.declarationStatus === 'REJECTED'">
+                        {{ dashboard()?.declarationStatus?.replace('_', ' ') }}
+                    </span>
+                    <p class="text-sm text-gs-muted mt-2">Year: {{ dashboard()?.declarationYear }}</p>
+                </div>
+                }
+            </div>
+
+            <div>
+                @if (!dashboard()?.hasDeclaration || dashboard()?.declarationStatus === 'DRAFT') {
+                <a routerLink="/declaration/start"
+                    class="text-sm text-gs-bg bg-gs-green px-4 py-2 rounded font-semibold hover:bg-gs-green-hover transition-colors inline-block tracking-wide">
+                    {{ dashboard()?.hasDeclaration ? 'Resume Draft' : 'Start Declaration' }}
+                </a>
+                } @else if (dashboard()?.declarationStatus === 'REJECTED') {
+                <p class="text-xs text-red-400">Please wait for admin to unlock for resubmission.</p>
+                } @else {
+                <a routerLink="/declaration/history"
+                    class="text-sm border border-gs-green text-gs-green px-4 py-2 rounded font-semibold hover:bg-gs-green/10 transition-colors inline-block">
+                    View History
+                </a>
+                }
+            </div>
+        </div>
+
+        <!-- Carbon Score Card -->
+        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6 flex flex-col justify-between">
+            <div>
+                <h2 class="text-lg font-semibold text-gs-text mb-2">My Carbon Score</h2>
+
+                @if (!dashboard()?.latestScore) {
+                <p class="text-sm text-gs-muted mb-4">You do not have a verified score yet.</p>
+                } @else {
+                <div class="mb-4 text-center py-4 bg-gs-bg rounded-lg border border-gs-border shadow-inner">
+                    <div class="text-4xl font-extrabold text-gs-text mb-2">
+                        {{ dashboard()?.latestScore?.totalCo2 | number:'1.0-0' }} <span
+                            class="text-sm font-normal text-gs-muted">kg CO₂</span>
+                    </div>
+                    <span class="inline-block px-3 py-1 text-sm font-bold rounded-full text-gs-bg"
+                        [class.bg-gs-green]="dashboard()?.zone === 'GREEN_CHAMPION'"
+                        [class.bg-yellow-500]="dashboard()?.zone === 'GREEN_IMPROVER'"
+                        [class.bg-red-500]="dashboard()?.zone === 'GREEN_DEFAULTER'">
+                        {{ dashboard()?.zone?.replace('_', ' ') }}
+                    </span>
+                </div>
+                }
+            </div>
+
+        </div>
+
+    </div>
+
+    @if (dashboard()?.latestScore; as s) {
+    <!-- Comparison Metrics -->
+    <div class="mt-6">
+        <div
+            class="bg-gs-bg border border-green-900/10 rounded-xl p-6 flex flex-col justify-center hover:bg-gs-card hover:border-gs-green/20 transition-all w-full md:w-1/2">
+            <p class="text-xs font-semibold text-gs-muted uppercase tracking-wider">Per Capita Emissions</p>
+            <div class="mt-2 text-3xl font-bold text-gs-text">{{ s.perCapitaCo2 | number:'1.0-1' }} <span
+                    class="text-base font-normal text-gs-muted">kg</span></div>
+        </div>
+    </div>
+
+
+
+    <!-- Recommendations Teaser -->
+    <div
+        class="mt-6 bg-gradient-to-r from-gs-green/20 to-gs-bg border border-gs-green/30 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-lg shadow-gs-green/5">
+        <div>
+            <h3 class="text-lg font-bold text-gs-text flex items-center gap-2 mb-1">
+                <span class="text-gs-green">🌱</span> Tailored Recommendations
+            </h3>
+            <p class="text-sm text-gs-muted">We've generated {{ s.recommendations?.length || 0 }} actionable steps to
+                improve
+                your carbon footprint.</p>
+        </div>
+        <a routerLink="/user/recommendations"
+            class="shrink-0 bg-gs-green text-gs-bg px-6 py-2.5 text-sm rounded-lg font-bold hover:bg-gs-green-hover transition-colors">
+            View Action Plan
+        </a>
+    </div>
+
+    }
+    }
+</div>

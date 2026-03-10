@@ -1,0 +1,134 @@
+<div class="max-w-6xl mx-auto px-4 py-8 relative">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-gs-text">Task Assignments</h2>
+            <p class="text-gs-muted mt-1">Monitor agent field activity and reallocate stalled assignments.</p>
+        </div>
+        <button routerLink="/admin/dashboard" class="text-sm text-gs-green hover:underline">
+            &larr; Back to Dashboard
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-gs-card border border-green-900/20 p-4 rounded-lg mb-6 flex flex-wrap gap-6 items-center">
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-gs-muted">Status:</span>
+            <select #statusSelect (change)="onFilterChange(statusSelect.value)"
+                class="bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-1 text-sm focus:outline-none focus:border-gs-green">
+                <option value="ALL">All Status</option>
+                <option value="ASSIGNED">Assigned</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="REASSIGNED">Reassigned</option>
+            </select>
+        </div>
+    </div>
+
+    @if (error()) {
+    <div class="bg-red-900/20 border border-red-500 text-red-400 p-4 rounded-lg">
+        {{ error() }}
+    </div>
+    } @else if (assignments().length === 0) {
+    <div class="bg-gs-card border border-green-900/20 rounded-lg p-10 text-center text-gs-muted">
+        No assignments found matching the selected status.
+    </div>
+    } @else {
+    <div class="bg-gs-card border border-green-900/20 rounded-lg overflow-x-auto">
+        <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="bg-gs-bg border-b border-green-900/20 text-gs-muted text-xs uppercase">
+                <tr>
+                    <th class="px-6 py-4 font-medium">Assignment</th>
+                    <th class="px-6 py-4 font-medium">Target Context</th>
+                    <th class="px-6 py-4 font-medium">Status & Deadline</th>
+                    <th class="px-6 py-4 font-medium text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-green-900/10">
+                @for (task of assignments(); track task.assignmentId) {
+                <tr class="hover:bg-gs-bg/50 transition-colors">
+                    <td class="px-6 py-4">
+                        <p class="font-bold text-gs-text">ID: #{{ task.assignmentId }}</p>
+                        <p class="text-xs text-gs-muted mt-0.5">Dec: #{{ task.declarationId }} (Y{{ task.declarationYear
+                            }})</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="text-gs-text font-medium">{{ task.userName }}</p>
+                        <p class="text-xs text-gs-muted flex items-center gap-1 mt-0.5"><span
+                                class="px-1.5 py-0.5 border border-gs-green/20 rounded bg-green-900/10 text-gs-green">{{
+                                task.userType }}</span> {{ task.userCity }} - {{ task.userPinCode }}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-col gap-1 items-start">
+                            <span class="px-2 py-0.5 rounded text-xs font-medium border uppercase"
+                                [ngClass]="getStatusBadgeClass(task.status, task.isOverdue)">
+                                {{ task.status.replace('_', ' ') }}
+                            </span>
+                            <p class="text-xs whitespace-nowrap"
+                                [class.text-red-400]="task.isOverdue && task.status !== 'COMPLETED'"
+                                [class.text-gs-muted]="!(task.isOverdue && task.status !== 'COMPLETED')">
+                                {{ task.deadline | date:'medium' }}
+                                @if (task.isOverdue && task.status !== 'COMPLETED') { <span
+                                    class="font-bold ml-1">(OVERDUE)</span> }
+                            </p>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex flex-col gap-2 items-end">
+                            <button routerLink="/admin/declarations/{{task.declarationId}}"
+                                class="text-xs text-gs-green hover:underline">View Declaration</button>
+                            @if (task.status !== 'COMPLETED') {
+                            <button (click)="openReassignModal(task.assignmentId)"
+                                class="px-3 py-1 bg-gs-bg border border-green-900/50 text-gs-text hover:border-gs-green rounded transition-colors text-xs font-semibold">
+                                Reassign
+                            </button>
+                            }
+                        </div>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    }
+
+    <!-- Reassign Modal Overview Backdrop overlay -->
+    @if (reassignModalOpen()) {
+    <div class="fixed inset-0 bg-black/80 z-40 flex items-center justify-center p-4">
+        <div class="bg-gs-card border border-green-900/30 rounded-xl p-6 w-full max-w-md shadow-2xl z-50">
+
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gs-text">Reassign Task #{{ selectedAssignmentId() }}</h3>
+                <button (click)="closeReassignModal()" class="text-gs-muted hover:text-white">&times;</button>
+            </div>
+
+            <p class="text-sm text-gs-muted mb-6">Select an active agent to transfer this verification task to.</p>
+
+            @if (agentsLoading()) {
+            <div class="text-center py-4 text-sm text-gs-muted">Loading active agents...</div>
+            } @else {
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gs-muted mb-2">Select Target Agent</label>
+                <select (change)="onAgentSelect($event)"
+                    class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded-lg px-4 py-3 focus:outline-none focus:border-gs-green focus:ring-1 focus:ring-gs-green transition-colors">
+                    <option value="">-- Choose Agent --</option>
+                    @for (agent of agents(); track agent.agentId) {
+                    <option [value]="agent.agentId">{{ agent.fullName }} ({{ agent.strikeCount }} strikes) - {{
+                        agent.assignedZones }}</option>
+                    }
+                </select>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-green-900/20">
+                <button (click)="closeReassignModal()" [disabled]="actioning()"
+                    class="px-4 py-2 border border-green-900/30 text-gs-muted rounded hover:bg-white/5 transition-colors disabled:opacity-50 text-sm">Cancel</button>
+                <button (click)="reassignTask()" [disabled]="!newAgentId() || actioning()"
+                    class="px-4 py-2 bg-gs-green text-gs-bg font-bold rounded hover:bg-gs-green-hover transition-colors disabled:opacity-50 text-sm">
+                    Confirm Reassignment
+                </button>
+            </div>
+            }
+
+        </div>
+    </div>
+    }
+</div>

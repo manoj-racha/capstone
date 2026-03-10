@@ -1,0 +1,66 @@
+<div class="min-h-[calc(100vh-4rem)] flex flex-col pt-16 pb-12">
+    <main class="flex-grow flex flex-col items-center justify-center px-4 max-w-5xl mx-auto text-center space-y-10">
+
+        <!-- Hero Section -->
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-gs-text leading-tight">
+            GreenSure <br />
+            <span class="text-gs-green">Carbon Footprint Platform</span>
+        </h1>
+
+        <p class="text-lg md:text-xl text-gs-muted max-w-2xl">
+            Declare, verify, and track your household or MSME carbon footprint. Join The Hartford's initiative for a
+            greener, sustainable future.
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center gap-4 pt-4">
+            <a routerLink="/register"
+                class="w-full sm:w-auto px-8 py-3 rounded-lg bg-gs-green text-gs-bg font-bold text-lg hover:bg-gs-green-hover transition-colors shadow-[0_0_15px_rgba(0,200,90,0.3)] hover:shadow-[0_0_25px_rgba(0,200,90,0.5)]">
+                Get Started
+            </a>
+            <a routerLink="/login"
+                class="w-full sm:w-auto px-8 py-3 rounded-lg border border-gs-green text-gs-green font-bold text-lg hover:bg-gs-bg hover:text-gs-green-hover hover:border-gs-green-hover transition-colors">
+                Sign In
+            </a>
+        </div>
+
+        <!-- Feature Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-16 w-full text-left">
+            <!-- Card 1 -->
+            <div
+                class="bg-gs-card p-6 border border-green-900/20 rounded-lg transition-transform hover:-translate-y-1 hover:border-gs-green/50">
+                <div
+                    class="text-4xl mb-4 bg-gs-bg w-14 h-14 flex items-center justify-center rounded-lg border border-gs-border shadow-sm">
+                    📝
+                </div>
+                <h3 class="text-xl font-semibold text-gs-text mb-2">Declare</h3>
+                <p class="text-sm text-gs-muted">Submit your energy, transport, and lifestyle usage data logically
+                    through an easy-to-use guided form.</p>
+            </div>
+
+            <!-- Card 2 -->
+            <div
+                class="bg-gs-card p-6 border border-green-900/20 rounded-lg transition-transform hover:-translate-y-1 hover:border-gs-green/50">
+                <div
+                    class="text-4xl mb-4 bg-gs-bg w-14 h-14 flex items-center justify-center rounded-lg border border-gs-border shadow-sm">
+                    🔍
+                </div>
+                <h3 class="text-xl font-semibold text-gs-text mb-2">Verify</h3>
+                <p class="text-sm text-gs-muted">Our expert field agents conduct standardized verifications to ensure
+                    absolute data integrity and fairness.</p>
+            </div>
+
+            <!-- Card 3 -->
+            <div
+                class="bg-gs-card p-6 border border-green-900/20 rounded-lg transition-transform hover:-translate-y-1 hover:border-gs-green/50">
+                <div
+                    class="text-4xl mb-4 bg-gs-bg w-14 h-14 flex items-center justify-center rounded-lg border border-gs-border shadow-sm">
+                    📈
+                </div>
+                <h3 class="text-xl font-semibold text-gs-text mb-2">Track</h3>
+                <p class="text-sm text-gs-muted">Get your Carbon Score, benchmark it against your peers, and receive
+                    personalized AI recommendations.</p>
+            </div>
+        </div>
+
+    </main>
+</div>

@@ -1,0 +1,163 @@
+<div class="max-w-3xl mx-auto px-4 py-8">
+    <div class="mb-8 border-b border-green-900/20 pb-4">
+        <h1 class="text-2xl font-bold text-gs-text">My Profile</h1>
+        <p class="text-gs-muted mt-1">Update your personal and {{ userType() === 'MSME' ? 'business' : 'household' }}
+            details</p>
+    </div>
+
+    @if (errorMessage() && !profileForm) {
+    <div class="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-lg">
+        {{ errorMessage() }}
+    </div>
+    } @else {
+
+    @if (successMessage()) {
+    <div
+        class="mb-6 bg-green-500/10 border border-green-500/30 text-green-500 p-4 rounded-lg flex items-center justify-between">
+        <span class="font-medium">{{ successMessage() }}</span>
+        <button (click)="successMessage.set('')" class="text-green-500 hover:text-green-400">✕</button>
+    </div>
+    }
+
+    @if (errorMessage()) {
+    <div
+        class="mb-6 bg-red-500/10 border border-red-500/30 text-red-500 p-4 rounded-lg flex items-center justify-between">
+        <span class="font-medium">{{ errorMessage() }}</span>
+        <button (click)="errorMessage.set('')" class="text-red-500 hover:text-red-400">✕</button>
+    </div>
+    }
+
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()"
+        class="bg-gs-card border border-green-900/20 rounded-lg p-6 md:p-8 space-y-8 shadow-sm">
+
+        <!-- Basic Details -->
+        <div>
+            <h2 class="text-lg font-semibold text-gs-green mb-4 flex items-center gap-2">
+                <span>👤</span> Basic Information
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="space-y-1">
+                    <label class="block text-sm font-medium text-gs-muted ml-1">Full Name</label>
+                    <input type="text" formControlName="fullName"
+                        class="w-full bg-gs-bg border border-green-900/20 rounded-lg px-4 py-2.5 text-gs-text focus:outline-none focus:border-gs-green transition-colors">
+                    @if (profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched) {
+                    <span class="text-xs text-red-400 font-medium ml-1">Full Name is required</span>
+                    }
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-sm font-medium text-gs-muted ml-1">Mobile</label>
+                    <input type="text" formControlName="mobile"
+                        class="w-full bg-gs-bg border border-green-900/20 rounded-lg px-4 py-2.5 text-gs-text focus:outline-none focus:border-gs-green transition-colors">
+                    @if (profileForm.get('mobile')?.invalid && profileForm.get('mobile')?.touched) {
+                    <span class="text-xs text-red-400 font-medium ml-1">Mobile is required</span>
+                    }
+                </div>
+                <div class="md:col-span-2 space-y-1">
+                    <label class="block text-sm font-medium text-gs-muted ml-1">Address</label>
+                    <input type="text" formControlName="address"
+                        class="w-full bg-gs-bg border border-green-900/20 rounded-lg px-4 py-2.5 text-gs-text focus:outline-none focus:border-gs-green transition-colors">
+                    @if (profileForm.get('address')?.invalid && profileForm.get('address')?.touched) {
+                    <span class="text-xs text-red-400 font-medium ml-1">Address is required</span>
+                    }
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-sm font-medium text-gs-muted ml-1">City</label>
+                    <input type="text" formControlName="city"
+                        class="w-full bg-gs-bg border border-green-900/20 rounded-lg px-4 py-2.5 text-gs-text focus:outline-none focus:border-gs-green transition-colors">
+                    @if (profileForm.get('city')?.invalid && profileForm.get('city')?.touched) {
+                    <span class="text-xs text-red-400 font-medium ml-1">City is required</span>
+                    }
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-sm font-medium text-gs-muted ml-1">Pin Code</label>
+                    <input type="text" formControlName="pinCode"
+                        class="w-full bg-gs-bg border border-green-900/20 rounded-lg px-4 py-2.5 text-gs-text focus:outline-none focus:border-gs-green transition-colors">
+                    @if (profileForm.get('pinCode')?.invalid && profileForm.get('pinCode')?.touched) {
+                    <span class="text-xs text-red-400 font-medium ml-1">Valid Pin Code is required</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="border-t border-green-900/10"></div>
+
+        <!-- Specific Details -->
+        <div>
+            <h2 class="text-lg font-semibold text-gs-green mb-4 flex items-center gap-2">
+                @if (userType() === 'MSME') {
+                <span>🏢</span> Business Information
+                } @else {
+                <span>🏠</span> Household Details
+                }
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                @if (userType() === 'HOUSEHOLD') {
+                <div class="space-y-1">
+                    <label class="block text-sm font-medium text-gs-muted ml-1">Number of Members</label>
+                    <input type="number" formControlName="numberOfMembers"
+                        class="w-full bg-gs-bg border border-green-900/20 rounded-lg px-4 py-2.5 text-gs-text focus:outline-none focus:border-gs-green transition-colors">
+                    @if (profileForm.get('numberOfMembers')?.invalid && profileForm.get('numberOfMembers')?.touched) {
+                    <span class="text-xs text-red-400 font-medium ml-1">Required (min 1)</span>
+                    }
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-sm font-medium text-gs-muted ml-1">Dwelling Type</label>
+                    <select formControlName="dwellingType"
+                        class="w-full bg-gs-bg border border-green-900/20 rounded-lg px-4 py-2.5 text-gs-text focus:outline-none focus:border-gs-green transition-colors">
+                        <option value="">Select Type</option>
+                        <option value="APARTMENT">Apartment</option>
+                        <option value="INDEPENDENT_HOUSE">Independent House</option>
+                        <option value="VILLA">Villa</option>
+                    </select>
+                </div>
+                }
+
+                @if (userType() === 'MSME') {
+                <div class="space-y-1">
+                    <label class="block text-sm font-medium text-gs-muted ml-1">Business Name</label>
+                    <input type="text" formControlName="businessName"
+                        class="w-full bg-gs-bg border border-green-900/20 rounded-lg px-4 py-2.5 text-gs-text focus:outline-none focus:border-gs-green transition-colors">
+                    @if (profileForm.get('businessName')?.invalid && profileForm.get('businessName')?.touched) {
+                    <span class="text-xs text-red-400 font-medium ml-1">Business Name is required</span>
+                    }
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-sm font-medium text-gs-muted ml-1">Industry Sector</label>
+                    <input type="text" formControlName="industrySector"
+                        class="w-full bg-gs-bg border border-green-900/20 rounded-lg px-4 py-2.5 text-gs-text focus:outline-none focus:border-gs-green transition-colors">
+                    @if (profileForm.get('industrySector')?.invalid && profileForm.get('industrySector')?.touched) {
+                    <span class="text-xs text-red-400 font-medium ml-1">Sector is required</span>
+                    }
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-sm font-medium text-gs-muted ml-1">Employee Count</label>
+                    <input type="number" formControlName="employeeCount"
+                        class="w-full bg-gs-bg border border-green-900/20 rounded-lg px-4 py-2.5 text-gs-text focus:outline-none focus:border-gs-green transition-colors">
+                    @if (profileForm.get('employeeCount')?.invalid && profileForm.get('employeeCount')?.touched) {
+                    <span class="text-xs text-red-400 font-medium ml-1">Required (min 1)</span>
+                    }
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-sm font-medium text-gs-muted ml-1">Facility Area (Sq Ft)</label>
+                    <input type="number" formControlName="facilityAreaSqFt"
+                        class="w-full bg-gs-bg border border-green-900/20 rounded-lg px-4 py-2.5 text-gs-text focus:outline-none focus:border-gs-green transition-colors">
+                </div>
+                }
+            </div>
+        </div>
+
+        <div class="pt-6 flex flex-col sm:flex-row justify-end gap-4 border-t border-green-900/20">
+            <button type="button" routerLink="/user/dashboard"
+                class="px-6 py-2.5 rounded-lg font-bold text-gs-muted hover:text-gs-text hover:bg-green-900/20 transition-colors">
+                Cancel
+            </button>
+            <button type="submit" [disabled]="saving() || profileForm.invalid"
+                class="bg-gs-green text-gs-bg px-8 py-2.5 rounded-lg font-bold hover:bg-gs-green-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(0,200,90,0.2)]">
+                {{ saving() ? 'Saving Changes...' : 'Save Profile' }}
+            </button>
+        </div>
+
+    </form>
+    }
+</div>

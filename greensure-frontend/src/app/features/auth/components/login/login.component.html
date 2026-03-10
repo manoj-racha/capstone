@@ -1,0 +1,70 @@
+<!-- ── LOGIN PAGE ─────────────────────────────────────── -->
+<div class="min-h-screen flex items-center justify-center px-4 bg-gs-bg">
+    <div class="w-full max-w-md space-y-6">
+
+        <!-- Logo / Brand -->
+        <div class="text-center">
+            <a routerLink="/landing" class="text-2xl font-bold text-gs-green">
+                🌿 GreenSure
+            </a>
+            <p class="mt-2 text-gs-muted text-sm">
+                Sign in to your carbon declaration account
+            </p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6 space-y-5">
+
+            <h1 class="text-xl font-semibold text-gs-text">Login</h1>
+
+            <!-- Error Message -->
+            @if (errorMessage()) {
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3">
+                {{ errorMessage() }}
+            </div>
+            }
+
+            <!-- Login Form -->
+            <form (ngSubmit)="onLogin()" class="space-y-4">
+
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gs-muted mb-1">Email</label>
+                    <input id="email" type="email" placeholder="you@example.com" [ngModel]="email()"
+                        (ngModelChange)="email.set($event)" name="email" required class="w-full" />
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gs-muted mb-1">Password</label>
+                    <input id="password" type="password" placeholder="••••••••" [ngModel]="password()"
+                        (ngModelChange)="password.set($event)" name="password" required class="w-full" />
+                </div>
+
+                <!-- Forgot Password Link -->
+                <div class="text-right">
+                    <a routerLink="/forgot-password" class="text-sm text-gs-green hover:text-gs-green-hover">
+                        Forgot password?
+                    </a>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit"
+                    class="w-full bg-gs-green text-gs-bg font-semibold py-2.5 rounded-lg hover:bg-gs-green-hover transition-colors">
+                    Sign In
+                </button>
+
+            </form>
+
+            <!-- Register Link -->
+            <p class="text-center text-sm text-gs-muted">
+                Don't have an account?
+                <a routerLink="/register" class="text-gs-green hover:text-gs-green-hover font-medium">
+                    Register here
+                </a>
+            </p>
+
+        </div>
+
+    </div>
+</div>

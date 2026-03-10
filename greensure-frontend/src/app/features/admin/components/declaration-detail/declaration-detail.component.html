@@ -1,0 +1,157 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-gs-text flex items-center gap-3">
+                Declaration Details
+                @if (declaration()) {
+                <span class="px-2 py-0.5 rounded text-xs font-medium border uppercase"
+                    [ngClass]="getStatusBadgeClass(declaration()?.status)">
+                    {{ declaration()?.status }}
+                </span>
+                }
+            </h2>
+            <p class="text-gs-muted mt-1">Comprehensive view of footprint data and verification remarks.</p>
+        </div>
+        <button routerLink="/admin/declarations" class="text-sm text-gs-green hover:underline">
+            &larr; Back to Declarations
+        </button>
+    </div>
+
+    @if (error()) {
+    <div class="bg-red-900/20 border border-red-500 text-red-400 p-4 rounded-lg">
+        {{ error() }}
+    </div>
+    } @else if (declaration()) {
+
+    <div class="space-y-6">
+
+        <!-- Primary Data Board -->
+        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
+            <div class="flex flex-col md:flex-row justify-between pb-6 mb-6 border-b border-green-900/20 gap-4">
+                <div>
+                    <p class="text-sm text-gs-muted mb-1">Declaration ID</p>
+                    <p class="text-2xl font-bold font-mono text-gs-text">#{{ declaration()?.declarationId }}</p>
+                </div>
+                <div class="md:text-right">
+                    <p class="text-sm text-gs-muted mb-1">User ID</p>
+                    <p class="text-lg font-medium text-gs-text"><a routerLink="/admin/users/{{declaration()?.userId}}"
+                            class="text-gs-green hover:underline">User #{{ declaration()?.userId }}</a></p>
+                </div>
+                <div class="md:text-right">
+                    <p class="text-sm text-gs-muted mb-1">Target Year</p>
+                    <p class="text-lg font-medium text-gs-text">{{ declaration()?.declarationYear }}</p>
+                </div>
+                <div class="md:text-right">
+                    <p class="text-sm text-gs-muted mb-1">Submission Date</p>
+                    <p class="text-sm font-medium text-gs-text">{{ declaration()?.submittedAt ?
+                        (declaration()?.submittedAt | date:'medium') : 'Draft not submitted' }}</p>
+                </div>
+            </div>
+
+            <!-- Core Metrics Grid -->
+            <h3 class="text-lg font-semibold text-gs-text mb-4">Declared Footprint Metrics</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-gs-bg border border-green-900/10 rounded-lg p-4">
+                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Electricity</p>
+                    <p class="text-xl font-bold text-gs-text">{{ declaration()?.electricityUnits || 0 }} <span
+                            class="text-sm font-normal text-gs-muted">units</span></p>
+                </div>
+
+                <div class="bg-gs-bg border border-green-900/10 rounded-lg p-4">
+                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Solar Adopted</p>
+                    <p class="text-xl font-bold text-gs-text">{{ declaration()?.hasSolar ? 'Yes' : 'No' }}</p>
+                    @if (declaration()?.hasSolar) {
+                    <p class="text-xs text-gs-green mt-1">{{ declaration()?.solarUnits || 0 }} units/mo</p>
+                    }
+                </div>
+
+                <div class="bg-gs-bg border border-green-900/10 rounded-lg p-4">
+                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Generator Use</p>
+                    <p class="text-xl font-bold text-gs-text">{{ declaration()?.hasGenerator ? 'Yes' : 'No' }}</p>
+                    @if (declaration()?.hasGenerator) {
+                    <p class="text-xs text-red-400 mt-1">{{ declaration()?.generatorHoursPerMonth || 0 }} hrs/mo</p>
+                    }
+                </div>
+
+                <div class="bg-gs-bg border border-green-900/10 rounded-lg p-4">
+                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Cooling Load</p>
+                    <p class="text-xl font-bold text-gs-text">{{ declaration()?.numAcUnits || 0 }} <span
+                            class="text-sm font-normal text-gs-muted">AC units</span></p>
+                </div>
+
+                <div class="bg-gs-bg border border-green-900/10 rounded-lg p-4">
+                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Public Transit</p>
+                    <p class="text-xl font-bold text-gs-text">{{ declaration()?.usesPublicTransport ? 'Yes' : 'No' }}
+                    </p>
+                    @if (declaration()?.usesPublicTransport) {
+                    <p class="text-xs text-gs-green mt-1">{{ declaration()?.publicTransportKm || 0 }} km/mo</p>
+                    }
+                </div>
+
+                <div class="bg-gs-bg border border-green-900/10 rounded-lg p-4">
+                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Lifestyle Volume</p>
+                    <p class="text-lg font-bold text-gs-text pt-1">{{
+                        declaration()?.shoppingOrdersPerMonth?.replace('_', ' ') }}</p>
+                </div>
+            </div>
+
+            <!-- Vehicles Section -->
+            @if (declaration()?.vehicles && declaration()?.vehicles?.length) {
+            <div class="mt-8">
+                <h3 class="text-lg font-semibold text-gs-text mb-4">Registered Vehicles</h3>
+                <div class="overflow-x-auto bg-gs-bg border border-green-900/20 rounded-lg">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-black/20 text-gs-muted text-xs uppercase">
+                            <tr>
+                                <th class="px-4 py-3">Vehicle ID</th>
+                                <th class="px-4 py-3">Type</th>
+                                <th class="px-4 py-3">Fuel Type</th>
+                                <th class="px-4 py-3">Monthly KM</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-green-900/10">
+                            @for (vehicle of declaration()?.vehicles; track vehicle.vehicleId) {
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-gs-text">ID: {{ vehicle.vehicleId }} (Qty: {{
+                                    vehicle.quantity }})</td>
+                                <td class="px-4 py-3 text-gs-muted">{{ vehicle.vehicleType }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-0.5 rounded text-xs border border-green-900/30"
+                                        [ngClass]="vehicle.fuelType === 'EV' ? 'text-gs-green bg-gs-green/10' : 'text-yellow-500 bg-yellow-500/10'">
+                                        {{ vehicle.fuelType }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-gs-text font-medium">{{ vehicle.kmPerMonth }}</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            }
+        </div>
+
+        <!-- Verification Findings -->
+        <div class="bg-gs-card border border-green-900/30 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gs-text mb-4">Verification Status</h3>
+
+            @if (declaration()?.status === 'REJECTED') {
+            <div class="pt-2">
+                <h4 class="text-red-400 font-semibold mb-2">Declaration Rejected</h4>
+                <p class="text-sm text-gs-muted mb-4 max-w-xl">This declaration was rejected. The user must correct
+                    discrepancies and resubmit. If the user is locked out, you can unlock the declaration manually.</p>
+
+                <button (click)="unlockDeclaration()" [disabled]="actioning()"
+                    class="px-6 py-2 border border-blue-500/50 text-blue-400 bg-blue-500/10 font-semibold rounded hover:bg-blue-500/20 transition-colors disabled:opacity-50">
+                    Unlock Declaration for Resubmission
+                </button>
+            </div>
+            } @else {
+            <p class="text-sm text-gs-muted italic">Current Status: {{ declaration()?.status }}</p>
+            }
+        </div>
+
+    </div>
+
+    }
+</div>

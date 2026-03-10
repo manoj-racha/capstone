@@ -1,0 +1,115 @@
+<div class="max-w-2xl mx-auto px-4 py-8">
+    <div class="mb-8 flex justify-between items-end">
+        <div>
+            <h2 class="text-2xl font-bold text-gs-text">Create Agent</h2>
+            <p class="text-gs-muted mt-1">Onboard a new field verification agent.</p>
+        </div>
+        <button routerLink="/admin/agents" class="text-sm text-gs-green hover:underline">
+            &larr; Back to Agents
+        </button>
+    </div>
+
+    @if (error()) {
+    <div class="bg-red-900/20 border border-red-500 text-red-400 p-4 rounded-lg mb-6">
+        {{ error() }}
+    </div>
+    }
+
+    <form [formGroup]="createForm" (ngSubmit)="onSubmit()"
+        class="bg-gs-card border border-green-900/20 rounded-lg p-6 md:p-8 space-y-6">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Full Name -->
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gs-muted mb-2">Full Name</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gs-green">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                    <input type="text" formControlName="fullName"
+                        class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:border-gs-green focus:ring-1 focus:ring-gs-green transition-colors"
+                        placeholder="e.g. Anjali Sharma">
+                </div>
+                @if (createForm.get('fullName')?.touched && createForm.get('fullName')?.invalid) {
+                <div class="text-red-400 text-xs mt-1">Full name is required (min. 3 characters).</div>
+                }
+            </div>
+
+            <!-- Employee ID -->
+            <div>
+                <label class="block text-sm font-medium text-gs-muted mb-2">Employee ID</label>
+                <input type="text" formControlName="employeeId"
+                    class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded-lg px-4 py-3 focus:outline-none focus:border-gs-green focus:ring-1 focus:ring-gs-green transition-colors"
+                    placeholder="e.g. EMP-1042">
+                @if (createForm.get('employeeId')?.touched && createForm.get('employeeId')?.invalid) {
+                <div class="text-red-400 text-xs mt-1">Employee ID is required.</div>
+                }
+            </div>
+
+            <!-- Agent Type -->
+            <div>
+                <label class="block text-sm font-medium text-gs-muted mb-2">Role Type</label>
+                <select formControlName="agentType"
+                    class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded-lg px-4 py-3 focus:outline-none focus:border-gs-green focus:ring-1 focus:ring-gs-green transition-colors">
+                    <option value="FIELD_AGENT">Field Agent</option>
+                    <option value="ADMIN">Administrator</option>
+                </select>
+            </div>
+
+            <!-- Email -->
+            <div>
+                <label class="block text-sm font-medium text-gs-muted mb-2">Email Address</label>
+                <input type="email" formControlName="email" autocomplete="off"
+                    class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded-lg px-4 py-3 focus:outline-none focus:border-gs-green focus:ring-1 focus:ring-gs-green transition-colors"
+                    placeholder="agent@greensure.com">
+                @if (createForm.get('email')?.touched && createForm.get('email')?.invalid) {
+                <div class="text-red-400 text-xs mt-1">Valid email is required.</div>
+                }
+            </div>
+
+            <!-- Mobile -->
+            <div>
+                <label class="block text-sm font-medium text-gs-muted mb-2">Mobile Number</label>
+                <input type="tel" formControlName="mobile"
+                    class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded-lg px-4 py-3 focus:outline-none focus:border-gs-green focus:ring-1 focus:ring-gs-green transition-colors"
+                    placeholder="10-digit number">
+                @if (createForm.get('mobile')?.touched && createForm.get('mobile')?.invalid) {
+                <div class="text-red-400 text-xs mt-1">Valid 10-digit mobile number required.</div>
+                }
+            </div>
+
+            <!-- Password -->
+            <div>
+                <label class="block text-sm font-medium text-gs-muted mb-2">Temporary Password</label>
+                <input type="password" formControlName="password" autocomplete="new-password"
+                    class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded-lg px-4 py-3 focus:outline-none focus:border-gs-green focus:ring-1 focus:ring-gs-green transition-colors"
+                    placeholder="Min. 6 characters">
+                @if (createForm.get('password')?.touched && createForm.get('password')?.invalid) {
+                <div class="text-red-400 text-xs mt-1">Password is required (min. 6 chars).</div>
+                }
+            </div>
+
+            <!-- Assigned Zones -->
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gs-muted mb-2">Assigned PIN Code Zones</label>
+                <input type="text" formControlName="assignedZones"
+                    class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded-lg px-4 py-3 font-mono text-sm focus:outline-none focus:border-gs-green focus:ring-1 focus:ring-gs-green transition-colors"
+                    placeholder="e.g. 560001,560002,560003">
+                @if (createForm.get('assignedZones')?.touched && createForm.get('assignedZones')?.invalid) {
+                <div class="text-red-400 text-xs mt-1">At least one PIN code must be assigned.</div>
+                }
+            </div>
+        </div>
+
+        <div class="pt-6 border-t border-green-900/20">
+            <button type="submit" [disabled]="submitting() || createForm.invalid"
+                class="w-full py-3 bg-gs-green text-gs-bg font-bold rounded-lg hover:shadow-[0_0_20px_rgba(0,200,90,0.4)] transition-all disabled:opacity-50 text-lg">
+                {{ submitting() ? 'Creating Account...' : 'Create Agent Account' }}
+            </button>
+        </div>
+
+    </form>
+</div>

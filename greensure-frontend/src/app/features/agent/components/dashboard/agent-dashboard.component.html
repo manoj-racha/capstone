@@ -1,0 +1,110 @@
+<div class="max-w-5xl mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-gs-text">Agent Dashboard</h2>
+            <p class="text-gs-muted mt-1">Manage your field verification assignments.</p>
+        </div>
+
+        <div class="flex bg-gs-card rounded-lg border border-green-900/20 p-1">
+            <button (click)="loadTasks()" [class.bg-gs-green]="currentFilter() === 'ALL'"
+                [class.text-gs-bg]="currentFilter() === 'ALL'" [class.text-gs-muted]="currentFilter() !== 'ALL'"
+                class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors">
+                All
+            </button>
+            <button (click)="loadTasks('ASSIGNED')" [class.bg-gs-green]="currentFilter() === 'ASSIGNED'"
+                [class.text-gs-bg]="currentFilter() === 'ASSIGNED'"
+                [class.text-gs-muted]="currentFilter() !== 'ASSIGNED'"
+                class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors">
+                Assigned
+            </button>
+            <button (click)="loadTasks('IN_PROGRESS')" [class.bg-gs-green]="currentFilter() === 'IN_PROGRESS'"
+                [class.text-gs-bg]="currentFilter() === 'IN_PROGRESS'"
+                [class.text-gs-muted]="currentFilter() !== 'IN_PROGRESS'"
+                class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors">
+                In Progress
+            </button>
+            <button (click)="loadTasks('COMPLETED')" [class.bg-gs-green]="currentFilter() === 'COMPLETED'"
+                [class.text-gs-bg]="currentFilter() === 'COMPLETED'"
+                [class.text-gs-muted]="currentFilter() !== 'COMPLETED'"
+                class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors">
+                Completed
+            </button>
+        </div>
+    </div>
+
+    @if (error()) {
+    <div class="bg-red-900/20 border border-red-500 text-red-400 p-4 rounded-lg">
+        {{ error() }}
+    </div>
+    } @else if (tasks().length === 0) {
+    <div
+        class="bg-gs-card border border-green-900/20 rounded-lg p-10 text-center text-gs-muted flex flex-col items-center">
+        <svg class="w-12 h-12 mb-4 text-green-900/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <p class="text-lg">No {{ currentFilter() !== 'ALL' ? currentFilter().toLowerCase().replace('_', ' ') : '' }}
+            assignments found.</p>
+        <p class="text-sm mt-1">Check back later or refresh the page.</p>
+    </div>
+    } @else {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (task of tasks(); track task.assignmentId) {
+        <div class="bg-gs-card border rounded-lg p-5 flex flex-col justify-between hover:shadow-[0_4px_20px_rgba(0,200,90,0.1)] transition-all"
+            [ngClass]="{'border-red-500/50': task.isOverdue && task.status !== 'COMPLETED', 'border-green-900/20 hover:border-gs-green/40': !(task.isOverdue && task.status !== 'COMPLETED')}">
+
+            <div>
+                <div class="flex justify-between items-start mb-4">
+                    <span
+                        class="text-xs px-2 py-1 rounded border font-medium uppercase {{ getStatusBadgeClass(task.status, task.isOverdue) }}">
+                        {{ getStatusDisplay(task.status) }}
+                    </span>
+                    <span class="text-xs text-gs-muted font-mono">#{{ task.assignmentId }}</span>
+                </div>
+
+                <h3 class="text-lg font-bold text-gs-text mb-1 truncate" [title]="task.userName">{{ task.userName }}
+                </h3>
+                <p class="text-sm text-gs-muted mb-4">{{ task.userType }} &bull; Year {{ task.declarationYear }}</p>
+
+                <div class="space-y-2 text-sm">
+                    <div class="flex items-start gap-2">
+                        <svg class="w-4 h-4 text-gs-green mt-0.5 shrink-0" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
+                            </path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <span class="text-gs-text truncate" [title]="task.userCity + ' - ' + task.userPinCode">{{
+                            task.userCity }} - {{ task.userPinCode }}</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <svg class="w-4 h-4 text-gs-green mt-0.5 shrink-0" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                            </path>
+                        </svg>
+                        <div class="flex flex-col">
+                            <span class="text-gs-text text-xs">Deadline:</span>
+                            <span class="text-gs-text font-medium"
+                                [class.text-red-400]="task.isOverdue && task.status !== 'COMPLETED'">{{ task.deadline |
+                                date:'medium' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-green-900/20">
+                <button routerLink="/agent/task/{{task.assignmentId}}"
+                    class="w-full py-2 text-sm font-semibold rounded transition-colors {{ task.status === 'ASSIGNED' || task.status === 'IN_PROGRESS' ? 'bg-gs-green text-gs-bg hover:bg-gs-green-hover' : 'border border-gs-muted text-gs-text hover:border-gs-green hover:text-gs-green' }}">
+                    {{ task.status === 'COMPLETED' ? 'View Details' : 'Open Task' }}
+                </button>
+            </div>
+
+        </div>
+        }
+    </div>
+    }
+</div>

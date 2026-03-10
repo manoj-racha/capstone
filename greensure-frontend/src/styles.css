@@ -1,0 +1,63 @@
+/* GreenSure Global Styles */
+@import "tailwindcss";
+
+/* ── Tailwind v4 Custom Theme ──────────────────────────── */
+@theme {
+  /* GreenSure brand colors */
+  --color-gs-bg: #0d1210;
+  --color-gs-card: #111915;
+  --color-gs-green: #00c85a;
+  --color-gs-green-hover: #00e065;
+  --color-gs-text: #e2ede8;
+  --color-gs-muted: #7a9a87;
+  --color-gs-border: rgba(0, 200, 90, 0.1);
+
+  /* Zone badge colors */
+  --color-zone-green: #00c85a;
+  --color-zone-yellow: #f59e0b;
+  --color-zone-red: #ef4444;
+
+  /* Font family */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Base Styles ───────────────────────────────────────── */
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-gs-bg);
+  color: var(--color-gs-text);
+  min-height: 100vh;
+  margin: 0;
+}
+
+/* ── Form Input Styles ─────────────────────────────────── */
+input, select, textarea {
+  background-color: var(--color-gs-bg);
+  border: 1px solid var(--color-gs-border);
+  color: var(--color-gs-text);
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-gs-green);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--color-gs-muted);
+}
+
+/* ── Scrollbar (dark theme) ────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-gs-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-gs-muted);
+  border-radius: 3px;
+}

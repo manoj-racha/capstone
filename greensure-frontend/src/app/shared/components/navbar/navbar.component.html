@@ -1,0 +1,83 @@
+<nav class="bg-gs-card border-b border-green-900/20 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="flex items-center justify-between h-16">
+
+            <!-- Logo -->
+            <div class="flex-shrink-0">
+                <a routerLink="/landing" class="text-xl font-bold text-gs-green flex items-center gap-2">
+                    🌿 GreenSure
+                </a>
+            </div>
+
+            <!-- Center Nav Links -->
+            <div class="hidden md:flex flex-grow justify-center">
+                <div class="flex items-center space-x-2 lg:space-x-4">
+
+                    @if (isLoggedIn()) {
+                    @switch (role()) {
+                    @case ('USER') {
+                    <a routerLink="/user/dashboard" routerLinkActive="text-gs-green border-b-2 border-gs-green"
+                        class="text-gs-text hover:text-gs-green px-3 py-4 text-sm font-medium transition-colors h-16 flex items-center border-b-2 border-transparent">Dashboard</a>
+                    <a routerLink="/declaration/history" routerLinkActive="text-gs-green border-b-2 border-gs-green"
+                        class="text-gs-text hover:text-gs-green px-3 py-4 text-sm font-medium transition-colors h-16 flex items-center border-b-2 border-transparent">Declaration</a>
+                    <a routerLink="/user/recommendations" routerLinkActive="text-gs-green border-b-2 border-gs-green"
+                        class="text-gs-text hover:text-gs-green px-3 py-4 text-sm font-medium transition-colors h-16 flex items-center border-b-2 border-transparent">Recommendations</a>
+                    }
+
+                    @case ('AGENT') {
+                    <a routerLink="/agent/dashboard" routerLinkActive="text-gs-green border-b-2 border-gs-green"
+                        class="text-gs-text hover:text-gs-green px-3 py-4 text-sm font-medium transition-colors h-16 flex items-center border-b-2 border-transparent">Dashboard</a>
+                    <a routerLink="/agent/performance" routerLinkActive="text-gs-green border-b-2 border-gs-green"
+                        class="text-gs-text hover:text-gs-green px-3 py-4 text-sm font-medium transition-colors h-16 flex items-center border-b-2 border-transparent">My
+                        Performance</a>
+                    }
+
+                    @case ('ADMIN') {
+                    <a routerLink="/admin/dashboard" routerLinkActive="text-gs-green border-b-2 border-gs-green"
+                        class="text-gs-text hover:text-gs-green px-3 py-4 text-sm font-medium transition-colors h-16 flex items-center border-b-2 border-transparent">Dashboard</a>
+                    <a routerLink="/admin/users" routerLinkActive="text-gs-green border-b-2 border-gs-green"
+                        class="text-gs-text hover:text-gs-green px-3 py-4 text-sm font-medium transition-colors h-16 flex items-center border-b-2 border-transparent">Users</a>
+                    <a routerLink="/admin/agents" routerLinkActive="text-gs-green border-b-2 border-gs-green"
+                        class="text-gs-text hover:text-gs-green px-3 py-4 text-sm font-medium transition-colors h-16 flex items-center border-b-2 border-transparent">Agents</a>
+                    <a routerLink="/admin/declarations" routerLinkActive="text-gs-green border-b-2 border-gs-green"
+                        class="text-gs-text hover:text-gs-green px-3 py-4 text-sm font-medium transition-colors h-16 flex items-center border-b-2 border-transparent">Declarations</a>
+                    <a routerLink="/admin/assignments" routerLinkActive="text-gs-green border-b-2 border-gs-green"
+                        class="text-gs-text hover:text-gs-green px-3 py-4 text-sm font-medium transition-colors h-16 flex items-center border-b-2 border-transparent">Assignments</a>
+                    <a routerLink="/admin/reports" routerLinkActive="text-gs-green border-b-2 border-gs-green"
+                        class="text-gs-text hover:text-gs-green px-3 py-4 text-sm font-medium transition-colors h-16 flex items-center border-b-2 border-transparent">Reports</a>
+                    }
+                    }
+                    }
+                </div>
+            </div>
+
+            <!-- Right Side -->
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                @if (isLoggedIn()) {
+                @if (role() !== 'ADMIN') {
+                <app-notification-bell />
+                }
+
+                <button (click)="onLogout()"
+                    class="text-sm font-medium text-gs-muted hover:text-gs-green transition-colors px-3 py-2 cursor-pointer">
+                    Logout
+                </button>
+
+                <!-- Mobile profile shortcut -->
+                @if (role() === 'USER') {
+                <a routerLink="/user/profile"
+                    class="hidden md:flex items-center justify-center w-8 h-8 rounded-full bg-gs-green text-gs-bg font-bold">
+                    U
+                </a>
+                }
+                } @else {
+                <a routerLink="/login"
+                    class="text-sm font-medium text-gs-text hover:text-gs-green transition-colors px-3 py-2">Login</a>
+                <a routerLink="/register"
+                    class="text-sm font-medium bg-gs-green text-gs-bg px-4 py-2 rounded-lg hover:bg-gs-green-hover transition-colors">Register</a>
+                }
+            </div>
+
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,109 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-6 flex justify-between items-end">
+        <div>
+            <h2 class="text-2xl font-bold text-gs-text">Vehicles Owned</h2>
+            <p class="text-gs-muted mt-1">Add details of any vehicles connected to this declaration.</p>
+        </div>
+    </div>
+
+    @if (error()) {
+    <div class="bg-red-900/20 border border-red-500 text-red-400 p-4 rounded-lg mb-6">
+        {{ error() }}
+    </div>
+    }
+
+    <!-- Existing Vehicles list -->
+    <div class="space-y-4 mb-8">
+        @if (vehicles().length === 0) {
+        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6 text-center text-gs-muted">
+            No vehicles added yet. You can skip this step if you don't own any vehicles.
+        </div>
+        } @else {
+        @for (item of vehicles(); track item.vehicleId) {
+        <div
+            class="bg-gs-card border border-green-900/20 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <div class="font-semibold text-gs-text text-lg">
+                    {{ item.quantity }}x {{ item.vehicleType.replace('_', ' ') }} ({{ item.fuelType }})
+                </div>
+                <div class="text-gs-muted text-sm mt-1">
+                    Travels approx {{ item.kmPerMonth }} km per month
+                </div>
+            </div>
+            <button (click)="onRemoveVehicle(item.vehicleId)"
+                class="px-3 py-1 text-sm border border-red-500/50 text-red-400 rounded hover:bg-red-500/10 transition-colors">
+                Remove
+            </button>
+        </div>
+        }
+        }
+    </div>
+
+    <!-- Add Vehicle Form -->
+    <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
+        <h3 class="text-xl font-semibold text-gs-text mb-4">Add a Vehicle</h3>
+        <form [formGroup]="vehicleForm" (ngSubmit)="onAddVehicle()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div>
+                <label class="block text-gs-muted mb-1 text-sm">Vehicle Type</label>
+                <select formControlName="vehicleType"
+                    class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+                    <option value="TWO_WHEELER">Two Wheeler</option>
+                    <option value="FOUR_WHEELER">Four Wheeler</option>
+                    <option value="COMMERCIAL">Commercial</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-gs-muted mb-1 text-sm">Fuel Type</label>
+                <select formControlName="fuelType"
+                    class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+                    <option value="PETROL">Petrol</option>
+                    <option value="DIESEL">Diesel</option>
+                    <option value="CNG">CNG</option>
+                    <option value="ELECTRIC">Electric</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-gs-muted mb-1 text-sm">Target Monthly Distance (km)</label>
+                <input type="number" formControlName="kmPerMonth"
+                    class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green"
+                    placeholder="e.g. 500">
+                @if (vehicleForm.get('kmPerMonth')?.touched && vehicleForm.get('kmPerMonth')?.invalid) {
+                <div class="text-red-400 text-xs mt-1">Valid distance is required.</div>
+                }
+            </div>
+
+            <div>
+                <label class="block text-gs-muted mb-1 text-sm">Quantity</label>
+                <input type="number" formControlName="quantity"
+                    class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green"
+                    min="1">
+                @if (vehicleForm.get('quantity')?.touched && vehicleForm.get('quantity')?.invalid) {
+                <div class="text-red-400 text-xs mt-1">Minimum quantity is 1.</div>
+                }
+            </div>
+
+            <div class="md:col-span-2 flex justify-end mt-2">
+                <button type="submit" [disabled]="vehicleForm.invalid"
+                    class="px-6 py-2 border border-gs-green text-gs-green bg-transparent font-semibold rounded hover:bg-gs-green/10 transition-colors disabled:opacity-50">
+                    + Add Vehicle
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Navigation Footer -->
+    <div class="flex justify-between items-center mt-8 border-t border-green-900/20 pt-6">
+        <button routerLink="/declaration/fill/{{declarationId()}}"
+            class="px-6 py-2 border border-gs-muted text-gs-muted bg-transparent font-semibold rounded hover:bg-white/5 transition-colors">
+            Back
+        </button>
+        <button (click)="onNext()"
+            class="px-6 py-2 bg-gs-green text-gs-bg font-semibold rounded hover:bg-gs-green-hover transition-colors">
+            Next: Review
+        </button>
+    </div>
+
+</div>

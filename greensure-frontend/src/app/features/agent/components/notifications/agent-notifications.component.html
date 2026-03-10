@@ -1,0 +1,52 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-6 flex justify-between items-end">
+        <div>
+            <h2 class="text-2xl font-bold text-gs-text">Notifications</h2>
+            <p class="text-gs-muted mt-1">Review your recent alerts and assignment updates.</p>
+        </div>
+    </div>
+
+    @if (error()) {
+    <div class="bg-red-900/20 border border-red-500 text-red-400 p-4 rounded-lg">
+        {{ error() }}
+    </div>
+    } @else if (notifications().length === 0) {
+    <div class="bg-gs-card border border-green-900/20 rounded-lg p-10 text-center text-gs-muted">
+        You have no notifications at this time.
+    </div>
+    } @else {
+    <div class="space-y-4">
+        @for (notif of notifications(); track notif.notificationId) {
+
+        <div (click)="markAsRead(notif.notificationId)"
+            class="p-5 rounded-lg border transition-all cursor-pointer relative overflow-hidden"
+            [ngClass]="notif.status === 'UNREAD' ? 'bg-gs-card border-gs-green/50 shadow-[0_0_10px_rgba(0,200,90,0.1)]' : 'bg-gs-bg border-green-900/20 opacity-75 hover:opacity-100'">
+
+            @if (notif.status === 'UNREAD') {
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-gs-green"></div>
+            }
+
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-2 ml-1">
+                <div class="flex items-center gap-2">
+                    <span
+                        class="text-xs px-2 py-0.5 rounded border font-medium bg-black/30 border-green-900/30 text-gs-muted">
+                        {{ notif.notificationType.replace('_', ' ') }}
+                    </span>
+                    @if (notif.status === 'UNREAD') {
+                    <span class="flex h-2 w-2 relative">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gs-green opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-gs-green"></span>
+                    </span>
+                    }
+                </div>
+                <span class="text-xs text-gs-muted">{{ notif.sentAt | date:'medium' }}</span>
+            </div>
+
+            <p class="text-gs-text ml-1" [class.font-medium]="notif.status === 'UNREAD'">{{ notif.message }}</p>
+        </div>
+
+        }
+    </div>
+    }
+</div>

@@ -1,0 +1,69 @@
+<div class="max-w-5xl mx-auto px-4 py-8 space-y-8">
+    <div class="flex items-center justify-between border-b border-green-900/20 pb-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gs-text">Score History 📈</h1>
+            <p class="text-gs-muted mt-1">Track your year-over-year sustainability progress</p>
+        </div>
+        <a routerLink="/user/score"
+            class="text-sm border border-gs-green text-gs-green px-4 py-2 rounded-lg font-bold hover:bg-gs-green/10 transition-colors">
+            Back to Analytics
+        </a>
+    </div>
+
+
+
+    @if (error()) {
+    <div class="bg-red-500/10 border border-red-500/30 text-red-500 p-6 rounded-lg text-center font-semibold">
+        {{ error() }}
+    </div>
+    }
+
+    @if (!error() && history().length === 0) {
+    <div class="bg-gs-card border border-green-900/20 p-12 rounded-xl text-center">
+        <div class="text-4xl mb-4 opacity-50">📅</div>
+        <p class="text-lg text-gs-text font-semibold">No history available</p>
+        <p class="text-gs-muted mt-2">You haven't generated any carbon scores yet.</p>
+    </div>
+    }
+
+    @if (history().length > 0) {
+    <div class="bg-gs-card border border-green-900/20 rounded-xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gs-bg border-b border-green-900/20">
+                        <th class="p-4 text-sm font-semibold text-gs-muted uppercase tracking-wider">Year</th>
+                        <th class="p-4 text-sm font-semibold text-gs-muted uppercase tracking-wider">Total CO₂ (kg)</th>
+                        <th class="p-4 text-sm font-semibold text-gs-muted uppercase tracking-wider">Performance Zone
+                        </th>
+                        <th class="p-4 text-sm font-semibold text-gs-muted uppercase tracking-wider">Per Capita (kg)
+                        </th>
+                        <th class="p-4 text-sm font-semibold text-gs-muted uppercase tracking-wider text-right">Date
+                            Generated</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-green-900/10">
+                    @for (score of history(); track score.scoreId) {
+                    <tr class="hover:bg-gs-bg/50 transition-colors group">
+                        <td class="p-4 font-bold text-gs-text">{{ score.scoreYear }}</td>
+                        <td class="p-4 text-gs-text font-mono text-lg group-hover:text-gs-green transition-colors">{{
+                            score.totalCo2 | number:'1.0-0' }}</td>
+                        <td class="p-4">
+                            <span class="inline-block px-3 py-1 text-xs font-bold rounded-full text-gs-bg shadow-sm"
+                                [class.bg-gs-green]="score.zone === 'GREEN_CHAMPION'"
+                                [class.bg-yellow-500]="score.zone === 'GREEN_IMPROVER'"
+                                [class.bg-red-500]="score.zone === 'GREEN_DEFAULTER'">
+                                {{ score.zone.replace('_', ' ') }}
+                            </span>
+                        </td>
+                        <td class="p-4 text-gs-muted">{{ score.perCapitaCo2 | number:'1.0-1' }}</td>
+                        <td class="p-4 text-sm text-gs-muted text-right">{{ score.generatedAt | date:'mediumDate' }}
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    }
+</div>

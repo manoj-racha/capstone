@@ -1,0 +1,76 @@
+<div class="max-w-4xl mx-auto px-4 py-8 space-y-8">
+    <div class="border-b border-green-900/20 pb-4">
+        <h1 class="text-2xl font-bold text-gs-text flex items-center gap-2"><span>💡</span> AI Recommendations</h1>
+        <p class="text-gs-muted mt-1">Personalized action plan to lower your carbon footprint</p>
+    </div>
+
+
+
+    @if (error()) {
+    <div class="bg-red-500/10 border border-red-500/30 text-red-500 p-6 rounded-lg text-center font-semibold">
+        {{ error() }}
+    </div>
+    }
+
+    @if (!error() && recommendations().length === 0) {
+    <div class="bg-gs-card border border-green-900/20 p-12 rounded-xl text-center">
+        <div class="text-4xl mb-4 opacity-75">🌱</div>
+        <p class="text-lg text-gs-text font-semibold">No recommendations yet.</p>
+        <p class="text-gs-muted mt-2">Submit a declaration and get a carbon score first.</p>
+    </div>
+    }
+
+    @if (recommendations().length > 0) {
+    <div class="grid grid-cols-1 gap-5">
+        @for (rec of recommendations(); track rec.recommendationId) {
+        <div
+            class="bg-gs-card border border-green-900/20 rounded-xl p-6 hover:border-gs-green/50 transition-colors shadow-sm relative overflow-hidden group">
+
+            <!-- Category Accent Color -->
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 transition-colors"
+                [class.bg-orange-500]="rec.category === 'ENERGY'" [class.bg-blue-500]="rec.category === 'TRANSPORT'"
+                [class.bg-purple-500]="rec.category === 'LIFESTYLE'"
+                [class.bg-teal-500]="rec.category === 'OPERATIONS'">
+            </div>
+
+            <div class="pl-4 flex flex-col md:flex-row md:items-start justify-between gap-4">
+                <div class="flex-grow">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider"
+                            [class.text-orange-500]="rec.category === 'ENERGY'"
+                            [class.text-blue-500]="rec.category === 'TRANSPORT'"
+                            [class.text-purple-500]="rec.category === 'LIFESTYLE'"
+                            [class.text-teal-500]="rec.category === 'OPERATIONS'">
+                            {{ rec.category }}
+                        </span>
+                        <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase"
+                            [class.bg-red-500/20]="rec.priority === 'HIGH'"
+                            [class.text-red-400]="rec.priority === 'HIGH'"
+                            [class.bg-yellow-500/20]="rec.priority === 'MEDIUM'"
+                            [class.text-yellow-500]="rec.priority === 'MEDIUM'"
+                            [class.bg-green-500/20]="rec.priority === 'LOW'"
+                            [class.text-green-500]="rec.priority === 'LOW'">
+                            {{ rec.priority }} PRIORITY
+                        </span>
+                    </div>
+
+                    <h3 class="font-bold text-gs-text mb-2 group-hover:text-gs-green transition-colors">{{
+                        rec.category }} Action</h3>
+                    <p class="text-sm text-gs-muted">{{ rec.recommendationText }}</p>
+                </div>
+
+                <div
+                    class="shrink-0 text-left md:text-right bg-gs-bg p-4 rounded-xl border border-green-900/10 self-start group-hover:border-gs-green/20 transition-colors">
+                    <p class="text-[10px] uppercase font-bold text-gs-muted mb-1 tracking-wider">Date Generated</p>
+                    <p class="text-lg font-bold text-gs-green">{{ rec.generatedAt | date:'mediumDate' }}</p>
+                    <div class="text-right whitespace-nowrap">
+                        <span class="text-xs font-medium text-gs-green uppercase">Priority: {{ rec.priority }}</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        }
+    </div>
+    }
+</div>

@@ -1,0 +1,90 @@
+<div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-gs-text">System Reports</h2>
+            <p class="text-gs-muted mt-1">Aggregated analytics and field agent metrics.</p>
+        </div>
+        <button routerLink="/admin/dashboard" class="text-sm text-gs-green hover:underline">
+            &larr; Back to Dashboard
+        </button>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="flex border-b border-green-900/20 mb-6 font-medium text-sm">
+        <button (click)="setActiveTab('PERFORMANCE')" class="px-6 py-3 border-b-2 transition-colors duration-200"
+            [ngClass]="activeTab() === 'PERFORMANCE' ? 'border-gs-green text-gs-green' : 'border-transparent text-gs-muted hover:text-gs-text'">
+            Agent Performance
+        </button>
+    </div>
+
+    <!-- PERFORMANCE TAB -->
+    @if (activeTab() === 'PERFORMANCE') {
+    <div class="animate-fade-in">
+        @if (performanceError()) {
+        <div class="bg-red-900/20 border border-red-500 text-red-400 p-4 rounded-lg">
+            {{ performanceError() }}
+        </div>
+        } @else if (agentPerformance().length === 0) {
+        <div class="bg-gs-card border border-green-900/20 rounded-lg p-10 text-center text-gs-muted">
+            No agent performance data available.
+        </div>
+        } @else {
+        <div class="bg-gs-card border border-green-900/20 rounded-lg overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-gs-bg border-b border-green-900/20 text-gs-muted text-xs uppercase tracking-wider">
+                    <tr>
+                        <th class="px-6 py-4 font-medium">Agent Details</th>
+                        <th class="px-6 py-4 font-medium">Completion Rate</th>
+                        <th class="px-6 py-4 font-medium">Verified</th>
+                        <th class="px-6 py-4 font-medium">Rejected</th>
+                        <th class="px-6 py-4 font-medium">Strikes</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-green-900/10 text-gs-text">
+                    @for (perf of agentPerformance(); track $index) {
+                    <tr class="hover:bg-gs-bg/50 transition-colors">
+                        <td class="px-6 py-4">
+                            <p class="font-bold text-gs-text">Agent Profile</p>
+                            <p class="text-xs text-gs-muted mt-0.5">Assigned: {{ perf.totalAssignments }}</p>
+                        </td>
+                        <td class="px-6 py-4 font-medium">
+                            <span [class.text-gs-green]="perf.completionRate > 80"
+                                [class.text-yellow-500]="perf.completionRate <= 80 && perf.completionRate > 50"
+                                [class.text-red-400]="perf.completionRate <= 50">
+                                {{ formatPct(perf.completionRate) }}
+                            </span>
+                            <div class="w-24 bg-black/40 rounded-full h-1.5 mt-1.5 overflow-hidden">
+                                <div class="h-1.5 rounded-full" [class.bg-gs-green]="perf.completionRate > 80"
+                                    [class.bg-yellow-500]="perf.completionRate <= 80 && perf.completionRate > 50"
+                                    [class.bg-red-400]="perf.completionRate <= 50"
+                                    [style.width]="formatPct(perf.completionRate)"></div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <p class="font-medium text-blue-400">{{ perf.confirmedCount }} Conf / {{ perf.modifiedCount
+                                }} Mod</p>
+                            <p class="text-xs text-gs-muted mt-0.5">{{ formatPct(perf.confirmationRate) }} confirmation
+                            </p>
+                        </td>
+                        <td class="px-6 py-4 text-red-400 font-medium">
+                            {{ perf.rejectedCount }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="font-bold" [class.text-red-500]="perf.strikeCount >= 3"
+                                [class.text-gs-text]="perf.strikeCount < 3">
+                                {{ perf.strikeCount }}
+                            </span>
+                            @if (perf.strikeCount >= 3) {
+                            <span
+                                class="ml-2 px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded text-xs border border-red-500/30">Flagged</span>
+                            }
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+    </div>
+    }
+</div>
