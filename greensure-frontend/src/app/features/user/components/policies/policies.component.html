@@ -1,0 +1,269 @@
+<div class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between pb-4 border-b border-gs-border">
+        <div>
+            <h1 class="text-2xl font-bold text-gs-text">Insurance Policies</h1>
+            <p class="text-gs-muted mt-1">Choose a policy and see your carbon-linked premium.</p>
+        </div>
+        <a routerLink="/user/dashboard" class="text-sm text-gs-dark hover:underline">← Back to Dashboard</a>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SUCCESS STATE                                         -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    @if (policyConfirmed()) {
+    <div class="bg-green-900/20 border-2 border-green-500 rounded-xl p-10 text-center space-y-4 max-w-xl mx-auto">
+        <div class="text-5xl">✅</div>
+        <h2 class="text-xl font-bold text-green-400">Policy Selected Successfully</h2>
+        <p class="text-sm text-gs-muted leading-relaxed">
+            Our team will contact you within 24 hours to complete the documentation and activate your coverage.
+        </p>
+        <div class="flex items-center justify-center gap-4 pt-4">
+            <a routerLink="/user/dashboard"
+                class="px-6 py-2 bg-gs-dark text-white font-semibold rounded-lg hover:bg-gs-mid transition-colors text-sm">
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+    } @else {
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- STEP 1 — YOUR CARBON DISCOUNT                         -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    @if (scoreLoaded()) {
+    <div class="space-y-2">
+        <h2 class="text-lg font-bold text-gs-text">Step 1 — Your Carbon Discount</h2>
+
+        @if (score()) {
+        <div class="bg-gs-surface border-2 border-gs-dark/20 rounded-xl p-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-4">
+                    <span class="text-3xl px-3 py-1 rounded-full text-white font-bold"
+                        [class.bg-gs-dark]="score()!.zone === 'GREEN_CHAMPION'"
+                        [class.bg-yellow-500]="score()!.zone === 'GREEN_IMPROVER'"
+                        [class.bg-red-500]="score()!.zone === 'GREEN_DEFAULTER'">
+                        {{ score()!.perCapitaCo2 | number:'1.0-0' }}
+                    </span>
+                    <div>
+                        <p class="text-sm text-gs-muted">kg CO₂ per capita</p>
+                        <p class="font-bold text-gs-text">{{ score()!.zone?.replace('_', ' ') }}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-6 text-center">
+                    <div>
+                        <p class="text-xs text-gs-muted">Zone Discount</p>
+                        <p class="text-2xl font-extrabold text-gs-dark">{{ discount().zoneDiscount }}%</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gs-muted">Improvement Bonus</p>
+                        <p class="text-2xl font-extrabold text-blue-400">+{{ discount().improvementBonus }}%</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gs-muted">Total Discount</p>
+                        <p class="text-3xl font-extrabold text-gs-dark">{{ discount().totalDiscount }}%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        } @else {
+        <div class="bg-gs-surface border border-gs-border rounded-xl p-6 text-center">
+            <p class="text-sm text-gs-muted mb-4">You need a verified carbon score to see your personalised premium.
+                Complete your carbon declaration first.</p>
+            <a routerLink="/declaration/start"
+                class="px-6 py-2 bg-gs-dark text-white font-semibold rounded-lg hover:bg-gs-mid transition-colors text-sm">
+                Start Declaration
+            </a>
+            <p class="text-xs text-gs-muted mt-4">Policies are shown below with base prices only — no discount applied.
+            </p>
+        </div>
+        }
+    </div>
+    }
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- STEP 2 — CHOOSE POLICY TYPE                           -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="space-y-4">
+        <h2 class="text-lg font-bold text-gs-text">Step 2 — Choose Policy Type</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            @for (policy of visiblePolicies(); track policy.policyType; let i = $index) {
+            <button (click)="selectPolicy(i)"
+                class="bg-gs-surface border-2 rounded-xl p-6 text-left transition-all hover:-translate-y-1 cursor-pointer"
+                [class.border-gs-dark]="selectedPolicyIndex() === i"
+                [class.border-gs-border]="selectedPolicyIndex() !== i"
+                [class.shadow-lg]="selectedPolicyIndex() === i"
+                [class.shadow-gs-dark/10]="selectedPolicyIndex() === i">
+                <div class="text-3xl mb-3">{{ policy.icon }}</div>
+                <h3 class="text-lg font-bold text-gs-text">{{ policy.name }}</h3>
+                <p class="text-sm text-gs-muted mt-1">{{ policy.description }}</p>
+            </button>
+            }
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- STEP 3 — CHOOSE PLAN + DURATION                       -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    @if (selectedPolicyIndex() !== null) {
+    <div class="space-y-6">
+        <h2 class="text-lg font-bold text-gs-text">Step 3 — Choose Plan &amp; Duration</h2>
+
+        <!-- Duration selector -->
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-gs-muted font-medium">Duration:</span>
+            <div class="flex bg-gs-bg rounded-lg border border-gs-border overflow-hidden">
+                <button (click)="setDuration(6)" class="px-4 py-2 text-sm font-medium transition-colors"
+                    [class.bg-gs-dark]="durationMonths() === 6" [class.text-white]="durationMonths() === 6"
+                    [class.text-gs-muted]="durationMonths() !== 6">
+                    6 months
+                </button>
+                <button (click)="setDuration(12)"
+                    class="px-4 py-2 text-sm font-medium transition-colors border-x border-gs-border"
+                    [class.bg-gs-dark]="durationMonths() === 12" [class.text-white]="durationMonths() === 12"
+                    [class.text-gs-muted]="durationMonths() !== 12">
+                    1 year
+                </button>
+                <button (click)="setDuration(24)" class="px-4 py-2 text-sm font-medium transition-colors"
+                    [class.bg-gs-dark]="durationMonths() === 24" [class.text-white]="durationMonths() === 24"
+                    [class.text-gs-muted]="durationMonths() !== 24">
+                    2 years
+                </button>
+            </div>
+        </div>
+
+        <!-- Plan cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            @for (plan of visiblePolicies()[selectedPolicyIndex()!].plans; track plan.planId; let j = $index) {
+            <div class="bg-gs-surface border-2 rounded-xl p-6 flex flex-col transition-all"
+                [class.border-gs-dark]="selectedPlanIndex() === j"
+                [class.border-gs-border]="selectedPlanIndex() !== j">
+
+                <h3 class="text-lg font-bold text-gs-text">{{ plan.planName }}</h3>
+                <p class="text-sm text-gs-muted mb-4">Coverage: {{ formatCoverage(plan.coverageAmount) }}</p>
+
+                <!-- Features -->
+                <ul class="space-y-2 mb-6 flex-grow">
+                    @for (f of plan.features; track f) {
+                    <li class="text-sm text-gs-muted flex items-start gap-2">
+                        <span class="text-gs-dark mt-0.5">✓</span> {{ f }}
+                    </li>
+                    }
+                </ul>
+
+                <!-- Price breakdown -->
+                <div class="border-t border-gs-border pt-4 space-y-2 text-sm">
+                    <div class="flex justify-between text-gs-muted">
+                        <span>Base price</span>
+                        <span class="text-gs-text">{{
+                            formatCurrency(calculateFinalPrice(plan.basePremiumYearly).baseForDuration) }}</span>
+                    </div>
+                    @if (discount().totalDiscount > 0) {
+                    <div class="flex justify-between text-gs-dark">
+                        <span>Carbon discount ({{ discount().totalDiscount }}%)</span>
+                        <span>-{{ formatCurrency(calculateFinalPrice(plan.basePremiumYearly).carbonSaving) }}</span>
+                    </div>
+                    }
+                    @if (calculateFinalPrice(plan.basePremiumYearly).durationSaving > 0) {
+                    <div class="flex justify-between text-blue-400">
+                        <span>Duration discount ({{ calculateFinalPrice(plan.basePremiumYearly).durationDiscountPct
+                            }}%)</span>
+                        <span>-{{ formatCurrency(calculateFinalPrice(plan.basePremiumYearly).durationSaving) }}</span>
+                    </div>
+                    }
+                    <div class="flex justify-between pt-2 border-t border-gs-border font-bold">
+                        <span class="text-gs-text">You pay</span>
+                        <span class="text-gs-dark text-lg">{{
+                            formatCurrency(calculateFinalPrice(plan.basePremiumYearly).finalPrice) }}</span>
+                    </div>
+                </div>
+
+                <button (click)="selectPlan(j); openConfirm()"
+                    class="mt-4 w-full py-2 bg-gs-dark text-white font-semibold rounded-lg hover:bg-gs-mid transition-colors text-sm">
+                    Select This Plan
+                </button>
+            </div>
+            }
+        </div>
+    </div>
+    }
+
+    }
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- CONFIRM MODAL                                         -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    @if (showConfirmModal() && selectedPolicyIndex() !== null && selectedPlanIndex() !== null) {
+    <div class="fixed inset-0 bg-black/80 z-40 flex items-center justify-center p-4">
+        <div class="bg-gs-surface border border-gs-border rounded-xl p-8 w-full max-w-md shadow-2xl z-50 space-y-6">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gs-text">Confirm Your Selection</h3>
+                <button (click)="closeConfirm()" class="text-gs-muted hover:text-white text-xl">&times;</button>
+            </div>
+
+            <div class="space-y-3 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gs-muted">Policy</span>
+                    <span class="text-gs-text font-medium">{{ visiblePolicies()[selectedPolicyIndex()!].name }} — {{
+                        visiblePolicies()[selectedPolicyIndex()!].plans[selectedPlanIndex()!].planName }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gs-muted">Coverage</span>
+                    <span class="text-gs-text font-medium">{{
+                        formatCoverage(visiblePolicies()[selectedPolicyIndex()!].plans[selectedPlanIndex()!].coverageAmount)
+                        }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gs-muted">Duration</span>
+                    <span class="text-gs-text font-medium">{{ durationMonths() === 6 ? '6 months' : durationMonths() ===
+                        12 ? '1 year' : '2 years' }}</span>
+                </div>
+                <div class="border-t border-gs-border pt-3 space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gs-muted">Base price</span>
+                        <span class="text-gs-text">{{
+                            formatCurrency(calculateFinalPrice(visiblePolicies()[selectedPolicyIndex()!].plans[selectedPlanIndex()!].basePremiumYearly).baseForDuration)
+                            }}</span>
+                    </div>
+                    @if (discount().totalDiscount > 0) {
+                    <div class="flex justify-between text-gs-dark">
+                        <span>Carbon discount ({{ discount().totalDiscount }}%)</span>
+                        <span>-{{
+                            formatCurrency(calculateFinalPrice(visiblePolicies()[selectedPolicyIndex()!].plans[selectedPlanIndex()!].basePremiumYearly).carbonSaving)
+                            }}</span>
+                    </div>
+                    }
+                    @if
+                    (calculateFinalPrice(visiblePolicies()[selectedPolicyIndex()!].plans[selectedPlanIndex()!].basePremiumYearly).durationSaving
+                    > 0) {
+                    <div class="flex justify-between text-blue-400">
+                        <span>Duration discount</span>
+                        <span>-{{
+                            formatCurrency(calculateFinalPrice(visiblePolicies()[selectedPolicyIndex()!].plans[selectedPlanIndex()!].basePremiumYearly).durationSaving)
+                            }}</span>
+                    </div>
+                    }
+                </div>
+                <div class="flex justify-between pt-3 border-t border-gs-border text-lg font-bold">
+                    <span class="text-gs-text">Final Premium</span>
+                    <span class="text-gs-dark">{{
+                        formatCurrency(calculateFinalPrice(visiblePolicies()[selectedPolicyIndex()!].plans[selectedPlanIndex()!].basePremiumYearly).finalPrice)
+                        }}</span>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button (click)="closeConfirm()"
+                    class="px-4 py-2 border border-gs-border text-gs-muted rounded hover:bg-white/5 transition-colors text-sm">
+                    Cancel
+                </button>
+                <button (click)="confirmPolicy()"
+                    class="px-6 py-2 bg-gs-dark text-white font-bold rounded hover:bg-gs-mid transition-colors text-sm">
+                    Confirm Selection
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+
+</div>

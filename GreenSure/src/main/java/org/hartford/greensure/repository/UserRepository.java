@@ -1,6 +1,8 @@
 package org.hartford.greensure.repository;
 
 import org.hartford.greensure.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,13 +27,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByPinCode(String pinCode);
 
     // Used by ADMIN — filter users by type (HOUSEHOLD or MSME)
-    List<User> findByUserType(User.UserType userType);
+    Page<User> findByUserType(User.UserType userType, Pageable pageable);
 
     // Used by ADMIN — filter users by status (ACTIVE, SUSPENDED etc)
-    List<User> findByStatus(User.UserStatus status);
+    Page<User> findByStatus(User.UserStatus status, Pageable pageable);
 
     // Used by ADMIN — filter users by type AND status
-    List<User> findByUserTypeAndStatus(User.UserType userType, User.UserStatus status);
+    Page<User> findByUserTypeAndStatus(User.UserType userType, User.UserStatus status, Pageable pageable);
 
     // Used by ADMIN — filter users by city
     List<User> findByCity(String city);
@@ -47,4 +49,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<User> searchByNameOrEmail(@Param("keyword") String keyword);
+
+    // Used by PASSWORD RESET — find user by reset token
+    Optional<User> findByResetToken(String resetToken);
 }

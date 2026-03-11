@@ -1,10 +1,10 @@
 package org.hartford.greensure.scheduler;
 
-
-
 import org.hartford.greensure.entity.*;
 import org.hartford.greensure.repository.*;
 import org.hartford.greensure.service.NotificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -17,66 +17,64 @@ import java.util.List;
 @Component
 public class RenewalEngine {
 
-    @Autowired
-    private CarbonScoreRepository scoreRepo;
-    @Autowired private NotificationRepository notificationRepo;
-    @Autowired private NotificationService notificationService;
+        private static final Logger log = LoggerFactory.getLogger(RenewalEngine.class);
 
-    // Runs at 9:00 AM on the 1st of every month
-    @Scheduled(cron = "0 0 9 1 * *")
-    @Transactional
-    public void sendRenewalReminders() {
+        @Autowired
+        private CarbonScoreRepository scoreRepo;
+        @Autowired
+        private NotificationRepository notificationRepo;
+        @Autowired
+        private NotificationService notificationService;
 
-        System.out.println(
-                "[RenewalEngine] Running renewal reminder check...");
+        // Runs at 9:00 AM on the 1st of every month
+        @Scheduled(cron = "0 0 9 1 * *")
+        @Transactional
+        public void sendRenewalReminders() {
 
-        int currentYear = LocalDate.now().getYear();
-        int lastYear = currentYear - 1;
+                log.info("Running renewal reminder check...");
 
-        // Find users who need renewal reminder:
-        // Had a score last year AND no score this year yet
-        List<Object> usersNeedingRenewal = scoreRepo
-                .findUsersNeedingRenewal(lastYear, currentYear);
+                int currentYear = LocalDate.now().getYear();
+                int lastYear = currentYear - 1;
 
-        // Find users already reminded this year
-        // so we don't send duplicate reminders
-        LocalDateTime yearStart = LocalDate.now()
-                .withDayOfYear(1)
-                .atStartOfDay();
+                // Find users who need renewal reminder:
+                // Had a score last year AND no score this year yet
+                List<Object> usersNeedingRenewal = scoreRepo
+                                .findUsersNeedingRenewal(lastYear, currentYear);
 
-        List<Long> alreadyReminded = notificationRepo
-                .findUserIdsAlreadyRemindedThisYear(yearStart);
+                // Find users already reminded this year
+                // so we don't send duplicate reminders
+                LocalDateTime yearStart = LocalDate.now()
+                                .withDayOfYear(1)
+                                .atStartOfDay();
 
-        int sent = 0;
+                List<Long> alreadyReminded = notificationRepo
+                                .findUserIdsAlreadyRemindedThisYear(yearStart);
 
-        for (Object userObj : usersNeedingRenewal) {
-            User user = (User) userObj;
-            Long userId = user.getUserId();
+                int sent = 0;
 
-            // Skip if already reminded this year
-            if (alreadyReminded.contains(userId)) {
-                continue;
-            }
+                for (Object userObj : usersNeedingRenewal) {
+                        User user = (User) userObj;
+                        Long userId = user.getUserId();
 
-            notificationService.sendToUser(
-                    userId,
-                    Notification.NotificationType.RENEWAL_REMINDER,
-                    "It's time to renew your GreenTrace " +
-                            "Carbon Declaration for " + currentYear + ". " +
-                            "Your last score was from " + lastYear + ". " +
-                            "Login now to start your renewal declaration " +
-                            "and track your improvement this year."
-            );
+                        // Skip if already reminded this year
+                        if (alreadyReminded.contains(userId)) {
+                                continue;
+                        }
 
-            sent++;
-            System.out.println(
-                    "[RenewalEngine] Sent renewal reminder to: " +
-                            user.getFullName() +
-                            " (" + user.getEmail() + ")");
+                        notificationService.sendToUser(
+                                        userId,
+                                        Notification.NotificationType.RENEWAL_REMINDER,
+                                        "It's time to renew your GreenTrace " +
+                                                        "Carbon Declaration for " + currentYear + ". " +
+                                                        "Your last score was from " + lastYear + ". " +
+                                                        "Login now to start your renewal declaration " +
+                                                        "and track your improvement this year.");
+
+                        sent++;
+                        log.info("Sent renewal reminder to: {} ({})",
+                                        user.getFullName(), user.getEmail());
+                }
+
+                log.info("Done. Sent {} renewal reminders.", sent);
         }
-
-        System.out.println(
-                "[RenewalEngine] Done. Sent " + sent +
-                        " renewal reminders.");
-    }
 }

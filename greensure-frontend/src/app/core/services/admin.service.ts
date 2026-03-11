@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ApiResponse } from '../models/api-response';
+import { ApiResponse, Page } from '../models/api-response';
 import { AdminOverview, CreateAgentRequest } from '../models/admin';
 import { UserProfile } from '../models/user';
 import { AgentPerformanceResponse, AgentTaskResponse } from '../models/agent';
@@ -20,18 +20,19 @@ export class AdminService {
     // USER MANAGEMENT
     // ═══════════════════════════════════════════════════════════
 
-    // GET /admin/users?userType=X&status=Y
-    // Fetches all users, optionally filtered by userType and status.
-    getUsers(userType?: string, status?: string): Observable<ApiResponse<UserProfile[]>> {
+    // GET /admin/users?userType=X&status=Y&page=0&size=10
+    // Fetches all users, optionally filtered by userType and status, paginated.
+    getUsers(userType?: string, status?: string, page: number = 0, size: number = 10): Observable<ApiResponse<Page<UserProfile>>> {
         let url = `${this.apiUrl}/admin/users`;
         const params: string[] = [];
         if (userType) params.push(`userType=${userType}`);
         if (status) params.push(`status=${status}`);
+        params.push(`page=${page}`);
+        params.push(`size=${size}`);
+
         if (params.length > 0) url += '?' + params.join('&');
 
-        return this.httpClient.get<ApiResponse<UserProfile[]>>(
-            url
-        );
+        return this.httpClient.get<ApiResponse<Page<UserProfile>>>(url);
     }
 
     // GET /admin/users/{id}
@@ -73,11 +74,11 @@ export class AdminService {
         );
     }
 
-    // GET /admin/agents
-    // Fetches all agents — used by agents management table.
-    getAgents(): Observable<ApiResponse<any[]>> {
-        return this.httpClient.get<ApiResponse<any[]>>(
-            `${this.apiUrl}/admin/agents`
+    // GET /admin/agents?page=0&size=10
+    // Fetches all agents — used by agents management table, paginated.
+    getAgents(page: number = 0, size: number = 10): Observable<ApiResponse<Page<any>>> {
+        return this.httpClient.get<ApiResponse<Page<any>>>(
+            `${this.apiUrl}/admin/agents?page=${page}&size=${size}`
         );
     }
 
@@ -111,15 +112,18 @@ export class AdminService {
     // DECLARATION MANAGEMENT
     // ═══════════════════════════════════════════════════════════
 
-    // GET /admin/declarations?status=SUBMITTED
-    // Fetches all declarations, optionally filtered by status.
-    getDeclarations(status?: string): Observable<ApiResponse<DeclarationResponse[]>> {
+    // GET /admin/declarations?status=SUBMITTED&page=0&size=10
+    // Fetches all declarations, optionally filtered by status, paginated.
+    getDeclarations(status?: string, page: number = 0, size: number = 10): Observable<ApiResponse<Page<DeclarationResponse>>> {
         let url = `${this.apiUrl}/admin/declarations`;
-        if (status) url += `?status=${status}`;
+        const params: string[] = [];
+        if (status) params.push(`status=${status}`);
+        params.push(`page=${page}`);
+        params.push(`size=${size}`);
 
-        return this.httpClient.get<ApiResponse<DeclarationResponse[]>>(
-            url
-        );
+        url += '?' + params.join('&');
+
+        return this.httpClient.get<ApiResponse<Page<DeclarationResponse>>>(url);
     }
 
     // GET /admin/declarations/{id}
@@ -143,15 +147,18 @@ export class AdminService {
     // ASSIGNMENT MANAGEMENT
     // ═══════════════════════════════════════════════════════════
 
-    // GET /admin/assignments?status=ASSIGNED
-    // Fetches all agent assignments, optionally filtered by status.
-    getAssignments(status?: string): Observable<ApiResponse<AgentTaskResponse[]>> {
+    // GET /admin/assignments?status=ASSIGNED&page=0&size=10
+    // Fetches all agent assignments, optionally filtered by status, paginated.
+    getAssignments(status?: string, page: number = 0, size: number = 10): Observable<ApiResponse<Page<AgentTaskResponse>>> {
         let url = `${this.apiUrl}/admin/assignments`;
-        if (status) url += `?status=${status}`;
+        const params: string[] = [];
+        if (status) params.push(`status=${status}`);
+        params.push(`page=${page}`);
+        params.push(`size=${size}`);
 
-        return this.httpClient.get<ApiResponse<AgentTaskResponse[]>>(
-            url
-        );
+        url += '?' + params.join('&');
+
+        return this.httpClient.get<ApiResponse<Page<AgentTaskResponse>>>(url);
     }
 
     // POST /admin/assignments/reassign/{id}?newAgentId=X
@@ -177,11 +184,11 @@ export class AdminService {
         );
     }
 
-    // GET /admin/reports/agent-performance
-    // Returns array of AgentPerformanceResponse for all agents.
-    getAgentPerformanceReport(): Observable<ApiResponse<AgentPerformanceResponse[]>> {
-        return this.httpClient.get<ApiResponse<AgentPerformanceResponse[]>>(
-            `${this.apiUrl}/admin/reports/agent-performance`
+    // GET /admin/reports/performance
+    // Returns AgentPerformanceResponse for all active agents.
+    getAgentPerformanceReport(): Observable<ApiResponse<AgentPerformanceResponse>> {
+        return this.httpClient.get<ApiResponse<AgentPerformanceResponse>>(
+            `${this.apiUrl}/admin/reports/performance`
         );
     }
 

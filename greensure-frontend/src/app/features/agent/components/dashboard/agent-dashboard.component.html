@@ -5,26 +5,26 @@
             <p class="text-gs-muted mt-1">Manage your field verification assignments.</p>
         </div>
 
-        <div class="flex bg-gs-card rounded-lg border border-green-900/20 p-1">
-            <button (click)="loadTasks()" [class.bg-gs-green]="currentFilter() === 'ALL'"
-                [class.text-gs-bg]="currentFilter() === 'ALL'" [class.text-gs-muted]="currentFilter() !== 'ALL'"
+        <div class="flex bg-gs-surface rounded-lg border border-gs-border p-1">
+            <button (click)="loadTasks()" [class.bg-gs-dark]="currentFilter() === 'ALL'"
+                [class.text-white]="currentFilter() === 'ALL'" [class.text-gs-muted]="currentFilter() !== 'ALL'"
                 class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors">
                 All
             </button>
-            <button (click)="loadTasks('ASSIGNED')" [class.bg-gs-green]="currentFilter() === 'ASSIGNED'"
-                [class.text-gs-bg]="currentFilter() === 'ASSIGNED'"
+            <button (click)="loadTasks('ASSIGNED')" [class.bg-gs-dark]="currentFilter() === 'ASSIGNED'"
+                [class.text-white]="currentFilter() === 'ASSIGNED'"
                 [class.text-gs-muted]="currentFilter() !== 'ASSIGNED'"
                 class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors">
                 Assigned
             </button>
-            <button (click)="loadTasks('IN_PROGRESS')" [class.bg-gs-green]="currentFilter() === 'IN_PROGRESS'"
-                [class.text-gs-bg]="currentFilter() === 'IN_PROGRESS'"
+            <button (click)="loadTasks('IN_PROGRESS')" [class.bg-gs-dark]="currentFilter() === 'IN_PROGRESS'"
+                [class.text-white]="currentFilter() === 'IN_PROGRESS'"
                 [class.text-gs-muted]="currentFilter() !== 'IN_PROGRESS'"
                 class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors">
                 In Progress
             </button>
-            <button (click)="loadTasks('COMPLETED')" [class.bg-gs-green]="currentFilter() === 'COMPLETED'"
-                [class.text-gs-bg]="currentFilter() === 'COMPLETED'"
+            <button (click)="loadTasks('COMPLETED')" [class.bg-gs-dark]="currentFilter() === 'COMPLETED'"
+                [class.text-white]="currentFilter() === 'COMPLETED'"
                 [class.text-gs-muted]="currentFilter() !== 'COMPLETED'"
                 class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors">
                 Completed
@@ -38,7 +38,7 @@
     </div>
     } @else if (tasks().length === 0) {
     <div
-        class="bg-gs-card border border-green-900/20 rounded-lg p-10 text-center text-gs-muted flex flex-col items-center">
+        class="bg-gs-surface border border-gs-border rounded-lg p-10 text-center text-gs-muted flex flex-col items-center">
         <svg class="w-12 h-12 mb-4 text-green-900/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -50,8 +50,8 @@
     } @else {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @for (task of tasks(); track task.assignmentId) {
-        <div class="bg-gs-card border rounded-lg p-5 flex flex-col justify-between hover:shadow-[0_4px_20px_rgba(0,200,90,0.1)] transition-all"
-            [ngClass]="{'border-red-500/50': task.isOverdue && task.status !== 'COMPLETED', 'border-green-900/20 hover:border-gs-green/40': !(task.isOverdue && task.status !== 'COMPLETED')}">
+        <div class="bg-gs-surface border rounded-lg p-5 flex flex-col justify-between hover:shadow-md shadow-gs-dark/5 transition-all"
+            [ngClass]="{'border-red-500/50': task.isOverdue && task.status !== 'COMPLETED', 'border-gs-border hover:border-gs-dark/20': !(task.isOverdue && task.status !== 'COMPLETED')}">
 
             <div>
                 <div class="flex justify-between items-start mb-4">
@@ -68,7 +68,7 @@
 
                 <div class="space-y-2 text-sm">
                     <div class="flex items-start gap-2">
-                        <svg class="w-4 h-4 text-gs-green mt-0.5 shrink-0" fill="none" stroke="currentColor"
+                        <svg class="w-4 h-4 text-gs-dark mt-0.5 shrink-0" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
@@ -80,7 +80,7 @@
                             task.userCity }} - {{ task.userPinCode }}</span>
                     </div>
                     <div class="flex items-start gap-2">
-                        <svg class="w-4 h-4 text-gs-green mt-0.5 shrink-0" fill="none" stroke="currentColor"
+                        <svg class="w-4 h-4 text-gs-dark mt-0.5 shrink-0" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
@@ -96,9 +96,9 @@
                 </div>
             </div>
 
-            <div class="mt-6 pt-4 border-t border-green-900/20">
+            <div class="mt-6 pt-4 border-t border-gs-border">
                 <button routerLink="/agent/task/{{task.assignmentId}}"
-                    class="w-full py-2 text-sm font-semibold rounded transition-colors {{ task.status === 'ASSIGNED' || task.status === 'IN_PROGRESS' ? 'bg-gs-green text-gs-bg hover:bg-gs-green-hover' : 'border border-gs-muted text-gs-text hover:border-gs-green hover:text-gs-green' }}">
+                    class="w-full py-2 text-sm font-semibold rounded transition-colors {{ task.status === 'ASSIGNED' || task.status === 'IN_PROGRESS' ? 'bg-gs-dark text-white hover:bg-gs-mid' : 'border border-gs-muted text-gs-text hover:border-gs-dark hover:text-gs-dark' }}">
                     {{ task.status === 'COMPLETED' ? 'View Details' : 'Open Task' }}
                 </button>
             </div>

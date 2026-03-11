@@ -8,6 +8,9 @@ import org.hartford.greensure.security.JwtUtil;
 import org.hartford.greensure.service.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,30 +46,41 @@ public class AdminController {
         private PasswordEncoder passwordEncoder;
         @Autowired
         private JwtUtil jwtUtil;
+        @Autowired
+        private EmailService emailService;
 
         @GetMapping("/users")
-        public ResponseEntity<ApiResponse<List<UserProfileResponse>>> getAllUsers(
+        public ResponseEntity<ApiResponse<Page<UserProfileResponse>>> getAllUsers(
                         @RequestParam(required = false) User.UserType userType,
-                        @RequestParam(required = false) User.UserStatus status) {
+                        @RequestParam(required = false) User.UserStatus status,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
 
-                List<User> users;
+                Pageable pageable = PageRequest.of(page, size);
+                Page<User> users;
 
                 if (userType != null && status != null) {
-                        users = userRepository.findByUserTypeAndStatus(userType, status);
+                        users = userRepository.findByUserTypeAndStatus(userType, status, pageable);
                 } else if (userType != null) {
-                        users = userRepository.findByUserType(userType);
+                        users = userRepository.findByUserType(userType, pageable);
                 } else if (status != null) {
-                        users = userRepository.findByStatus(status);
+                        users = userRepository.findByStatus(status, pageable);
                 } else {
-                        users = userRepository.findAll();
+                        users = userRepository.findAll(pageable);
                 }
 
-                List<UserProfileResponse> response = users.stream()
-                                .map(u -> userService.getProfile(u.getUserId()))
-                                .collect(Collectors.toList());
+                Page<UserProfileResponse> responses = users.map(user -> UserProfileResponse.builder()
+                                .userId(user.getUserId())
+                                .fullName(user.getFullName())
+                                .email(user.getEmail())
+                                .mobile(user.getMobile())
+                                .userType(user.getUserType())
+                                .status(user.getStatus())
+                                .city(user.getCity())
+                                .createdAt(user.getCreatedAt())
+                                .build());
 
-                return ResponseEntity.ok(
-                                ApiResponse.success("Users fetched", response));
+                return ResponseEntity.ok(ApiResponse.success("Users fetched", responses));
         }
 
         @GetMapping("/users/{id}")
@@ -133,19 +147,38 @@ public class AdminController {
                                 .build();
 
                 agentRepository.save(agent);
+
+                // Send welcome email with credentials (best-effort)
+                emailService.sendAgentWelcomeEmail(
+                                request.getEmail(),
+                                request.getFullName(),
+                                request.getPassword());
+
                 return ResponseEntity.ok(
-                                ApiResponse.success("Agent created successfully"));
+                                ApiResponse.success("Agent created successfully. Welcome email sent."));
         }
 
         @GetMapping("/agents")
-        public ResponseEntity<ApiResponse<List<AgentPerformanceResponse>>> getAllAgents() {
+        public ResponseEntity<ApiResponse<Page<java.util.Map<String, Object>>>> getAllAgents(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
 
-                List<AgentPerformanceResponse> agents = agentRepository.findAll().stream()
-                                .map(a -> agentService.getPerformance(a.getAgentId()))
-                                .collect(Collectors.toList());
+                Pageable pageable = PageRequest.of(page, size);
+                Page<Agent> agents = agentRepository.findByAgentType(Agent.AgentType.FIELD_AGENT, pageable);
 
-                return ResponseEntity.ok(
-                                ApiResponse.success("Agents fetched", agents));
+                Page<java.util.Map<String, Object>> responses = agents.map(agent -> {
+                        java.util.Map<String, Object> map = new java.util.HashMap<>();
+                        map.put("agentId", agent.getAgentId());
+                        map.put("fullName", agent.getFullName());
+                        map.put("employeeId", agent.getEmployeeId());
+                        map.put("assignedZones", agent.getAssignedZones());
+                        map.put("strikeCount", agent.getStrikeCount());
+                        map.put("status", agent.getStatus());
+                        map.put("createdAt", agent.getCreatedAt());
+                        return map;
+                });
+
+                return ResponseEntity.ok(ApiResponse.success("Agents fetched", responses));
         }
 
         @GetMapping("/agents/{id}")
@@ -193,19 +226,42 @@ public class AdminController {
         }
 
         @GetMapping("/declarations")
-        public ResponseEntity<ApiResponse<List<DeclarationResponse>>> getAllDeclarations(
-                        @RequestParam(required = false) CarbonDeclaration.DeclarationStatus status) {
+        public ResponseEntity<ApiResponse<Page<DeclarationResponse>>> getAllDeclarations(
+                        @RequestParam(required = false) CarbonDeclaration.DeclarationStatus status,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
 
-                List<CarbonDeclaration> declarations = status != null
-                                ? declarationRepo.findByStatusOrderBySubmittedAtDesc(status)
-                                : declarationRepo.findAll();
+                Pageable pageable = PageRequest.of(page, size);
+                Page<CarbonDeclaration> declarations;
 
-                List<DeclarationResponse> response = declarations.stream()
-                                .map(declarationService::mapToResponse)
-                                .collect(Collectors.toList());
+                if (status != null) {
+                        declarations = declarationRepo.findByStatusOrderBySubmittedAtDesc(status, pageable);
+                } else {
+                        declarations = declarationRepo.findAllByOrderBySubmittedAtDesc(pageable); // Changed from
+                                                                                                  // findAll(pageable)
+                                                                                                  // to maintain order
+                }
 
-                return ResponseEntity.ok(
-                                ApiResponse.success("Declarations fetched", response));
+                Page<DeclarationResponse> responses = declarations.map(d -> {
+                        DeclarationResponse resp = DeclarationResponse.builder()
+                                .declarationId(d.getDeclarationId())
+                                .userId(d.getUser().getUserId())
+                                .declarationYear(d.getDeclarationYear())
+                                .status(d.getStatus())
+                                .submittedAt(d.getSubmittedAt())
+                                .resubmissionCount(d.getResubmissionCount())
+                                .build();
+
+                        assignmentRepo.findActiveAssignmentByDeclarationId(d.getDeclarationId())
+                                .ifPresent(assignment -> {
+                                        resp.setAssignedAgentId(assignment.getAgent().getAgentId());
+                                        resp.setAssignedAgentName(assignment.getAgent().getFullName());
+                                });
+
+                        return resp;
+                });
+
+                return ResponseEntity.ok(ApiResponse.success("Declarations fetched", responses));
         }
 
         @GetMapping("/declarations/{id}")
@@ -255,29 +311,36 @@ public class AdminController {
         }
 
         @GetMapping("/assignments")
-        public ResponseEntity<ApiResponse<List<AgentTaskResponse>>> getAllAssignments(
-                        @RequestParam(required = false) AgentAssignment.AssignmentStatus status) {
+        public ResponseEntity<ApiResponse<Page<AgentTaskResponse>>> getAllAssignments(
+                        @RequestParam(required = false) AgentAssignment.AssignmentStatus status,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
 
-                List<AgentAssignment> assignments = status != null
-                                ? assignmentRepo.findByStatusOrderByAssignedAtDesc(status)
-                                : assignmentRepo.findAll();
+                Pageable pageable = PageRequest.of(page, size);
+                Page<AgentAssignment> assignments;
 
-                List<AgentTaskResponse> response = assignments.stream()
-                                .map(a -> AgentTaskResponse.builder()
-                                                .assignmentId(a.getAssignmentId())
-                                                .status(a.getStatus())
-                                                .assignedAt(a.getAssignedAt())
-                                                .deadline(a.getDeadline())
-                                                .completedAt(a.getCompletedAt())
-                                                .isOverdue(
-                                                                java.time.LocalDateTime.now().isAfter(a.getDeadline())
-                                                                                && a.getStatus() != AgentAssignment.AssignmentStatus.COMPLETED)
-                                                .userId(a.getDeclaration().getUser().getUserId())
-                                                .userName(a.getDeclaration().getUser().getFullName())
-                                                .declarationId(a.getDeclaration().getDeclarationId())
-                                                .declarationYear(a.getDeclaration().getDeclarationYear())
-                                                .build())
-                                .collect(Collectors.toList());
+                if (status != null) {
+                        assignments = assignmentRepo.findByStatusOrderByAssignedAtDesc(status, pageable);
+                } else {
+                        assignments = assignmentRepo.findAll(pageable);
+                }
+
+                Page<AgentTaskResponse> response = assignments.map(a -> AgentTaskResponse.builder()
+                                .assignmentId(a.getAssignmentId())
+                                .status(a.getStatus())
+                                .assignedAt(a.getAssignedAt())
+                                .deadline(a.getDeadline())
+                                .completedAt(a.getCompletedAt())
+                                .isOverdue(
+                                                java.time.LocalDateTime.now().isAfter(a.getDeadline())
+                                                                && a.getStatus() != AgentAssignment.AssignmentStatus.COMPLETED)
+                                .userId(a.getDeclaration().getUser().getUserId())
+                                .userName(a.getDeclaration().getUser().getFullName())
+                                .declarationId(a.getDeclaration().getDeclarationId())
+                                .declarationYear(a.getDeclaration().getDeclarationYear())
+                                .agentId(a.getAgent().getAgentId())
+                                .agentName(a.getAgent().getFullName())
+                                .build());
 
                 return ResponseEntity.ok(
                                 ApiResponse.success("Assignments fetched", response));
@@ -332,16 +395,50 @@ public class AdminController {
                                 ApiResponse.success("Overview fetched", overview));
         }
 
-        @GetMapping("/reports/agent-performance")
-        public ResponseEntity<ApiResponse<List<AgentPerformanceResponse>>> getAgentPerformanceReport() {
+        @GetMapping("/reports/performance")
+        public ResponseEntity<ApiResponse<AgentPerformanceResponse>> getAgentPerformanceReport() {
 
-                List<AgentPerformanceResponse> report = agentRepository.findByAgentType(Agent.AgentType.FIELD_AGENT)
-                                .stream()
-                                .map(a -> agentService.getPerformance(a.getAgentId()))
-                                .collect(Collectors.toList());
+                // For now, return aggregate of all active agents
+                // TODO: Could be expanded to take agentId or return list of
+                // AgentPerformanceResponse
+                Pageable firstPage = PageRequest.of(0, 100);
+                Page<Agent> agents = agentRepository.findByAgentType(Agent.AgentType.FIELD_AGENT, firstPage);
 
-                return ResponseEntity.ok(
-                                ApiResponse.success("Agent performance report fetched", report));
+                long activeCount = agents.getTotalElements();
+
+                long totalAssignments = assignmentRepo.count();
+                long completedAssignments = assignmentRepo.countByStatus(AgentAssignment.AssignmentStatus.COMPLETED);
+                long reassignedAssignments = assignmentRepo.countByStatus(AgentAssignment.AssignmentStatus.REASSIGNED);
+
+                long totalVerifications = verificationRepo.count();
+                long confirmedCount = verificationRepo.countByOverallAction(Verification.VerificationAction.CONFIRMED);
+                long modifiedCount = verificationRepo.countByOverallAction(Verification.VerificationAction.MODIFIED);
+                long rejectedCount = verificationRepo.countByOverallAction(Verification.VerificationAction.REJECTED);
+
+                double completionRate = totalAssignments > 0 ? ((double) completedAssignments / totalAssignments) * 100 : 0.0;
+                double confirmationRate = totalVerifications > 0 ? ((double) confirmedCount / totalVerifications) * 100 : 0.0;
+                double modificationRate = totalVerifications > 0 ? ((double) modifiedCount / totalVerifications) * 100 : 0.0;
+
+                int totalStrikes = agents.getContent().stream().mapToInt(Agent::getStrikeCount).sum();
+
+                AgentPerformanceResponse response = AgentPerformanceResponse.builder()
+                                .agentId(0L)
+                                .fullName("Active Field Staff (" + activeCount + ")")
+                                .employeeId("AGG-000")
+                                .strikeCount(totalStrikes)
+                                .totalAssignments(totalAssignments)
+                                .completedAssignments(completedAssignments)
+                                .reassignedAssignments(reassignedAssignments)
+                                .totalVerifications(totalVerifications)
+                                .confirmedCount(confirmedCount)
+                                .modifiedCount(modifiedCount)
+                                .rejectedCount(rejectedCount)
+                                .completionRate(completionRate)
+                                .confirmationRate(confirmationRate)
+                                .modificationRate(modificationRate)
+                                .build();
+
+                return ResponseEntity.ok(ApiResponse.success("Performance report fetched", response));
         }
 
         @GetMapping("/reports/carbon-heatmap")

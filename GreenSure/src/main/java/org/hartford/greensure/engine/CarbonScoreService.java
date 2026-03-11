@@ -176,7 +176,7 @@ public class CarbonScoreService {
 
         // 2. Cooking fuel
         if (d.getCookingFuelType() != null) {
-            CarbonDeclaration.CookingFuelType fuelType = resolve(
+            CarbonDeclaration.CookingFuelType fuelType = resolveEnum(
                     v.getCorrectedCookingFuelType(),
                     d.getCookingFuelType());
 
@@ -368,7 +368,7 @@ public class CarbonScoreService {
                 .orElse(1);
 
         // 1. Diet
-        CarbonDeclaration.DietaryPattern diet = resolve(
+        CarbonDeclaration.DietaryPattern diet = resolveEnum(
                 v.getCorrectedDietaryPattern(),
                 d.getDietaryPattern());
 
@@ -377,7 +377,7 @@ public class CarbonScoreService {
         }
 
         // 2. Online shopping
-        CarbonDeclaration.ShoppingOrders shopping = resolve(
+        CarbonDeclaration.ShoppingOrders shopping = resolveEnum(
                 v.getCorrectedShoppingOrders(),
                 d.getShoppingOrdersPerMonth());
 
@@ -567,7 +567,19 @@ public class CarbonScoreService {
     // Core resolve rule:
     // If agent corrected the value → use corrected
     // If agent left it null → use declared value
-    private <T> T resolve(T corrected, T declared) {
+    private Double resolve(Double corrected, Double declared) {
+        if (corrected != null) return corrected;
+        if (declared != null) return declared;
+        return 0.0;
+    }
+
+    private Integer resolve(Integer corrected, Integer declared) {
+        if (corrected != null) return corrected;
+        if (declared != null) return declared;
+        return 0;
+    }
+
+    private <T extends Enum<T>> T resolveEnum(T corrected, T declared) {
         return corrected != null ? corrected : declared;
     }
 

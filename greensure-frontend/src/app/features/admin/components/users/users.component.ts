@@ -14,12 +14,17 @@ export class UsersComponent implements OnInit {
     private adminService = inject(AdminService);
 
     users = signal<UserProfile[]>([]);
-
     error = signal<string>('');
 
     // Filter state
     userTypeFilter = signal<string>('');
     statusFilter = signal<string>('');
+
+    // Pagination state
+    currentPage = signal<number>(0);
+    pageSize = signal<number>(10);
+    totalElements = signal<number>(0);
+    totalPages = signal<number>(0);
 
     ngOnInit(): void {
         this.loadUsers();
@@ -32,10 +37,12 @@ export class UsersComponent implements OnInit {
         const uType = this.userTypeFilter() || undefined;
         const stat = this.statusFilter() || undefined;
 
-        this.adminService.getUsers(uType, stat).subscribe({
+        this.adminService.getUsers(uType, stat, this.currentPage(), this.pageSize()).subscribe({
             next: (res) => {
                 if (res.success && res.data) {
-                    this.users.set(res.data);
+                    this.users.set(res.data.content);
+                    this.totalElements.set(res.data.totalElements);
+                    this.totalPages.set(res.data.totalPages);
                 } else {
                     this.error.set(res.error || 'Failed to load users.');
                 }
@@ -52,6 +59,14 @@ export class UsersComponent implements OnInit {
         } else {
             this.statusFilter.set(val === 'ALL' ? '' : val);
         }
+        this.currentPage.set(0); // Reset to first page on filter change
         this.loadUsers();
+    }
+
+    onPageChange(page: number): void {
+        if (page >= 0 && page < this.totalPages()) {
+            this.currentPage.set(page);
+            this.loadUsers();
+        }
     }
 }

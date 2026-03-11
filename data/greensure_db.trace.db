@@ -309,3 +309,9 @@ Caused by: org.h2.jdbc.JdbcSQLNonTransientConnectionException: The connection wa
 	at org.h2.message.DbException.getJdbcSQLException(DbException.java:690)
 	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
 	... 16 more
+2026-03-11 06:43:31.655550+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]DLETE FROM AGENTS"; expected "DELETE, DROP"; SQL statement:
+DLETE FROM AGENTS [42001-240]
+2026-03-11 06:43:36.870839+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]DLETE FROM AGENTS"; expected "DELETE, DROP"; SQL statement:
+DLETE FROM AGENTS [42001-240]

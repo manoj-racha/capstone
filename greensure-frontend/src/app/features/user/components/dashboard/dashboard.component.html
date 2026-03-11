@@ -8,9 +8,9 @@
 
     @if (dashboard()) {
     <!-- Header -->
-    <div class="flex items-center justify-between pb-4 border-b border-green-900/20">
+    <div class="flex items-center justify-between pb-4 border-b border-gs-border">
         <div>
-            <h1 class="text-2xl font-bold text-gs-text">Dashboard</h1>
+            <h1 class="text-2xl font-bold text-gs-text">My GreenSure Dashboard</h1>
             <p class="text-gs-muted">Welcome back, {{ dashboard()?.fullName }}</p>
         </div>
         <span class="px-3 py-1 rounded-full text-xs font-bold leading-tight"
@@ -26,19 +26,20 @@
         <p class="text-amber-500 text-sm font-medium">It's a new year! Your carbon footprint declaration is due for
             renewal.</p>
         <a routerLink="/declaration/start"
-            class="text-sm bg-amber-500 text-gs-bg px-4 py-2 font-bold rounded hover:bg-amber-400 transition-colors">Renew</a>
+            class="text-sm bg-amber-500 text-white px-4 py-2 font-bold rounded hover:bg-amber-400 transition-colors">Renew</a>
     </div>
     }
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
 
         <!-- Declaration Status Card -->
-        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6 flex flex-col justify-between">
+        <div class="bg-gs-surface border border-gs-border rounded-lg p-6 flex flex-col justify-between">
             <div>
                 <h2 class="text-lg font-semibold text-gs-text mb-2">Declaration Status</h2>
 
                 @if (!dashboard()?.hasDeclaration) {
-                <p class="text-sm text-gs-muted mb-4">No declaration submitted yet.</p>
+                <p class="text-sm text-gs-muted mb-4">No declaration submitted yet. Start your first carbon
+                    declaration to unlock premium discounts.</p>
                 } @else {
                 <div class="mb-4">
                     <span class="inline-block px-2 py-1 text-xs font-semibold rounded"
@@ -58,24 +59,60 @@
             </div>
 
             <div>
-                @if (!dashboard()?.hasDeclaration || dashboard()?.declarationStatus === 'DRAFT') {
+                <!-- No declaration yet → Start Declaration -->
+                @if (!dashboard()?.hasDeclaration) {
                 <a routerLink="/declaration/start"
-                    class="text-sm text-gs-bg bg-gs-green px-4 py-2 rounded font-semibold hover:bg-gs-green-hover transition-colors inline-block tracking-wide">
-                    {{ dashboard()?.hasDeclaration ? 'Resume Draft' : 'Start Declaration' }}
+                    class="text-sm text-white bg-gs-dark px-4 py-2 rounded font-semibold hover:bg-gs-mid transition-colors inline-block tracking-wide">
+                    Start Declaration
                 </a>
-                } @else if (dashboard()?.declarationStatus === 'REJECTED') {
-                <p class="text-xs text-red-400">Please wait for admin to unlock for resubmission.</p>
-                } @else {
-                <a routerLink="/declaration/history"
-                    class="text-sm border border-gs-green text-gs-green px-4 py-2 rounded font-semibold hover:bg-gs-green/10 transition-colors inline-block">
-                    View History
+                }
+
+                <!-- DRAFT → Continue Declaration -->
+                @if (dashboard()?.declarationStatus === 'DRAFT') {
+                <a [routerLink]="'/declaration/fill/' + dashboard()?.currentDeclarationId"
+                    class="text-sm text-white bg-gs-dark px-4 py-2 rounded font-semibold hover:bg-gs-mid transition-colors inline-block tracking-wide">
+                    Continue Declaration
                 </a>
+                }
+
+                <!-- SUBMITTED → Status message -->
+                @if (dashboard()?.declarationStatus === 'SUBMITTED') {
+                <p class="text-sm text-blue-400">Your declaration has been submitted and is awaiting agent assignment.
+                </p>
+                }
+
+                <!-- UNDER_VERIFICATION → Status message -->
+                @if (dashboard()?.declarationStatus === 'UNDER_VERIFICATION') {
+                <p class="text-sm text-amber-400">A field agent is currently verifying your declaration.</p>
+                }
+
+                <!-- VERIFIED → View score -->
+                @if (dashboard()?.declarationStatus === 'VERIFIED') {
+                <div class="flex flex-col gap-2">
+                    <p class="text-sm text-green-400">Your declaration has been verified. View your carbon score.</p>
+                    <a routerLink="/user/score-history"
+                        class="text-sm text-white bg-gs-dark px-4 py-2 rounded font-semibold hover:bg-gs-mid transition-colors inline-block tracking-wide w-fit">
+                        View Score
+                    </a>
+                </div>
+                }
+
+                <!-- REJECTED → Edit and resubmit -->
+                @if (dashboard()?.declarationStatus === 'REJECTED') {
+                <div class="flex flex-col gap-2">
+                    <p class="text-sm text-red-400">Your declaration was rejected. You may edit and resubmit your
+                        declaration.</p>
+                    <a [routerLink]="'/declaration/fill/' + dashboard()?.currentDeclarationId"
+                        class="text-sm text-white bg-amber-500 px-4 py-2 rounded font-semibold hover:bg-amber-400 transition-colors inline-block tracking-wide w-fit">
+                        Edit Declaration
+                    </a>
+                </div>
                 }
             </div>
         </div>
 
         <!-- Carbon Score Card -->
-        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6 flex flex-col justify-between">
+        <div class="bg-gs-surface border border-gs-border rounded-lg p-6 flex flex-col justify-between">
             <div>
                 <h2 class="text-lg font-semibold text-gs-text mb-2">My Carbon Score</h2>
 
@@ -87,8 +124,8 @@
                         {{ dashboard()?.latestScore?.totalCo2 | number:'1.0-0' }} <span
                             class="text-sm font-normal text-gs-muted">kg CO₂</span>
                     </div>
-                    <span class="inline-block px-3 py-1 text-sm font-bold rounded-full text-gs-bg"
-                        [class.bg-gs-green]="dashboard()?.zone === 'GREEN_CHAMPION'"
+                    <span class="inline-block px-3 py-1 text-sm font-bold rounded-full text-white"
+                        [class.bg-gs-dark]="dashboard()?.zone === 'GREEN_CHAMPION'"
                         [class.bg-yellow-500]="dashboard()?.zone === 'GREEN_IMPROVER'"
                         [class.bg-red-500]="dashboard()?.zone === 'GREEN_DEFAULTER'">
                         {{ dashboard()?.zone?.replace('_', ' ') }}
@@ -96,37 +133,69 @@
                 </div>
                 }
             </div>
-
         </div>
 
     </div>
+
+    <!-- No Active Policies Card -->
+    <div
+        class="bg-gs-surface border border-gs-border rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-start gap-4">
+            <span class="text-3xl">🛡️</span>
+            <div>
+                <h3 class="text-lg font-bold text-gs-text">You have no active policies</h3>
+                <p class="text-sm text-gs-muted mt-1">Get insured today and earn a discount based on your carbon score.
+                </p>
+            </div>
+        </div>
+        <a routerLink="/user/policies"
+            class="shrink-0 bg-gs-dark text-white px-6 py-2.5 text-sm rounded-lg font-bold hover:bg-gs-mid transition-colors">
+            Browse Policies
+        </a>
+    </div>
+
+    <!-- Discount Teaser (only when verified score exists) -->
+    @if (dashboard()?.latestScore) {
+    <div
+        class="bg-gradient-to-r from-gs-green/20 to-gs-bg border border-gs-dark/20 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-start gap-4">
+            <span class="text-3xl">🏆</span>
+            <div>
+                <h3 class="text-lg font-bold text-gs-text">You qualify for a premium discount</h3>
+                <p class="text-sm text-gs-muted mt-1">Your verified carbon score unlocks savings on all GreenSure
+                    policies.</p>
+            </div>
+        </div>
+        <a routerLink="/user/policies"
+            class="shrink-0 bg-gs-dark text-white px-6 py-2.5 text-sm rounded-lg font-bold hover:bg-gs-mid transition-colors">
+            View My Policies
+        </a>
+    </div>
+    }
 
     @if (dashboard()?.latestScore; as s) {
     <!-- Comparison Metrics -->
     <div class="mt-6">
         <div
-            class="bg-gs-bg border border-green-900/10 rounded-xl p-6 flex flex-col justify-center hover:bg-gs-card hover:border-gs-green/20 transition-all w-full md:w-1/2">
+            class="bg-gs-bg border border-gs-border rounded-xl p-6 flex flex-col justify-center hover:bg-gs-surface hover:border-gs-dark/20 transition-all w-full md:w-1/2">
             <p class="text-xs font-semibold text-gs-muted uppercase tracking-wider">Per Capita Emissions</p>
             <div class="mt-2 text-3xl font-bold text-gs-text">{{ s.perCapitaCo2 | number:'1.0-1' }} <span
                     class="text-base font-normal text-gs-muted">kg</span></div>
         </div>
     </div>
 
-
-
     <!-- Recommendations Teaser -->
     <div
-        class="mt-6 bg-gradient-to-r from-gs-green/20 to-gs-bg border border-gs-green/30 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-lg shadow-gs-green/5">
+        class="mt-6 bg-gradient-to-r from-gs-green/20 to-gs-bg border border-gs-dark/20 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-lg shadow-gs-dark/10">
         <div>
             <h3 class="text-lg font-bold text-gs-text flex items-center gap-2 mb-1">
-                <span class="text-gs-green">🌱</span> Tailored Recommendations
+                <span class="text-gs-dark">🌱</span> Tailored Recommendations
             </h3>
             <p class="text-sm text-gs-muted">We've generated {{ s.recommendations?.length || 0 }} actionable steps to
-                improve
-                your carbon footprint.</p>
+                improve your carbon footprint and lower your premiums.</p>
         </div>
         <a routerLink="/user/recommendations"
-            class="shrink-0 bg-gs-green text-gs-bg px-6 py-2.5 text-sm rounded-lg font-bold hover:bg-gs-green-hover transition-colors">
+            class="shrink-0 bg-gs-dark text-white px-6 py-2.5 text-sm rounded-lg font-bold hover:bg-gs-mid transition-colors">
             View Action Plan
         </a>
     </div>

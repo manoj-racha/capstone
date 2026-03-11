@@ -1,5 +1,5 @@
 <div class="max-w-4xl mx-auto px-4 py-8 space-y-8">
-    <div class="border-b border-green-900/20 pb-4">
+    <div class="border-b border-gs-border pb-4">
         <h1 class="text-2xl font-bold text-gs-text flex items-center gap-2"><span>💡</span> AI Recommendations</h1>
         <p class="text-gs-muted mt-1">Personalized action plan to lower your carbon footprint</p>
     </div>
@@ -13,7 +13,7 @@
     }
 
     @if (!error() && recommendations().length === 0) {
-    <div class="bg-gs-card border border-green-900/20 p-12 rounded-xl text-center">
+    <div class="bg-gs-surface border border-gs-border p-12 rounded-xl text-center">
         <div class="text-4xl mb-4 opacity-75">🌱</div>
         <p class="text-lg text-gs-text font-semibold">No recommendations yet.</p>
         <p class="text-gs-muted mt-2">Submit a declaration and get a carbon score first.</p>
@@ -24,7 +24,7 @@
     <div class="grid grid-cols-1 gap-5">
         @for (rec of recommendations(); track rec.recommendationId) {
         <div
-            class="bg-gs-card border border-green-900/20 rounded-xl p-6 hover:border-gs-green/50 transition-colors shadow-sm relative overflow-hidden group">
+            class="bg-gs-surface border border-gs-border rounded-xl p-6 hover:border-gs-dark/20 transition-colors shadow-sm relative overflow-hidden group">
 
             <!-- Category Accent Color -->
             <div class="absolute left-0 top-0 bottom-0 w-1.5 transition-colors"
@@ -54,17 +54,17 @@
                         </span>
                     </div>
 
-                    <h3 class="font-bold text-gs-text mb-2 group-hover:text-gs-green transition-colors">{{
+                    <h3 class="font-bold text-gs-text mb-2 group-hover:text-gs-dark transition-colors">{{
                         rec.category }} Action</h3>
                     <p class="text-sm text-gs-muted">{{ rec.recommendationText }}</p>
                 </div>
 
                 <div
-                    class="shrink-0 text-left md:text-right bg-gs-bg p-4 rounded-xl border border-green-900/10 self-start group-hover:border-gs-green/20 transition-colors">
+                    class="shrink-0 text-left md:text-right bg-gs-bg p-4 rounded-xl border border-gs-border self-start group-hover:border-gs-dark/20 transition-colors">
                     <p class="text-[10px] uppercase font-bold text-gs-muted mb-1 tracking-wider">Date Generated</p>
-                    <p class="text-lg font-bold text-gs-green">{{ rec.generatedAt | date:'mediumDate' }}</p>
+                    <p class="text-lg font-bold text-gs-dark">{{ rec.generatedAt | date:'mediumDate' }}</p>
                     <div class="text-right whitespace-nowrap">
-                        <span class="text-xs font-medium text-gs-green uppercase">Priority: {{ rec.priority }}</span>
+                        <span class="text-xs font-medium text-gs-dark uppercase">Priority: {{ rec.priority }}</span>
                     </div>
                 </div>
             </div>

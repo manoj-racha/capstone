@@ -90,14 +90,17 @@ public class EmissionFactors {
 
     // ── ZONE THRESHOLDS ───────────────────────────────────────
 
-    // Household per capita kg CO2 per year
-    public static final double HH_GREEN_CHAMPION_THRESHOLD = 1500.0;
-    public static final double HH_GREEN_IMPROVER_THRESHOLD = 2500.0;
-    // Above 2500 = GREEN_DEFAULTER
+    // Household thresholds
+    // Based on real Indian avg ~3000 kg per capita per year
+    // Family of 4 = ~12000 kg total which is national average
+    public static final double HH_GREEN_CHAMPION_THRESHOLD  = 3000.0;
+    public static final double HH_GREEN_IMPROVER_THRESHOLD  = 6000.0;
 
-    // MSME per employee kg CO2 per year
-    public static final double MSME_GREEN_CHAMPION_THRESHOLD = 2500.0;
-    public static final double MSME_GREEN_IMPROVER_THRESHOLD = 5000.0;
+    // MSME thresholds
+    // Higher because includes operations, fleet, boilers,
+    // raw materials on top of energy and transport
+    public static final double MSME_GREEN_CHAMPION_THRESHOLD  = 6000.0;
+    public static final double MSME_GREEN_IMPROVER_THRESHOLD  = 12000.0;
     // Above 5000 = GREEN_DEFAULTER
 
     // ── MONTHS IN YEAR ────────────────────────────────────────

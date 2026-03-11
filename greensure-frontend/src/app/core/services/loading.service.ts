@@ -6,13 +6,19 @@ import { Injectable, signal } from '@angular/core';
 export class LoadingService {
 
     private requestCount = 0;
+    private hideTimeout: any;
 
     // Public signal that components can react to
     readonly isLoading = signal<boolean>(false);
 
     show(): void {
         this.requestCount++;
-        if (this.requestCount === 1) {
+        // Clear any pending hide
+        if (this.hideTimeout) {
+            clearTimeout(this.hideTimeout);
+            this.hideTimeout = null;
+        }
+        if (this.requestCount > 0 && !this.isLoading()) {
             this.isLoading.set(true);
         }
     }
@@ -21,7 +27,12 @@ export class LoadingService {
         this.requestCount--;
         if (this.requestCount <= 0) {
             this.requestCount = 0;
-            this.isLoading.set(false);
+            // Debounce the hiding by 100ms
+            this.hideTimeout = setTimeout(() => {
+                if (this.requestCount === 0) {
+                    this.isLoading.set(false);
+                }
+            }, 100);
         }
     }
 }

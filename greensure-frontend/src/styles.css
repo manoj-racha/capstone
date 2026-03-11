@@ -1,38 +1,53 @@
-/* GreenSure Global Styles */
+/* GreenSure Global Styles — Light Theme */
 @import "tailwindcss";
 
 /* ── Tailwind v4 Custom Theme ──────────────────────────── */
 @theme {
-  /* GreenSure brand colors */
-  --color-gs-bg: #0d1210;
-  --color-gs-card: #111915;
-  --color-gs-green: #00c85a;
-  --color-gs-green-hover: #00e065;
-  --color-gs-text: #e2ede8;
-  --color-gs-muted: #7a9a87;
-  --color-gs-border: rgba(0, 200, 90, 0.1);
+  /* ── Backgrounds ──────────────────────────────────────── */
+  --color-gs-bg:      #F8F6F1;   /* warm cream — main background */
+  --color-gs-surface:  #FFFFFF;   /* white — cards */
+  --color-gs-sage:     #F0F4EE;   /* light sage — alt sections */
 
-  /* Zone badge colors */
-  --color-zone-green: #00c85a;
-  --color-zone-yellow: #f59e0b;
-  --color-zone-red: #ef4444;
+  /* ── Brand greens ─────────────────────────────────────── */
+  --color-gs-dark:     #1E5C3A;   /* deep forest green — primary */
+  --color-gs-mid:      #2E7D52;   /* medium green — hover states */
+  --color-gs-light:    #E8F5EE;   /* pale green — tags/pills */
+  --color-gs-accent:   #3DAA6B;   /* bright green — icons/highlights */
 
-  /* Font family */
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  /* ── Text ─────────────────────────────────────────────── */
+  --color-gs-text:     #1A2B22;   /* near black with green tint */
+  --color-gs-body:     #3D5247;   /* dark muted green — paragraphs */
+  --color-gs-muted:    #7A9485;   /* light muted — captions/labels */
+
+  /* ── Zone colors ──────────────────────────────────────── */
+  --color-gs-gold:     #D4A017;   /* champion — amber/gold */
+  --color-gs-blue:     #2E6DA4;   /* improver — calm blue */
+  --color-gs-red:      #C0392B;   /* defaulter — muted red */
+
+  /* ── Utility ──────────────────────────────────────────── */
+  --color-gs-border:   #E2EBE6;   /* subtle green-tinted border */
+
+  /* ── Font families ────────────────────────────────────── */
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body:    'Inter', sans-serif;
 }
 
 /* ── Base Styles ───────────────────────────────────────── */
 body {
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   background-color: var(--color-gs-bg);
   color: var(--color-gs-text);
   min-height: 100vh;
   margin: 0;
 }
 
+h1, h2, h3 {
+  font-family: var(--font-heading);
+}
+
 /* ── Form Input Styles ─────────────────────────────────── */
 input, select, textarea {
-  background-color: var(--color-gs-bg);
+  background-color: #FFFFFF;
   border: 1px solid var(--color-gs-border);
   color: var(--color-gs-text);
   border-radius: 0.5rem;
@@ -43,14 +58,15 @@ input, select, textarea {
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: var(--color-gs-green);
+  border-color: var(--color-gs-dark);
+  box-shadow: 0 0 0 3px rgba(30, 92, 58, 0.1);
 }
 
 input::placeholder, textarea::placeholder {
   color: var(--color-gs-muted);
 }
 
-/* ── Scrollbar (dark theme) ────────────────────────────── */
+/* ── Scrollbar (light theme) ──────────────────────────── */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -58,6 +74,9 @@ input::placeholder, textarea::placeholder {
   background: var(--color-gs-bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-gs-muted);
+  background: var(--color-gs-border);
   border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gs-muted);
 }

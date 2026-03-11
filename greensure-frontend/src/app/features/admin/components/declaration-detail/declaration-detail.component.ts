@@ -76,7 +76,7 @@ export class DeclarationDetailComponent implements OnInit {
         switch (status) {
             case 'DRAFT': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
             case 'SUBMITTED': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            case 'VERIFIED': return 'bg-gs-green/20 text-gs-green border-gs-green/30';
+            case 'VERIFIED': return 'bg-gs-dark/10 text-gs-dark border-gs-dark/20';
             case 'REJECTED': return 'bg-red-500/20 text-red-500 border-red-500/30';
             default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
         }

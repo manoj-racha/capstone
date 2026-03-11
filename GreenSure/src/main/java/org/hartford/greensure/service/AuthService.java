@@ -11,17 +11,30 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 @Service
 public class AuthService {
 
-    @Autowired private UserRepository userRepository;
-    @Autowired private HouseholdProfileRepository householdProfileRepository;
-    @Autowired private MsmeProfileRepository msmeProfileRepository;
-    @Autowired private AgentRepository agentRepository;
-    @Autowired private CarbonDeclarationRepository declarationRepository;
-    @Autowired private PasswordEncoder passwordEncoder;
-    @Autowired private JwtUtil jwtUtil;
-    @Autowired private AuthenticationManager authenticationManager;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private HouseholdProfileRepository householdProfileRepository;
+    @Autowired
+    private MsmeProfileRepository msmeProfileRepository;
+    @Autowired
+    private AgentRepository agentRepository;
+    @Autowired
+    private CarbonDeclarationRepository declarationRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtUtil jwtUtil;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private EmailService emailService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -149,36 +162,56 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional
     public void forgotPassword(ForgotPasswordRequest request) {
-        boolean existsInUsers = userRepository.existsByEmail(request.getEmail());
-        boolean existsInAgents = agentRepository.existsByEmail(request.getEmail());
+        // Always return success to prevent email enumeration
+        String email = request.getEmail();
 
-        if (!existsInUsers && !existsInAgents) {
-            return;
-        }
+        // Check users table
+        userRepository.findByEmail(email).ifPresent(user -> {
+            String resetToken = UUID.randomUUID().toString();
+            user.setResetToken(resetToken);
+            user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(30));
+            userRepository.save(user);
+            emailService.sendPasswordResetEmail(email, resetToken);
+        });
 
-        String resetToken = jwtUtil.generateToken(0L, request.getEmail(), "RESET");
-
-        System.out.println("PASSWORD RESET TOKEN for " + request.getEmail() + ": " + resetToken);
+        // Check agents table
+        agentRepository.findByEmail(email).ifPresent(agent -> {
+            // For agents, use JWT-based token (no resetToken field on Agent entity)
+            String resetToken = jwtUtil.generateToken(0L, email, "RESET");
+            emailService.sendPasswordResetEmail(email, resetToken);
+        });
     }
 
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
-        if (!jwtUtil.isTokenValid(request.getToken())) {
-            throw new RuntimeException("Invalid or expired reset token");
-        }
-
-        String email = jwtUtil.extractEmail(request.getToken());
+        String token = request.getToken();
         String newHash = passwordEncoder.encode(request.getNewPassword());
 
-        userRepository.findByEmail(email).ifPresent(user -> {
+        // Try DB-backed token first (for users)
+        var userOpt = userRepository.findByResetToken(token);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (user.getResetTokenExpiry() == null || user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+                throw new RuntimeException("Reset link has expired. Please request a new one.");
+            }
             user.setPasswordHash(newHash);
+            user.setResetToken(null);
+            user.setResetTokenExpiry(null);
             userRepository.save(user);
-        });
+            return;
+        }
 
-        agentRepository.findByEmail(email).ifPresent(agent -> {
-            agent.setPasswordHash(newHash);
-            agentRepository.save(agent);
-        });
+        // Fallback: try JWT-based token (for agents)
+        if (jwtUtil.isTokenValid(token)) {
+            String email = jwtUtil.extractEmail(token);
+            agentRepository.findByEmail(email).ifPresent(agent -> {
+                agent.setPasswordHash(newHash);
+                agentRepository.save(agent);
+            });
+        } else {
+            throw new RuntimeException("Invalid or expired reset token.");
+        }
     }
 }

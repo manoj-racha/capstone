@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -13,26 +13,35 @@ export class ForgotPasswordComponent {
     email = signal('');
 
     errorMessage = signal('');
-    successMessage = signal('');
+    emailSent = signal(false);
 
-    constructor(private authService: AuthService) { }
+    // Mask the email for confirmation display: j***@example.com
+    maskedEmail = computed(() => {
+        const e = this.email();
+        if (!e.includes('@')) return e;
+        const [local, domain] = e.split('@');
+        const masked = local.charAt(0) + '***';
+        return masked + '@' + domain;
+    });
 
-    // Sends email to POST /auth/forgot-password
-    // Backend sends a reset link/OTP to the user's email
+    private authService: AuthService = inject(AuthService);
+
     onSubmit(): void {
         this.errorMessage.set('');
-        this.successMessage.set('');
+        this.emailSent.set(false);
+
+        if (!this.email()) {
+            this.errorMessage.set('Please enter your email address');
+            return;
+        }
 
         this.authService.forgotPassword(this.email()).subscribe({
-            next: (res) => {
-                if (res.success) {
-                    this.successMessage.set(res.message || 'If this email exists, a reset link has been sent.');
-                } else {
-                    this.errorMessage.set(res.error || 'Something went wrong');
-                }
+            next: () => {
+                this.emailSent.set(true);
             },
-            error: (err) => {
-                this.errorMessage.set(err.error?.error || 'Something went wrong. Please try again.');
+            error: () => {
+                // Always show success to prevent email enumeration
+                this.emailSent.set(true);
             }
         });
     }

@@ -32,7 +32,12 @@ public class AuthController {
         try {
             response = authService.loginUser(request);
         } catch (RuntimeException e) {
-            response = authService.loginAgent(request);
+            try {
+                response = authService.loginAgent(request);
+            } catch (RuntimeException ex) {
+                // Return 200 OK with success=false to prevent 400 Bad Request console errors
+                return ResponseEntity.ok(ApiResponse.error("Invalid email or password"));
+            }
         }
 
         return ResponseEntity.ok(

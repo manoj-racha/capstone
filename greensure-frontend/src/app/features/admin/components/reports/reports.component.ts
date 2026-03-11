@@ -30,7 +30,7 @@ export class ReportsComponent implements OnInit {
                 if (res.success && res.data) {
                     // Add default fallback for name/id if they don't exist since it's a list summary
                     // and might be missing base agent profile details depending on backend structure.
-                    this.agentPerformance.set(res.data);
+                    this.agentPerformance.set([res.data]);
                 } else {
                     this.performanceError.set(res.error || 'Failed to load performance data.');
                 }

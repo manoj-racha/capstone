@@ -1,66 +1,648 @@
-<div class="min-h-[calc(100vh-4rem)] flex flex-col pt-16 pb-12">
-    <main class="flex-grow flex flex-col items-center justify-center px-4 max-w-5xl mx-auto text-center space-y-10">
+<div class="bg-gs-bg">
 
-        <!-- Hero Section -->
-        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-gs-text leading-tight">
-            GreenSure <br />
-            <span class="text-gs-green">Carbon Footprint Platform</span>
-        </h1>
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 1 — HERO                                      -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section class="py-20 px-4 bg-gs-bg">
+        <div class="max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-12">
+            
+            <!-- Left: Text content -->
+            <div class="flex-1">
+                <!-- Trust badge -->
+                <div class="inline-flex items-center gap-2 bg-gs-light text-gs-dark text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
+                    <lucide-icon [img]="BadgeCheck" [size]="16"></lucide-icon>
+                    IRDAI Registered Insurance
+                </div>
 
-        <p class="text-lg md:text-xl text-gs-muted max-w-2xl">
-            Declare, verify, and track your household or MSME carbon footprint. Join The Hartford's initiative for a
-            greener, sustainable future.
-        </p>
+                <!-- Headline -->
+                <h1 class="font-heading text-5xl font-bold text-gs-text leading-tight mb-6">
+                    You Live Responsibly.<br/>
+                    Your Insurance Should<br/>
+                    <span class="text-gs-dark">Reflect That.</span>
+                </h1>
 
-        <div class="flex flex-col sm:flex-row items-center gap-4 pt-4">
+                <!-- Subline -->
+                <p class="text-gs-body text-lg leading-relaxed mb-8 max-w-lg">
+                    Most insurance treats everyone the same. 
+                    GreenSure measures your actual carbon footprint 
+                    and rewards greener living with lower premiums 
+                    — verified by a real field agent.
+                </p>
+
+                <!-- Buttons -->
+                <div class="flex flex-wrap items-center gap-4 mb-12">
+                    <a routerLink="/register" 
+                       class="bg-gs-dark text-white font-semibold px-7 py-3.5 rounded-lg hover:bg-gs-mid transition-colors duration-200 inline-flex items-center gap-2">
+                        Calculate My Premium
+                        <lucide-icon [img]="ArrowRight" [size]="18"></lucide-icon>
+                    </a>
+                    <a href="#how-it-works"
+                       class="border-2 border-gs-dark text-gs-dark font-semibold px-6 py-3 rounded-lg hover:bg-gs-light transition-colors duration-200 inline-flex items-center gap-2">
+                        See How It Works
+                        <lucide-icon [img]="ChevronRight" [size]="18"></lucide-icon>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Right: Visual card -->
+            <div class="flex-1 flex justify-center lg:justify-end">
+                <div class="bg-white rounded-2xl p-6 shadow-[0_8px_40px_rgba(30,92,58,0.15)] border border-gs-border w-full max-w-sm">
+                    
+                    <!-- Card header -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <lucide-icon [img]="Shield" [size]="20" class="text-gs-dark"></lucide-icon>
+                            <span class="font-semibold text-gs-text text-sm">Home Shield — Standard</span>
+                        </div>
+                        <span class="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">ACTIVE</span>
+                    </div>
+
+                    <!-- Zone badge -->
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center gap-2 mb-1">
+                            <lucide-icon [img]="Trophy" [size]="18" class="text-amber-600"></lucide-icon>
+                            <span class="font-bold text-amber-700 text-sm">Green Champion</span>
+                        </div>
+                        <p class="text-amber-600 text-xs text-left">1,840 kg CO₂ per capita · Verified</p>
+                    </div>
+
+                    <!-- Price breakdown -->
+                    <div class="space-y-2 mb-4">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gs-muted">Base premium</span>
+                            <span class="text-gs-body line-through">₹9,999</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gs-muted">Carbon discount (25%)</span>
+                            <span class="text-green-600 font-medium">− ₹2,499</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gs-muted">Improvement bonus (8%)</span>
+                            <span class="text-green-600 font-medium">− ₹799</span>
+                        </div>
+                        <div class="border-t border-gs-border pt-2 flex justify-between">
+                            <span class="font-bold text-gs-text mt-1">You pay</span>
+                            <span class="font-bold text-gs-dark text-lg">₹6,701/yr</span>
+                        </div>
+                    </div>
+
+                    <div class="text-center text-xs text-gs-muted border-t border-gs-border pt-3">
+                        Coverage up to ₹15 lakhs · Renews annually
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Stats strip -->
+        <div class="max-w-5xl mx-auto mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 bg-gs-dark rounded-2xl p-8 shadow-xl">
+            <div class="text-center border-b md:border-b-0 md:border-r border-white/10 pb-6 md:pb-0 md:pr-6">
+                <lucide-icon [img]="Users" [size]="32" class="text-gs-accent mx-auto mb-3"></lucide-icon>
+                <p class="text-3xl font-bold text-white mb-1">12,000+</p>
+                <p class="text-sm text-white/70">Verified Scores</p>
+            </div>
+            <div class="text-center border-b md:border-b-0 md:border-r border-white/10 py-6 md:py-0 md:px-6">
+                <lucide-icon [img]="BadgeCheck" [size]="32" class="text-gs-accent mx-auto mb-3"></lucide-icon>
+                <p class="text-3xl font-bold text-white mb-1">340+</p>
+                <p class="text-sm text-white/70">Field Agents</p>
+            </div>
+            <div class="text-center pt-6 md:pt-0 md:pl-6">
+                <lucide-icon [img]="Shield" [size]="32" class="text-gs-accent mx-auto mb-3"></lucide-icon>
+                <p class="text-3xl font-bold text-white mb-1">₹1 Crore</p>
+                <p class="text-sm text-white/70">Max Coverage</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 2 — THE PROBLEM                               -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="problem" class="py-20 px-4 bg-white border-t border-gs-border/60">
+        <div class="max-w-5xl mx-auto">
+            
+            <span class="inline-flex items-center gap-2 bg-red-50 text-red-700 text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+                <lucide-icon [img]="AlertTriangle" [size]="14"></lucide-icon>
+                The Problem
+            </span>
+
+            <h2 class="font-heading text-4xl font-bold text-gs-text leading-tight mb-4">
+                Traditional Insurance Ignores<br/>
+                How You Actually Live
+            </h2>
+
+            <p class="text-gs-body text-lg leading-relaxed max-w-2xl mb-12">
+                Every year you pay a premium calculated by your postcode, age, and claim history. 
+                How you actually live — your diet, your vehicle, your energy choices — counts for nothing.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-gs-surface rounded-xl p-6 border border-gs-border border-l-4 border-l-red-400 shadow-[0_2px_16px_rgba(30,92,58,0.04)]">
+                    <lucide-icon [img]="Users" [size]="28" class="text-red-500 mb-4"></lucide-icon>
+                    <h3 class="font-bold text-gs-text text-lg mb-2">Same Premium for Everyone</h3>
+                    <p class="text-sm text-gs-body leading-relaxed">
+                        A family that drives 5 km a day pays the same as one that drives 80 km a day. 
+                        That is not fair and it does not incentivise better choices.
+                    </p>
+                </div>
+                <div class="bg-gs-surface rounded-xl p-6 border border-gs-border border-l-4 border-l-red-400 shadow-[0_2px_16px_rgba(30,92,58,0.04)]">
+                    <lucide-icon [img]="Leaf" [size]="28" class="text-red-500 mb-4"></lucide-icon>
+                    <h3 class="font-bold text-gs-text text-lg mb-2">Green Choices Go Unrewarded</h3>
+                    <p class="text-sm text-gs-body leading-relaxed">
+                        Solar panels, electric vehicles, reduced consumption — none of these lower 
+                        your insurance bill with a traditional provider.
+                    </p>
+                </div>
+                <div class="bg-gs-surface rounded-xl p-6 border border-gs-border border-l-4 border-l-red-400 shadow-[0_2px_16px_rgba(30,92,58,0.04)]">
+                    <lucide-icon [img]="Lock" [size]="28" class="text-red-500 mb-4"></lucide-icon>
+                    <h3 class="font-bold text-gs-text text-lg mb-2">No Transparency</h3>
+                    <p class="text-sm text-gs-body leading-relaxed">
+                        You never know exactly why your premium is what it is. The formula is hidden. 
+                        You just pay and accept it.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 3 — THE SOLUTION                              -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="solution" class="py-20 px-4 bg-gs-sage">
+        <div class="max-w-5xl mx-auto flex flex-col lg:flex-row gap-16 items-center">
+            
+            <div class="flex-1">
+                <span class="inline-flex items-center gap-2 bg-gs-light text-gs-dark text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+                    <lucide-icon [img]="CheckCircle" [size]="14"></lucide-icon>
+                    The GreenSure Way
+                </span>
+
+                <h2 class="font-heading text-4xl font-bold text-gs-text leading-tight mb-4">
+                    Insurance Tied to Your<br/>
+                    Real Carbon Footprint
+                </h2>
+
+                <p class="text-gs-body text-lg leading-relaxed mb-8">
+                    We send a certified field agent to your home or business. They verify your actual carbon 
+                    data on-site. Your premium is calculated from real verified numbers — not assumptions or postcodes.
+                </p>
+
+                <div class="space-y-4">
+                    <div class="flex items-start gap-3">
+                        <lucide-icon [img]="BadgeCheck" [size]="24" class="text-gs-accent mt-0.5 shrink-0"></lucide-icon>
+                        <p class="text-gs-text font-medium">Verified by a real agent — not self-reported</p>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <lucide-icon [img]="TrendingUp" [size]="24" class="text-gs-accent mt-0.5 shrink-0"></lucide-icon>
+                        <p class="text-gs-text font-medium">Score recalculated every year at renewal</p>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <lucide-icon [img]="Coins" [size]="24" class="text-gs-accent mt-0.5 shrink-0"></lucide-icon>
+                        <p class="text-gs-text font-medium">Improve your lifestyle, improve your premium</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 w-full max-w-lg">
+                <div class="bg-white rounded-2xl p-6 border border-gs-border shadow-[0_4px_24px_rgba(30,92,58,0.1)]">
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Left inside card -->
+                        <div class="border-r border-gs-border/50 pr-4">
+                            <div class="bg-red-50 text-red-700 text-xs font-bold px-3 py-1.5 rounded-lg inline-block mb-4">
+                                Traditional Insurance
+                            </div>
+                            <div class="mb-4">
+                                <p class="font-bold text-gs-text">₹12,000/yr</p>
+                                <p class="text-xs text-gs-muted">Based on: Postcode + age</p>
+                            </div>
+                            <ul class="space-y-3 text-sm text-gs-muted">
+                                <li class="flex gap-2"><span>×</span> Solar panels rewarded</li>
+                                <li class="flex gap-2"><span>×</span> EV rewarded</li>
+                                <li class="flex gap-2"><span>×</span> Transparent pricing</li>
+                                <li class="flex gap-2"><span>×</span> Annual improvement bonus</li>
+                            </ul>
+                        </div>
+
+                        <!-- Right inside card -->
+                        <div class="pl-2">
+                            <div class="bg-gs-light text-gs-dark text-xs font-bold px-3 py-1.5 rounded-lg inline-block mb-4">
+                                GreenSure
+                            </div>
+                            <div class="mb-4">
+                                <p class="font-bold text-gs-dark bg-green-50 px-2 py-0.5 rounded -ml-2 w-max">₹7,800/yr</p>
+                                <p class="text-xs text-gs-muted">Based on: Verified score</p>
+                            </div>
+                            <ul class="space-y-3 text-sm text-gs-text font-medium">
+                                <li class="flex gap-2"><span class="text-gs-accent">✓</span> Solar panels rewarded</li>
+                                <li class="flex gap-2"><span class="text-gs-accent">✓</span> EV rewarded</li>
+                                <li class="flex gap-2"><span class="text-gs-accent">✓</span> Transparent pricing</li>
+                                <li class="flex gap-2"><span class="text-gs-accent">✓</span> Annual bonus</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-gs-border text-center">
+                        <p class="text-gs-dark font-bold text-sm">Save up to ₹4,200/year by switching to GreenSure</p>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 4 — HOW IT WORKS                              -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="how-it-works" class="py-20 px-4 bg-white">
+        <div class="max-w-5xl mx-auto">
+            
+            <div class="text-center mb-16">
+                <span class="inline-flex items-center gap-2 bg-gs-light text-gs-dark text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+                    <lucide-icon [img]="FileText" [size]="14"></lucide-icon>
+                    The Process
+                </span>
+                <h2 class="font-heading text-4xl font-bold text-gs-text leading-tight mb-4">Four Steps to Smarter Insurance</h2>
+                <p class="text-gs-body text-lg leading-relaxed max-w-2xl mx-auto">
+                    Get covered first. Your carbon score follows within 30 days.
+                </p>
+            </div>
+
+            <!-- Timeline -->
+            <div class="relative">
+                <!-- Connective line (desktop) -->
+                <div class="hidden md:block absolute top-[44px] left-12 right-12 h-0.5 border-t-2 border-dashed border-gs-border z-0"></div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10 w-full">
+                    
+                    <div class="relative bg-white pt-2 text-center flex flex-col items-center">
+                        <div class="w-22 h-22 rounded-full bg-white border border-gs-border shadow-sm flex items-center justify-center mb-6 relative">
+                            <div class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-gs-dark text-white font-bold text-sm flex items-center justify-center">01</div>
+                            <lucide-icon [img]="Shield" [size]="32" class="text-gs-dark"></lucide-icon>
+                        </div>
+                        <h3 class="font-bold text-gs-text text-xl mb-3">Get Covered</h3>
+                        <p class="text-sm text-gs-body mb-4 px-2">Choose a policy and get insured immediately. No carbon work needed upfront.</p>
+                        <span class="text-xs font-semibold text-gs-dark bg-gs-light px-3 py-1 rounded-full">Instant coverage</span>
+                    </div>
+
+                    <div class="relative bg-white pt-2 text-center flex flex-col items-center">
+                        <div class="w-22 h-22 rounded-full bg-white border border-gs-border shadow-sm flex items-center justify-center mb-6 relative">
+                            <div class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-gs-dark text-white font-bold text-sm flex items-center justify-center">02</div>
+                            <lucide-icon [img]="ClipboardList" [size]="32" class="text-gs-dark"></lucide-icon>
+                        </div>
+                        <h3 class="font-bold text-gs-text text-xl mb-3">Declare</h3>
+                        <p class="text-sm text-gs-body mb-4 px-2">Submit your annual carbon data through our guided step-by-step form.</p>
+                        <span class="text-xs font-semibold text-gs-dark bg-gs-light px-3 py-1 rounded-full">Takes ~10 minutes</span>
+                    </div>
+
+                    <div class="relative bg-white pt-2 text-center flex flex-col items-center">
+                        <div class="w-22 h-22 rounded-full bg-white border border-gs-border shadow-sm flex items-center justify-center mb-6 relative">
+                            <div class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-gs-dark text-white font-bold text-sm flex items-center justify-center">03</div>
+                            <lucide-icon [img]="UserCheck" [size]="32" class="text-gs-dark"></lucide-icon>
+                        </div>
+                        <h3 class="font-bold text-gs-text text-xl mb-3">Get Verified</h3>
+                        <p class="text-sm text-gs-body mb-4 px-2">A certified field agent visits your premises to validate your data.</p>
+                        <span class="text-xs font-semibold text-gs-dark bg-gs-light px-3 py-1 rounded-full">Within 72 hours</span>
+                    </div>
+
+                    <div class="relative bg-white pt-2 text-center flex flex-col items-center">
+                        <div class="w-22 h-22 rounded-full bg-white border border-gs-border shadow-sm flex items-center justify-center mb-6 relative">
+                            <div class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-gs-dark text-white font-bold text-sm flex items-center justify-center">04</div>
+                            <lucide-icon [img]="Coins" [size]="32" class="text-gs-dark"></lucide-icon>
+                        </div>
+                        <h3 class="font-bold text-gs-text text-xl mb-3">Save Every Year</h3>
+                        <p class="text-sm text-gs-body mb-4 px-2">Your verified score adjusts your premium. Better score means more savings.</p>
+                        <span class="text-xs font-semibold text-gs-dark bg-gs-light px-3 py-1 rounded-full">Annual renewal</span>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 5 — PRODUCTS                                  -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="products" class="py-20 px-4 bg-gs-bg border-t border-gs-border/60">
+        <div class="max-w-5xl mx-auto">
+            
+            <div class="text-center mb-16">
+                <span class="inline-flex items-center gap-2 bg-gs-light text-gs-dark text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+                    <lucide-icon [img]="Shield" [size]="14"></lucide-icon>
+                    Our Products
+                </span>
+                <h2 class="font-heading text-4xl font-bold text-gs-text leading-tight mb-4">Coverage For Every Aspect of Your Life</h2>
+                <p class="text-gs-body text-lg leading-relaxed max-w-2xl mx-auto">
+                    Three insurance products, all linked to your verified carbon score.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                
+                <!-- Home Shield -->
+                <div class="bg-gs-surface rounded-xl p-8 border border-gs-border shadow-sm border-t-8 border-t-gs-dark hover:shadow-lg transition-shadow">
+                    <lucide-icon [img]="Home" [size]="36" class="text-gs-dark mb-6"></lucide-icon>
+                    <h3 class="font-bold text-gs-text text-2xl mb-3">Home Shield</h3>
+                    <p class="text-sm text-gs-body mb-6 min-h-[60px]">
+                        Complete protection for your home against fire, flood, theft and natural disasters.
+                    </p>
+                    <div class="space-y-2 mb-6 text-sm font-medium">
+                        <div class="flex justify-between border-b border-gs-border pb-2"><span class="text-gs-muted">Coverage:</span><span class="text-gs-text">Up to ₹50 Lakhs</span></div>
+                        <div class="flex justify-between pt-1"><span class="text-gs-muted">From:</span><span class="text-gs-text font-bold">₹4,999 / year</span></div>
+                    </div>
+                    <div class="bg-gs-light text-gs-dark text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-2 mb-8">
+                        <lucide-icon [img]="Leaf" [size]="14"></lucide-icon>
+                        Up to 30% carbon discount
+                    </div>
+                    <a routerLink="/register" class="text-gs-dark font-bold hover:text-gs-mid flex items-center gap-2 transition-colors">
+                        Explore Plans <lucide-icon [img]="ArrowRight" [size]="16"></lucide-icon>
+                    </a>
+                </div>
+
+                <!-- Vehicle Guard -->
+                <div class="bg-gs-surface rounded-xl p-8 border border-gs-border shadow-sm border-t-8 border-t-blue-600 hover:shadow-lg transition-shadow">
+                    <lucide-icon [img]="Car" [size]="36" class="text-blue-600 mb-6"></lucide-icon>
+                    <h3 class="font-bold text-gs-text text-2xl mb-3">Vehicle Guard</h3>
+                    <p class="text-sm text-gs-body mb-6 min-h-[60px]">
+                        Comprehensive coverage for all your declared vehicles — petrol, diesel, CNG or electric.
+                    </p>
+                    <div class="space-y-2 mb-6 text-sm font-medium">
+                        <div class="flex justify-between border-b border-gs-border pb-2"><span class="text-gs-muted">Coverage:</span><span class="text-gs-text">Up to ₹25 Lakhs</span></div>
+                        <div class="flex justify-between pt-1"><span class="text-gs-muted">From:</span><span class="text-gs-text font-bold">₹2,999 / year</span></div>
+                    </div>
+                    <div class="bg-gs-light text-gs-dark text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-2 mb-8">
+                        <lucide-icon [img]="Leaf" [size]="14"></lucide-icon>
+                        Up to 30% carbon discount
+                    </div>
+                    <a routerLink="/register" class="text-gs-dark font-bold hover:text-gs-mid flex items-center gap-2 transition-colors">
+                        Explore Plans <lucide-icon [img]="ArrowRight" [size]="16"></lucide-icon>
+                    </a>
+                </div>
+
+                <!-- Business Protect -->
+                <div class="bg-gs-surface rounded-xl p-8 border border-gs-border shadow-sm border-t-8 border-t-purple-600 hover:shadow-lg transition-shadow relative">
+                    <lucide-icon [img]="Building2" [size]="36" class="text-purple-600 mb-6"></lucide-icon>
+                    <h3 class="font-bold text-gs-text text-2xl mb-3">Business Protect</h3>
+                    <p class="text-sm text-gs-body mb-6 min-h-[60px]">
+                        Protect your MSME operations from equipment breakdown, fire, theft and business interruption.
+                    </p>
+                    <div class="space-y-2 mb-6 text-sm font-medium">
+                        <div class="flex justify-between border-b border-gs-border pb-2"><span class="text-gs-muted">Coverage:</span><span class="text-gs-text">Up to ₹1 Crore</span></div>
+                        <div class="flex justify-between pt-1"><span class="text-gs-muted">From:</span><span class="text-gs-text font-bold">₹9,999 / year</span></div>
+                    </div>
+                    <div class="bg-gs-light text-gs-dark text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-2 mb-8">
+                        <lucide-icon [img]="Leaf" [size]="14"></lucide-icon>
+                        Up to 30% carbon discount
+                    </div>
+                    <a routerLink="/register" class="text-gs-dark font-bold hover:text-gs-mid flex items-center gap-2 transition-colors">
+                        Explore Plans <lucide-icon [img]="ArrowRight" [size]="16"></lucide-icon>
+                    </a>
+                    <p class="text-[10px] text-gs-muted absolute bottom-4 right-8 uppercase font-bold">MSME Accounts Only</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 6 — ZONES AND DISCOUNTS                       -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="zones" class="py-20 px-4 bg-gs-dark overflow-hidden">
+        <div class="max-w-5xl mx-auto">
+            
+            <div class="text-center mb-16 relative z-10">
+                <span class="inline-flex items-center gap-2 bg-white/10 text-white text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+                    <lucide-icon [img]="Leaf" [size]="14"></lucide-icon>
+                    Carbon Zones
+                </span>
+                <h2 class="font-heading text-4xl font-bold text-white leading-tight mb-4">The Greener You Live,<br/>The Less You Pay</h2>
+                <p class="text-white/70 text-lg leading-relaxed max-w-2xl mx-auto">
+                    Every verified user is classified into one of three zones. Your zone determines your insurance premium.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+                
+                <!-- Champion -->
+                <div class="rounded-xl p-8 border border-white/20 bg-white/10 backdrop-blur-sm border-t-4 border-t-amber-400">
+                    <lucide-icon [img]="Trophy" [size]="36" class="text-amber-400 mb-4"></lucide-icon>
+                    <h3 class="font-bold text-amber-400 text-2xl mb-4">Green Champion</h3>
+                    <div class="space-y-1 mb-6 text-sm text-white/80">
+                        <p><span class="opacity-60 w-24 inline-block">Household:</span> Below 3,000 kg per capita</p>
+                        <p><span class="opacity-60 w-24 inline-block">MSME:</span> Below 6,000 kg per employee</p>
+                    </div>
+                    <div class="bg-amber-400 text-amber-900 font-bold px-4 py-2.5 rounded-lg mb-6 text-center text-sm shadow-inner">
+                        Up to 30% off all policies
+                    </div>
+                    <p class="text-sm text-white/60 leading-relaxed border-t border-white/10 pt-4">
+                        Well below the national average. Most eco-conscious households qualify for this zone.
+                    </p>
+                </div>
+
+                <!-- Improver -->
+                <div class="rounded-xl p-8 border border-white/20 bg-white/10 backdrop-blur-sm border-t-4 border-t-blue-400">
+                    <lucide-icon [img]="TrendingUp" [size]="36" class="text-blue-400 mb-4"></lucide-icon>
+                    <h3 class="font-bold text-blue-400 text-2xl mb-4">Green Improver</h3>
+                    <div class="space-y-1 mb-6 text-sm text-white/80">
+                        <p><span class="opacity-60 w-24 inline-block">Household:</span> 3,000 – 6,000 kg per capita</p>
+                        <p><span class="opacity-60 w-24 inline-block">MSME:</span> 6,000 – 12,000 kg per employee</p>
+                    </div>
+                    <div class="bg-blue-400 text-blue-950 font-bold px-4 py-2.5 rounded-lg mb-6 text-center text-sm shadow-inner">
+                        Up to 15% off all policies
+                    </div>
+                    <p class="text-sm text-white/60 leading-relaxed border-t border-white/10 pt-4">
+                        On the right path. Small targeted changes can move you to Champion and unlock better rates.
+                    </p>
+                </div>
+
+                <!-- Defaulter -->
+                <div class="rounded-xl p-8 border border-white/20 bg-white/5 backdrop-blur-sm border-t-4 border-t-white/30">
+                    <lucide-icon [img]="AlertTriangle" [size]="36" class="text-white/60 mb-4"></lucide-icon>
+                    <h3 class="font-bold text-white/60 text-2xl mb-4">Green Defaulter</h3>
+                    <div class="space-y-1 mb-6 text-sm text-white/80">
+                        <p><span class="opacity-60 w-24 inline-block">Household:</span> Above 6,000 kg per capita</p>
+                        <p><span class="opacity-60 w-24 inline-block">MSME:</span> Above 12,000 kg per employee</p>
+                    </div>
+                    <div class="bg-white/10 text-white/80 font-bold px-4 py-2.5 rounded-lg mb-6 text-center text-sm border border-white/10">
+                        Standard premium
+                    </div>
+                    <p class="text-sm text-white/60 leading-relaxed border-t border-white/10 pt-4">
+                        Above average. We give you a personalised action plan to reduce your score and unlock discounts next year.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="text-center mt-12 bg-white/10 rounded-xl p-6 md:p-8 max-w-2xl mx-auto border border-white/10 relative z-10 shadow-xl">
+                <lucide-icon [img]="TrendingUp" [size]="28" class="text-amber-400 mx-auto mb-3"></lucide-icon>
+                <p class="text-white font-bold text-lg mb-2">Improvement Bonus</p>
+                <p class="text-white/70 text-sm leading-relaxed">
+                    Improve your carbon score by 10% or more year on year and earn an additional 
+                    5–12% discount on top of your zone discount. Maximum combined discount: 35%.
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 7 — WHY TRUST US                              -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section class="py-20 px-4 bg-white">
+        <div class="max-w-5xl mx-auto">
+            
+            <div class="text-center mb-16">
+                <span class="inline-flex items-center gap-2 bg-gs-light text-gs-dark text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+                    <lucide-icon [img]="Star" [size]="14"></lucide-icon>
+                    Why GreenSure
+                </span>
+                <h2 class="font-heading text-4xl font-bold text-gs-text leading-tight mb-4">Built on Verification,<br/>Not Assumptions</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <div class="flex items-start gap-5 p-6 rounded-xl hover:bg-gs-sage/50 transition-colors border border-transparent hover:border-gs-border">
+                    <div class="bg-gs-light p-3 rounded-lg text-gs-dark">
+                        <lucide-icon [img]="BadgeCheck" [size]="28"></lucide-icon>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gs-text text-xl mb-2 mt-1">IRDAI Registered</h3>
+                        <p class="text-gs-body text-sm leading-relaxed">
+                            Fully regulated by India's insurance regulator. Every policy is legally backed and claim-protected.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-5 p-6 rounded-xl hover:bg-gs-sage/50 transition-colors border border-transparent hover:border-gs-border">
+                    <div class="bg-gs-light p-3 rounded-lg text-gs-dark">
+                        <lucide-icon [img]="UserCheck" [size]="28"></lucide-icon>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gs-text text-xl mb-2 mt-1">Field Verified Scores</h3>
+                        <p class="text-gs-body text-sm leading-relaxed">
+                            Every carbon score is validated by a trained agent who physically visits your address. No self-reporting loopholes.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-5 p-6 rounded-xl hover:bg-gs-sage/50 transition-colors border border-transparent hover:border-gs-border">
+                    <div class="bg-gs-light p-3 rounded-lg text-gs-dark">
+                        <lucide-icon [img]="FileText" [size]="28"></lucide-icon>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gs-text text-xl mb-2 mt-1">Complete Transparency</h3>
+                        <p class="text-gs-body text-sm leading-relaxed">
+                            See the exact formula behind your premium. Every discount is explained line by line. No hidden factors.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-5 p-6 rounded-xl hover:bg-gs-sage/50 transition-colors border border-transparent hover:border-gs-border">
+                    <div class="bg-gs-light p-3 rounded-lg text-gs-dark">
+                        <lucide-icon [img]="Sprout" [size]="28"></lucide-icon>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gs-text text-xl mb-2 mt-1">Carbon Positive</h3>
+                        <p class="text-gs-body text-sm leading-relaxed">
+                            5% of every annual premium funds verified carbon offset projects across India. Your policy plants trees.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 8 — CTA                                       -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section class="py-20 px-4 bg-gs-gold text-center relative overflow-hidden">
+        <div class="max-w-2xl mx-auto relative z-10">
+            
+            <lucide-icon [img]="Coins" [size]="48" class="text-gs-text mx-auto mb-6 opacity-70"></lucide-icon>
+
+            <h2 class="font-heading text-4xl font-bold text-gs-text mb-4">
+                Find Out What Zone You Are In
+            </h2>
+
+            <p class="text-gs-text/80 text-lg mb-10 max-w-lg mx-auto font-medium">
+                Takes 10 minutes. Could save you thousands every year on your insurance premium.
+            </p>
+
             <a routerLink="/register"
-                class="w-full sm:w-auto px-8 py-3 rounded-lg bg-gs-green text-gs-bg font-bold text-lg hover:bg-gs-green-hover transition-colors shadow-[0_0_15px_rgba(0,200,90,0.3)] hover:shadow-[0_0_25px_rgba(0,200,90,0.5)]">
-                Get Started
+               class="bg-gs-dark text-white font-bold px-10 py-5 rounded-xl text-lg hover:bg-gs-mid transition-colors duration-200 inline-flex items-center gap-3 shadow-xl hover:shadow-2xl hover:-translate-y-1">
+                Get Started Free
+                <lucide-icon [img]="ArrowRight" [size]="22"></lucide-icon>
             </a>
-            <a routerLink="/login"
-                class="w-full sm:w-auto px-8 py-3 rounded-lg border border-gs-green text-gs-green font-bold text-lg hover:bg-gs-bg hover:text-gs-green-hover hover:border-gs-green-hover transition-colors">
-                Sign In
-            </a>
+
+            <p class="text-gs-text/60 text-sm mt-6 font-medium">
+                No credit card required · Cancel anytime
+            </p>
+
         </div>
+    </section>
 
-        <!-- Feature Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-16 w-full text-left">
-            <!-- Card 1 -->
-            <div
-                class="bg-gs-card p-6 border border-green-900/20 rounded-lg transition-transform hover:-translate-y-1 hover:border-gs-green/50">
-                <div
-                    class="text-4xl mb-4 bg-gs-bg w-14 h-14 flex items-center justify-center rounded-lg border border-gs-border shadow-sm">
-                    📝
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 9 — FOOTER                                    -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <footer class="bg-gs-dark text-white/70 py-16 px-4 pb-8">
+        <div class="max-w-5xl mx-auto">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12 border-b border-white/10 pb-12">
+                
+                <!-- Col 1 -->
+                <div class="lg:col-span-1">
+                    <a routerLink="/landing" class="flex items-center gap-2 font-heading text-2xl font-bold text-white mb-4">
+                        <lucide-icon [img]="Leaf" [size]="24" class="text-gs-accent"></lucide-icon>
+                        GreenSure
+                    </a>
+                    <p class="text-sm leading-relaxed mb-4">Insurance that rewards a greener life.</p>
+                    <p class="text-xs font-bold bg-white/10 inline-block px-3 py-1.5 rounded text-white/90">IRDAI Reg. No. 12345678</p>
                 </div>
-                <h3 class="text-xl font-semibold text-gs-text mb-2">Declare</h3>
-                <p class="text-sm text-gs-muted">Submit your energy, transport, and lifestyle usage data logically
-                    through an easy-to-use guided form.</p>
+
+                <!-- Col 2 -->
+                <div>
+                    <h4 class="font-bold text-white uppercase tracking-wider text-sm mb-5">Products</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#products" class="hover:text-white transition-colors">Home Shield</a></li>
+                        <li><a href="#products" class="hover:text-white transition-colors">Vehicle Guard</a></li>
+                        <li><a href="#products" class="hover:text-white transition-colors">Business Protect</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3 -->
+                <div>
+                    <h4 class="font-bold text-white uppercase tracking-wider text-sm mb-5">Platform</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#how-it-works" class="hover:text-white transition-colors">How It Works</a></li>
+                        <li><a href="#zones" class="hover:text-white transition-colors">Carbon Zones</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Field Agents</a></li>
+                        <li><a routerLink="/register" class="hover:text-white transition-colors">Calculate Premium</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4 -->
+                <div>
+                    <h4 class="font-bold text-white uppercase tracking-wider text-sm mb-5">Support</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="hover:text-white transition-colors">Contact Us</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Claims</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
+                    </ul>
+                </div>
+
             </div>
 
-            <!-- Card 2 -->
-            <div
-                class="bg-gs-card p-6 border border-green-900/20 rounded-lg transition-transform hover:-translate-y-1 hover:border-gs-green/50">
-                <div
-                    class="text-4xl mb-4 bg-gs-bg w-14 h-14 flex items-center justify-center rounded-lg border border-gs-border shadow-sm">
-                    🔍
-                </div>
-                <h3 class="text-xl font-semibold text-gs-text mb-2">Verify</h3>
-                <p class="text-sm text-gs-muted">Our expert field agents conduct standardized verifications to ensure
-                    absolute data integrity and fairness.</p>
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
+                <p>© 2024 GreenSure Insurance Pvt. Ltd. All rights reserved.</p>
+                <p class="flex items-center gap-1.5">Made with <lucide-icon [img]="Leaf" [size]="12" class="text-gs-accent"></lucide-icon> for a greener India</p>
             </div>
 
-            <!-- Card 3 -->
-            <div
-                class="bg-gs-card p-6 border border-green-900/20 rounded-lg transition-transform hover:-translate-y-1 hover:border-gs-green/50">
-                <div
-                    class="text-4xl mb-4 bg-gs-bg w-14 h-14 flex items-center justify-center rounded-lg border border-gs-border shadow-sm">
-                    📈
-                </div>
-                <h3 class="text-xl font-semibold text-gs-text mb-2">Track</h3>
-                <p class="text-sm text-gs-muted">Get your Carbon Score, benchmark it against your peers, and receive
-                    personalized AI recommendations.</p>
-            </div>
         </div>
+    </footer>
 
-    </main>
 </div>

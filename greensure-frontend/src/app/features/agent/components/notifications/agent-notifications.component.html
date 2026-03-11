@@ -11,7 +11,7 @@
         {{ error() }}
     </div>
     } @else if (notifications().length === 0) {
-    <div class="bg-gs-card border border-green-900/20 rounded-lg p-10 text-center text-gs-muted">
+    <div class="bg-gs-surface border border-gs-border rounded-lg p-10 text-center text-gs-muted">
         You have no notifications at this time.
     </div>
     } @else {
@@ -20,23 +20,23 @@
 
         <div (click)="markAsRead(notif.notificationId)"
             class="p-5 rounded-lg border transition-all cursor-pointer relative overflow-hidden"
-            [ngClass]="notif.status === 'UNREAD' ? 'bg-gs-card border-gs-green/50 shadow-[0_0_10px_rgba(0,200,90,0.1)]' : 'bg-gs-bg border-green-900/20 opacity-75 hover:opacity-100'">
+            [ngClass]="notif.status === 'UNREAD' ? 'bg-gs-surface border-gs-dark/20 shadow-md shadow-gs-dark/5' : 'bg-gs-bg border-gs-border opacity-75 hover:opacity-100'">
 
             @if (notif.status === 'UNREAD') {
-            <div class="absolute left-0 top-0 bottom-0 w-1 bg-gs-green"></div>
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-gs-dark"></div>
             }
 
             <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-2 ml-1">
                 <div class="flex items-center gap-2">
                     <span
-                        class="text-xs px-2 py-0.5 rounded border font-medium bg-black/30 border-green-900/30 text-gs-muted">
+                        class="text-xs px-2 py-0.5 rounded border font-medium bg-black/30 border-gs-border text-gs-muted">
                         {{ notif.notificationType.replace('_', ' ') }}
                     </span>
                     @if (notif.status === 'UNREAD') {
                     <span class="flex h-2 w-2 relative">
                         <span
-                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gs-green opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-gs-green"></span>
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gs-dark opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-gs-dark"></span>
                     </span>
                     }
                 </div>

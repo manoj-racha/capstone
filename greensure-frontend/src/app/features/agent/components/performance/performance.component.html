@@ -12,7 +12,7 @@
 
     <!-- Top Stats Row -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-gs-card border border-green-900/20 rounded-lg p-5 hover:border-gs-green/30 transition-colors">
+        <div class="bg-gs-surface border border-gs-border rounded-lg p-5 hover:border-gs-dark/20 transition-colors">
             <p class="text-sm text-gs-muted mb-1 font-medium">Strike Count</p>
             <div class="flex items-center gap-2">
                 <span class="text-3xl font-bold" [class.text-red-500]="performance()!.strikeCount >= 3"
@@ -26,23 +26,23 @@
             </div>
         </div>
 
-        <div class="bg-gs-card border border-green-900/20 rounded-lg p-5 hover:border-gs-green/30 transition-colors">
+        <div class="bg-gs-surface border border-gs-border rounded-lg p-5 hover:border-gs-dark/20 transition-colors">
             <p class="text-sm text-gs-muted mb-1 font-medium">Total Assigned</p>
             <span class="text-3xl font-bold text-gs-text">{{ performance()?.totalAssignments }}</span>
         </div>
 
-        <div class="bg-gs-card border border-green-900/20 rounded-lg p-5 hover:border-gs-green/30 transition-colors">
+        <div class="bg-gs-surface border border-gs-border rounded-lg p-5 hover:border-gs-dark/20 transition-colors">
             <p class="text-sm text-gs-muted mb-1 font-medium">Completed</p>
             <span class="text-3xl font-bold text-gs-text">{{ performance()?.completedAssignments }}</span>
         </div>
 
         <div
-            class="bg-gs-card border border-green-900/20 rounded-lg p-5 hover:border-gs-green/30 transition-colors relative overflow-hidden group">
+            class="bg-gs-surface border border-gs-border rounded-lg p-5 hover:border-gs-dark/20 transition-colors relative overflow-hidden group">
             <div
-                class="absolute inset-0 bg-gs-green/5 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left">
+                class="absolute inset-0 bg-gs-dark/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left">
             </div>
             <p class="text-sm text-gs-muted mb-1 font-medium relative z-10">Completion Rate</p>
-            <span class="text-3xl font-bold text-gs-green relative z-10">{{ formatPct(performance()?.completionRate)
+            <span class="text-3xl font-bold text-gs-dark relative z-10">{{ formatPct(performance()?.completionRate)
                 }}</span>
         </div>
     </div>
@@ -51,12 +51,12 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         <!-- Verification Breakdown -->
-        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-gs-text border-b border-green-900/20 pb-3 mb-4">Verification Breakdown
+        <div class="bg-gs-surface border border-gs-border rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gs-text border-b border-gs-border pb-3 mb-4">Verification Breakdown
             </h3>
 
             <div class="space-y-4">
-                <div class="flex justify-between items-center bg-gs-bg border border-green-900/10 p-3 rounded">
+                <div class="flex justify-between items-center bg-gs-bg border border-gs-border p-3 rounded">
                     <div class="flex items-center gap-3">
                         <div class="w-3 h-3 rounded-full bg-blue-500"></div>
                         <span class="text-gs-text font-medium">Confirmed Declarations</span>
@@ -64,7 +64,7 @@
                     <span class="text-gs-text font-bold">{{ performance()?.confirmedCount }}</span>
                 </div>
 
-                <div class="flex justify-between items-center bg-gs-bg border border-green-900/10 p-3 rounded">
+                <div class="flex justify-between items-center bg-gs-bg border border-gs-border p-3 rounded">
                     <div class="flex items-center gap-3">
                         <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
                         <span class="text-gs-text font-medium">Modified Declarations</span>
@@ -72,7 +72,7 @@
                     <span class="text-gs-text font-bold">{{ performance()?.modifiedCount }}</span>
                 </div>
 
-                <div class="flex justify-between items-center bg-gs-bg border border-green-900/10 p-3 rounded">
+                <div class="flex justify-between items-center bg-gs-bg border border-gs-border p-3 rounded">
                     <div class="flex items-center gap-3">
                         <div class="w-3 h-3 rounded-full bg-red-500"></div>
                         <span class="text-gs-text font-medium">Rejected Declarations</span>
@@ -83,8 +83,8 @@
         </div>
 
         <!-- Key Performance Indicators -->
-        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-gs-text border-b border-green-900/20 pb-3 mb-4">Key Metrics</h3>
+        <div class="bg-gs-surface border border-gs-border rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gs-text border-b border-gs-border pb-3 mb-4">Key Metrics</h3>
 
             <div class="space-y-6">
                 <div>
@@ -112,9 +112,9 @@
                     </p>
                 </div>
 
-                <div class="pt-4 border-t border-green-900/10 flex justify-between items-center">
+                <div class="pt-4 border-t border-gs-border flex justify-between items-center">
                     <span class="text-gs-muted">Reassignments Processing</span>
-                    <span class="text-gs-text font-mono bg-gs-bg px-3 py-1 rounded border border-green-900/30">{{
+                    <span class="text-gs-text font-mono bg-gs-bg px-3 py-1 rounded border border-gs-border">{{
                         performance()?.reassignedAssignments }} tasks</span>
                 </div>
             </div>

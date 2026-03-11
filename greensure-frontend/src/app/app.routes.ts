@@ -99,6 +99,14 @@ export const routes: Routes = [
       import('./features/user/components/notifications/notifications.component')
         .then(m => m.NotificationsComponent)
   },
+  {
+    path: 'user/policies',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['USER'] },
+    loadComponent: () =>
+      import('./features/user/components/policies/policies.component')
+        .then(m => m.PoliciesComponent)
+  },
 
   // ── DECLARATION PAGES (must be logged in + USER role) ──────
   {

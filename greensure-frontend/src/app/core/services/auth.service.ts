@@ -72,7 +72,26 @@ export class AuthService {
     // ── HELPER: Check if user is logged in ────────────────────
     // Simply checks if a JWT token exists in localStorage.
     isLoggedIn(): boolean {
-        return !!localStorage.getItem('token');
+        const token = localStorage.getItem('token');
+        if (!token) return false;
+
+        // Check if the JWT is expired
+        if (this.isTokenExpired(token)) {
+            this.clearSession();
+            return false;
+        }
+        return true;
+    }
+
+    // ── HELPER: Check if JWT token is expired ──────────────────
+    private isTokenExpired(token: string): boolean {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const expiry = payload.exp * 1000; // convert to ms
+            return Date.now() > expiry;
+        } catch {
+            return true; // malformed token = treat as expired
+        }
     }
 
     // ── HELPER: Get current role ──────────────────────────────

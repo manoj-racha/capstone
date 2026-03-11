@@ -5,4 +5,13 @@ export interface ApiResponse<T> {
   error: string;       // error message if success is false
 }
 
+// Spring Boot Page response structure
+export interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
 

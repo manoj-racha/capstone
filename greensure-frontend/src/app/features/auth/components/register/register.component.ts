@@ -1,17 +1,23 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth.service';
+import {
+    LucideAngularModule,
+    Leaf,
+    AlertTriangle,
+    CheckCircle,
+    ArrowLeft
+} from 'lucide-angular';
 
 @Component({
     selector: 'app-register',
-    imports: [FormsModule, RouterLink],
+    imports: [FormsModule, RouterLink, LucideAngularModule],
     templateUrl: './register.component.html'
 })
 export class RegisterComponent {
 
     // ── User type toggle ─────────────────────────────────────
-    // Determines which conditional fields to show
     userType = signal<'HOUSEHOLD' | 'MSME'>('HOUSEHOLD');
     isHousehold = computed(() => this.userType() === 'HOUSEHOLD');
 
@@ -36,22 +42,56 @@ export class RegisterComponent {
     businessType = signal('');
     numEmployees = signal<number | null>(null);
 
-    // ── UI state ─────────────────────────────────────────────
+    // ── Icons ────────────────────────────────────────────────
+    readonly Leaf = Leaf;
+    readonly AlertTriangle = AlertTriangle;
+    readonly CheckCircle = CheckCircle;
+    readonly ArrowLeft = ArrowLeft;
 
+    // ── Touched state for validation ─────────────────────────
+    pinCodeTouched = signal(false);
+    dwellingTypeTouched = signal(false);
+
+    // ── Computed validation ──────────────────────────────────
+    pinCodeError = computed(() => {
+        if (!this.pinCodeTouched()) return '';
+        const val = this.pinCode();
+        if (!val) return 'Pin code is required';
+        if (!/^[0-9]{6}$/.test(val)) return 'Enter a valid 6-digit pin code';
+        return '';
+    });
+
+    dwellingTypeError = computed(() => {
+        if (!this.dwellingTypeTouched()) return '';
+        if (!this.dwellingType()) return 'Please select your dwelling type';
+        return '';
+    });
+
+    // ── UI state ─────────────────────────────────────────────
     errorMessage = signal('');
     successMessage = signal('');
+    submitted = signal(false);
 
-    constructor(
-        private authService: AuthService,
-        private router: Router
-    ) { }
+    private authService: AuthService = inject(AuthService);
+    private router: Router = inject(Router);
 
     // ── REGISTER ─────────────────────────────────────────────
-    // Validates passwords match, builds the request object,
-    // then calls POST /auth/register.
-    onRegister(): void {
+    onRegister(form?: any): void {
+        this.submitted.set(true);
         this.errorMessage.set('');
         this.successMessage.set('');
+
+        // Trigger touched for inline validations
+        this.pinCodeTouched.set(true);
+        if (this.isHousehold()) {
+            this.dwellingTypeTouched.set(true);
+        }
+
+        if (form && form.invalid) {
+            this.errorMessage.set('Please fill out all required fields correctly.');
+            this.scrollToFirstInvalid();
+            return;
+        }
 
         // Client-side password match check
         if (this.password() !== this.confirmPassword()) {
@@ -59,9 +99,21 @@ export class RegisterComponent {
             return;
         }
 
+        // Client-side pin code check
+        if (this.pinCodeError()) {
+            this.errorMessage.set(this.pinCodeError());
+            this.scrollToFirstInvalid();
+            return;
+        }
 
+        // Client-side dwelling type check
+        if (this.isHousehold() && this.dwellingTypeError()) {
+            this.errorMessage.set(this.dwellingTypeError());
+            this.scrollToFirstInvalid();
+            return;
+        }
 
-        // Build request — includes conditional fields based on userType
+        // Build request
         const request: any = {
             userType: this.userType(),
             fullName: this.fullName(),
@@ -74,12 +126,10 @@ export class RegisterComponent {
             state: this.state()
         };
 
-        // Add household-specific fields
         if (this.isHousehold()) {
             request.numberOfMembers = this.numberOfMembers();
             request.dwellingType = this.dwellingType();
         } else {
-            // Add MSME-specific fields
             request.businessName = this.businessName();
             request.gstNumber = this.gstNumber();
             request.businessType = this.businessType();
@@ -101,5 +151,14 @@ export class RegisterComponent {
                 );
             }
         });
+    }
+
+    private scrollToFirstInvalid(): void {
+        setTimeout(() => {
+            const firstInvalidControl = document.querySelector('.ng-invalid');
+            if (firstInvalidControl) {
+                firstInvalidControl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
     }
 }

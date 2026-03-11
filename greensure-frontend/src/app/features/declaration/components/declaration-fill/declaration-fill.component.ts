@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DeclarationService } from '../../../../core/services/declaration.service';
@@ -24,21 +24,21 @@ export class DeclarationFillComponent implements OnInit {
 
   fillForm: FormGroup = this.fb.group({
     // Energy
-    electricityUnits: [null],
+    electricityUnits: [null, [Validators.required, Validators.min(0)]],
     hasSolar: [false],
-    solarUnits: [null],
+    solarUnits: [null, [Validators.min(0)]],
     cookingFuelType: ['NONE'],
-    lpgCylinders: [null],
-    pngUnits: [null],
-    biomassKgPerDay: [null],
-    numAcUnits: [null],
-    acHoursPerDay: [null],
+    lpgCylinders: [null, [Validators.min(0)]],
+    pngUnits: [null, [Validators.min(0)]],
+    biomassKgPerDay: [null, [Validators.min(0)]],
+    numAcUnits: [null, [Validators.min(0)]],
+    acHoursPerDay: [null, [Validators.min(0)]],
     hasGenerator: [false],
-    generatorHoursPerMonth: [null],
+    generatorHoursPerMonth: [null, [Validators.min(0)]],
 
     // Transport
     usesPublicTransport: [false],
-    publicTransportKm: [null],
+    publicTransportKm: [null, [Validators.min(0)]],
 
     // Lifestyle — Household
     dietaryPattern: ['VEGETARIAN'],
@@ -46,19 +46,19 @@ export class DeclarationFillComponent implements OnInit {
 
     // Operations — MSME
     hasCommercialVehicles: [false],
-    commercialVehicleKm: [null],
-    thirdPartyShipments: [null],
-    employeesPrivateVehicle: [null],
-    employeesPublicTransport: [null],
-    generatorLitersPerMonth: [null],
+    commercialVehicleKm: [null, [Validators.min(0)]],
+    thirdPartyShipments: [null, [Validators.min(0)]],
+    employeesPrivateVehicle: [null, [Validators.min(0)]],
+    employeesPublicTransport: [null, [Validators.min(0)]],
+    generatorLitersPerMonth: [null, [Validators.min(0)]],
     hasBoiler: [false],
     boilerFuelType: ['NONE'],
-    boilerCoalKg: [null],
-    boilerGasScm: [null],
-    paperReamsPerMonth: [null],
+    boilerCoalKg: [null, [Validators.min(0)]],
+    boilerGasScm: [null, [Validators.min(0)]],
+    paperReamsPerMonth: [null, [Validators.min(0)]],
     usesRecycledPaper: [false],
     rawMaterialType: ['VIRGIN'],
-    rawMaterialKg: [null]
+    rawMaterialKg: [null, [Validators.min(0)]]
   });
 
   ngOnInit(): void {

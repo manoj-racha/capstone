@@ -53,6 +53,9 @@ export interface DeclarationResponse {
   usesRecycledPaper?: boolean;
   rawMaterialType?: string;         // "VIRGIN" | "RECYCLED" | "MIXED"
   rawMaterialKg?: number;
+
+  assignedAgentId?: number;
+  assignedAgentName?: string;
 }
 
 export interface VehicleRequest {

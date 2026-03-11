@@ -52,4 +52,8 @@ public class DeclarationResponse {
     private Boolean usesRecycledPaper;
     private RawMaterialType rawMaterialType;
     private Double rawMaterialKg;
+
+    // Assignment Details
+    private Long assignedAgentId;
+    private String assignedAgentName;
 }

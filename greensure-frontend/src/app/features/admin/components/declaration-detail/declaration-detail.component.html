@@ -12,7 +12,7 @@
             </h2>
             <p class="text-gs-muted mt-1">Comprehensive view of footprint data and verification remarks.</p>
         </div>
-        <button routerLink="/admin/declarations" class="text-sm text-gs-green hover:underline">
+        <button routerLink="/admin/declarations" class="text-sm text-gs-dark hover:underline">
             &larr; Back to Declarations
         </button>
     </div>
@@ -26,8 +26,8 @@
     <div class="space-y-6">
 
         <!-- Primary Data Board -->
-        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
-            <div class="flex flex-col md:flex-row justify-between pb-6 mb-6 border-b border-green-900/20 gap-4">
+        <div class="bg-gs-surface border border-gs-border rounded-lg p-6">
+            <div class="flex flex-col md:flex-row justify-between pb-6 mb-6 border-b border-gs-border gap-4">
                 <div>
                     <p class="text-sm text-gs-muted mb-1">Declaration ID</p>
                     <p class="text-2xl font-bold font-mono text-gs-text">#{{ declaration()?.declarationId }}</p>
@@ -35,7 +35,7 @@
                 <div class="md:text-right">
                     <p class="text-sm text-gs-muted mb-1">User ID</p>
                     <p class="text-lg font-medium text-gs-text"><a routerLink="/admin/users/{{declaration()?.userId}}"
-                            class="text-gs-green hover:underline">User #{{ declaration()?.userId }}</a></p>
+                            class="text-gs-dark hover:underline">User #{{ declaration()?.userId }}</a></p>
                 </div>
                 <div class="md:text-right">
                     <p class="text-sm text-gs-muted mb-1">Target Year</p>
@@ -51,21 +51,21 @@
             <!-- Core Metrics Grid -->
             <h3 class="text-lg font-semibold text-gs-text mb-4">Declared Footprint Metrics</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="bg-gs-bg border border-green-900/10 rounded-lg p-4">
+                <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
                     <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Electricity</p>
                     <p class="text-xl font-bold text-gs-text">{{ declaration()?.electricityUnits || 0 }} <span
                             class="text-sm font-normal text-gs-muted">units</span></p>
                 </div>
 
-                <div class="bg-gs-bg border border-green-900/10 rounded-lg p-4">
+                <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
                     <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Solar Adopted</p>
                     <p class="text-xl font-bold text-gs-text">{{ declaration()?.hasSolar ? 'Yes' : 'No' }}</p>
                     @if (declaration()?.hasSolar) {
-                    <p class="text-xs text-gs-green mt-1">{{ declaration()?.solarUnits || 0 }} units/mo</p>
+                    <p class="text-xs text-gs-dark mt-1">{{ declaration()?.solarUnits || 0 }} units/mo</p>
                     }
                 </div>
 
-                <div class="bg-gs-bg border border-green-900/10 rounded-lg p-4">
+                <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
                     <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Generator Use</p>
                     <p class="text-xl font-bold text-gs-text">{{ declaration()?.hasGenerator ? 'Yes' : 'No' }}</p>
                     @if (declaration()?.hasGenerator) {
@@ -73,22 +73,22 @@
                     }
                 </div>
 
-                <div class="bg-gs-bg border border-green-900/10 rounded-lg p-4">
+                <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
                     <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Cooling Load</p>
                     <p class="text-xl font-bold text-gs-text">{{ declaration()?.numAcUnits || 0 }} <span
                             class="text-sm font-normal text-gs-muted">AC units</span></p>
                 </div>
 
-                <div class="bg-gs-bg border border-green-900/10 rounded-lg p-4">
+                <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
                     <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Public Transit</p>
                     <p class="text-xl font-bold text-gs-text">{{ declaration()?.usesPublicTransport ? 'Yes' : 'No' }}
                     </p>
                     @if (declaration()?.usesPublicTransport) {
-                    <p class="text-xs text-gs-green mt-1">{{ declaration()?.publicTransportKm || 0 }} km/mo</p>
+                    <p class="text-xs text-gs-dark mt-1">{{ declaration()?.publicTransportKm || 0 }} km/mo</p>
                     }
                 </div>
 
-                <div class="bg-gs-bg border border-green-900/10 rounded-lg p-4">
+                <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
                     <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Lifestyle Volume</p>
                     <p class="text-lg font-bold text-gs-text pt-1">{{
                         declaration()?.shoppingOrdersPerMonth?.replace('_', ' ') }}</p>
@@ -99,7 +99,7 @@
             @if (declaration()?.vehicles && declaration()?.vehicles?.length) {
             <div class="mt-8">
                 <h3 class="text-lg font-semibold text-gs-text mb-4">Registered Vehicles</h3>
-                <div class="overflow-x-auto bg-gs-bg border border-green-900/20 rounded-lg">
+                <div class="overflow-x-auto bg-gs-bg border border-gs-border rounded-lg">
                     <table class="w-full text-left text-sm">
                         <thead class="bg-black/20 text-gs-muted text-xs uppercase">
                             <tr>
@@ -116,8 +116,8 @@
                                     vehicle.quantity }})</td>
                                 <td class="px-4 py-3 text-gs-muted">{{ vehicle.vehicleType }}</td>
                                 <td class="px-4 py-3">
-                                    <span class="px-2 py-0.5 rounded text-xs border border-green-900/30"
-                                        [ngClass]="vehicle.fuelType === 'EV' ? 'text-gs-green bg-gs-green/10' : 'text-yellow-500 bg-yellow-500/10'">
+                                    <span class="px-2 py-0.5 rounded text-xs border border-gs-border"
+                                        [ngClass]="vehicle.fuelType === 'EV' ? 'text-gs-dark bg-gs-dark/10' : 'text-yellow-500 bg-yellow-500/10'">
                                         {{ vehicle.fuelType }}
                                     </span>
                                 </td>
@@ -132,7 +132,7 @@
         </div>
 
         <!-- Verification Findings -->
-        <div class="bg-gs-card border border-green-900/30 rounded-lg p-6">
+        <div class="bg-gs-surface border border-gs-border rounded-lg p-6">
             <h3 class="text-lg font-semibold text-gs-text mb-4">Verification Status</h3>
 
             @if (declaration()?.status === 'REJECTED') {

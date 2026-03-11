@@ -57,6 +57,7 @@ export class DeclarationVehiclesComponent implements OnInit {
     onAddVehicle(): void {
         if (this.vehicleForm.invalid) {
             this.vehicleForm.markAllAsTouched();
+            this.scrollToFirstInvalid();
             return;
         }
 
@@ -104,5 +105,14 @@ export class DeclarationVehiclesComponent implements OnInit {
 
     onNext(): void {
         this.router.navigate(['/declaration/review', this.declarationId()]);
+    }
+
+    private scrollToFirstInvalid(): void {
+        setTimeout(() => {
+            const firstInvalidControl = document.querySelector('.ng-invalid');
+            if (firstInvalidControl) {
+                firstInvalidControl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
     }
 }

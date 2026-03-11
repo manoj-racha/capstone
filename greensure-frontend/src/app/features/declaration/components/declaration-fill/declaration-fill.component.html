@@ -12,13 +12,13 @@
   <form [formGroup]="fillForm" (ngSubmit)="onSaveAndContinue()" class="space-y-6">
 
     <!-- Energy Section -->
-    <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
+    <div class="bg-gs-surface border border-gs-border rounded-lg p-6">
       <h3 class="text-xl font-semibold text-gs-text mb-4">Energy Consumption</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-gs-muted mb-1 text-sm">Electricity Units (Monthly)</label>
-          <input type="number" formControlName="electricityUnits"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <label class="block text-gs-muted mb-1 text-sm font-semibold">Electricity Units (Monthly) <span class="text-red-500">*</span></label>
+          <input type="number" min="0" formControlName="electricityUnits"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         <div class="flex items-center space-x-2 mt-6">
           <input type="checkbox" formControlName="hasSolar" id="hasSolar" class="accent-gs-green w-4 h-4">
@@ -28,15 +28,15 @@
         @if (fillForm.get('hasSolar')?.value) {
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Solar Units Generated</label>
-          <input type="number" formControlName="solarUnits"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="solarUnits"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         }
 
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Cooking Fuel Type</label>
           <select formControlName="cookingFuelType"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
             <option value="NONE">None</option>
             <option value="LPG">LPG</option>
             <option value="PNG">PNG</option>
@@ -49,35 +49,35 @@
         @case ('LPG') {
         <div>
           <label class="block text-gs-muted mb-1 text-sm">LPG Cylinders per Month</label>
-          <input type="number" formControlName="lpgCylinders"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="lpgCylinders"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         }
         @case ('PNG') {
         <div>
           <label class="block text-gs-muted mb-1 text-sm">PNG Units per Month</label>
-          <input type="number" formControlName="pngUnits"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="pngUnits"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         }
         @case ('BIOMASS') {
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Biomass (kg per day)</label>
-          <input type="number" formControlName="biomassKgPerDay"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="biomassKgPerDay"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         }
         }
 
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Number of AC Units</label>
-          <input type="number" formControlName="numAcUnits"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="numAcUnits"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Avg AC Hours / Day</label>
-          <input type="number" formControlName="acHoursPerDay"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="acHoursPerDay"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
 
         <div class="flex items-center space-x-2 mt-6">
@@ -88,15 +88,15 @@
         @if (fillForm.get('hasGenerator')?.value) {
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Generator Hours / Month</label>
-          <input type="number" formControlName="generatorHoursPerMonth"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="generatorHoursPerMonth"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         }
       </div>
     </div>
 
     <!-- Transport Section (Non-Vehicle details) -->
-    <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
+    <div class="bg-gs-surface border border-gs-border rounded-lg p-6">
       <h3 class="text-xl font-semibold text-gs-text mb-4">Public Transport Usage</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="flex items-center space-x-2">
@@ -107,8 +107,8 @@
         @if (fillForm.get('usesPublicTransport')?.value) {
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Public Transport Distance (km / month)</label>
-          <input type="number" formControlName="publicTransportKm"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="publicTransportKm"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         }
       </div>
@@ -116,13 +116,13 @@
 
     <!-- Lifestyle Section (Household Only) -->
     @if (userType() === 'HOUSEHOLD') {
-    <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
+    <div class="bg-gs-surface border border-gs-border rounded-lg p-6">
       <h3 class="text-xl font-semibold text-gs-text mb-4">Lifestyle Details</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Dietary Pattern</label>
           <select formControlName="dietaryPattern"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
             <option value="VEGAN">Vegan</option>
             <option value="VEGETARIAN">Vegetarian</option>
             <option value="EGGETARIAN">Eggetarian</option>
@@ -133,7 +133,7 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Online Shopping Orders / Month</label>
           <select formControlName="shoppingOrdersPerMonth"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
             <option value="ZERO_TO_FIVE">0 to 5</option>
             <option value="SIX_TO_FIFTEEN">6 to 15</option>
             <option value="ABOVE_FIFTEEN">Above 15</option>
@@ -145,7 +145,7 @@
 
     <!-- Operations Section (MSME Only) -->
     @if (userType() === 'MSME') {
-    <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
+    <div class="bg-gs-surface border border-gs-border rounded-lg p-6">
       <h3 class="text-xl font-semibold text-gs-text mb-4">Operations Details</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Commercial Vehicles -->
@@ -158,31 +158,31 @@
         @if (fillForm.get('hasCommercialVehicles')?.value) {
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Commercial Vehicle (km / month)</label>
-          <input type="number" formControlName="commercialVehicleKm"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="commercialVehicleKm"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         }
 
         <!-- Other MSME Fields -->
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Third Party Shipments / Month</label>
-          <input type="number" formControlName="thirdPartyShipments"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="thirdPartyShipments"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Employees using Private Vehicles</label>
-          <input type="number" formControlName="employeesPrivateVehicle"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="employeesPrivateVehicle"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Employees using Public Transport</label>
-          <input type="number" formControlName="employeesPublicTransport"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="employeesPublicTransport"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Generator Fuel (Liters / month)</label>
-          <input type="number" formControlName="generatorLitersPerMonth"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="generatorLitersPerMonth"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
 
         <!-- Boiler -->
@@ -194,7 +194,7 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Boiler Fuel Type</label>
           <select formControlName="boilerFuelType"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
             <option value="NONE">None</option>
             <option value="COAL">Coal</option>
             <option value="NATURAL_GAS">Natural Gas</option>
@@ -205,15 +205,15 @@
         @case ('COAL') {
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Boiler Coal (kg)</label>
-          <input type="number" formControlName="boilerCoalKg"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="boilerCoalKg"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         }
         @case ('NATURAL_GAS') {
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Boiler Gas (SCM)</label>
-          <input type="number" formControlName="boilerGasScm"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="boilerGasScm"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         }
         }
@@ -222,8 +222,8 @@
         <!-- Paper & Raw Material -->
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Paper Reams / Month</label>
-          <input type="number" formControlName="paperReamsPerMonth"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="paperReamsPerMonth"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
         <div class="flex items-center space-x-2 mt-6">
           <input type="checkbox" formControlName="usesRecycledPaper" id="usesRecycledPaper"
@@ -233,7 +233,7 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Raw Material Type</label>
           <select formControlName="rawMaterialType"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
             <option value="VIRGIN">Virgin</option>
             <option value="RECYCLED">Recycled</option>
             <option value="MIXED">Mixed</option>
@@ -241,20 +241,20 @@
         </div>
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Raw Material (kg)</label>
-          <input type="number" formControlName="rawMaterialKg"
-            class="w-full bg-gs-bg border border-green-900/30 text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-green">
+          <input type="number" min="0" formControlName="rawMaterialKg"
+            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
         </div>
       </div>
     </div>
     }
 
-    <div class="flex justify-end gap-4 pt-4 border-t border-green-900/20">
+    <div class="flex justify-end gap-4 pt-4 border-t border-gs-border">
       <button type="button" routerLink="/user/dashboard"
-        class="px-6 py-2 border border-gs-green text-gs-green bg-transparent font-semibold rounded hover:bg-gs-green/10 transition-colors">
+        class="px-6 py-2 border border-gs-dark text-gs-dark bg-transparent font-semibold rounded hover:bg-gs-dark/10 transition-colors">
         Cancel
       </button>
       <button type="submit" [disabled]="fillForm.invalid"
-        class="px-6 py-2 bg-gs-green text-gs-bg font-semibold rounded hover:bg-gs-green-hover transition-colors disabled:opacity-50">
+        class="px-6 py-2 bg-gs-dark text-white font-semibold rounded hover:bg-gs-mid transition-colors disabled:opacity-50">
         Save & Continue
       </button>
     </div>

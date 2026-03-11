@@ -8,6 +8,8 @@ import org.hartford.greensure.repository.AgentAssignmentRepository;
 import org.hartford.greensure.repository.AgentRepository;
 import org.hartford.greensure.repository.CarbonDeclarationRepository;
 import org.hartford.greensure.service.NotificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -17,6 +19,8 @@ import java.util.List;
 
 @Component
 public class AssignmentEngine {
+
+        private static final Logger log = LoggerFactory.getLogger(AssignmentEngine.class);
 
         @Autowired
         private CarbonDeclarationRepository declarationRepo;
@@ -32,8 +36,7 @@ public class AssignmentEngine {
         @Transactional
         public void assignPendingDeclarations() {
 
-                System.out.println(
-                                "[AssignmentEngine] Running assignment check...");
+                log.info("Running assignment check...");
 
                 // Find all SUBMITTED declarations
                 List<CarbonDeclaration> submitted = declarationRepo
@@ -65,11 +68,8 @@ public class AssignmentEngine {
                                         .findLeastBusyAgentsByPinCode(pinCode);
 
                         if (availableAgents.isEmpty()) {
-                                System.out.println(
-                                                "[AssignmentEngine] No agents available " +
-                                                                "for pin code: " + pinCode +
-                                                                " — Declaration ID: " +
-                                                                declaration.getDeclarationId());
+                                log.warn("No agents available for pin code: {} — Declaration ID: {}",
+                                                pinCode, declaration.getDeclarationId());
                                 continue;
                         }
 
@@ -110,14 +110,10 @@ public class AssignmentEngine {
                                                         ". Please complete within 72 hours.");
 
                         assigned++;
-                        System.out.println(
-                                        "[AssignmentEngine] Assigned declaration " +
-                                                        declaration.getDeclarationId() +
-                                                        " to agent " + selectedAgent.getFullName());
+                        log.info("Assigned declaration {} to agent {}",
+                                        declaration.getDeclarationId(), selectedAgent.getFullName());
                 }
 
-                System.out.println(
-                                "[AssignmentEngine] Done. Assigned: " + assigned +
-                                                ", Skipped (already assigned): " + skipped);
+                log.info("Done. Assigned: {}, Skipped (already assigned): {}", assigned, skipped);
         }
 }

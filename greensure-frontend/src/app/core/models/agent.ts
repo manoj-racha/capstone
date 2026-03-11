@@ -18,6 +18,9 @@ export interface AgentTaskResponse {
   // Declaration info
   declarationId: number;
   declarationYear: number;
+
+  agentId?: number;
+  agentName?: string;
 }
 
 export interface AgentPerformanceResponse {

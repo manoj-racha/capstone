@@ -13,8 +13,8 @@
     <div class="space-y-6">
 
         <!-- Energy Overview -->
-        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
-            <h3 class="font-semibold text-lg text-gs-text border-b border-green-900/20 pb-2 mb-4">Energy Consumption
+        <div class="bg-gs-surface border border-gs-border rounded-lg p-6">
+            <h3 class="font-semibold text-lg text-gs-text border-b border-gs-border pb-2 mb-4">Energy Consumption
             </h3>
             <div class="grid grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-6 text-sm">
                 <div>
@@ -70,8 +70,8 @@
         </div>
 
         <!-- Transport Overview -->
-        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
-            <h3 class="font-semibold text-lg text-gs-text border-b border-green-900/20 pb-2 mb-4">Transport & Vehicles
+        <div class="bg-gs-surface border border-gs-border rounded-lg p-6">
+            <h3 class="font-semibold text-lg text-gs-text border-b border-gs-border pb-2 mb-4">Transport & Vehicles
             </h3>
             <div class="grid grid-cols-2 gap-y-4 gap-x-6 text-sm mb-6">
                 <div>
@@ -85,7 +85,7 @@
             <h4 class="text-gs-text mb-2 text-sm font-semibold">Registered Vehicles:</h4>
             <div class="space-y-2">
                 @for (veh of declaration()?.vehicles; track veh.vehicleId) {
-                <div class="bg-gs-bg border border-green-900/30 p-3 rounded text-sm flex justify-between items-center">
+                <div class="bg-gs-bg border border-gs-border p-3 rounded text-sm flex justify-between items-center">
                     <span class="text-gs-text">{{ veh.quantity }}x {{ veh.vehicleType.replace('_', ' ') }}</span>
                     <span class="text-gs-muted">{{ veh.fuelType }} | {{ veh.kmPerMonth }} km/m</span>
                 </div>
@@ -97,10 +97,10 @@
         </div>
 
         <!-- Specific Overview based on Household/MSME -->
-        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6">
-            <div class="flex items-center justify-between border-b border-green-900/20 pb-2 mb-4">
+        <div class="bg-gs-surface border border-gs-border rounded-lg p-6">
+            <div class="flex items-center justify-between border-b border-gs-border pb-2 mb-4">
                 <h3 class="font-semibold text-lg text-gs-text">Other Details</h3>
-                <a routerLink="/declaration/fill/{{declarationId()}}" class="text-xs text-gs-green hover:underline">Edit
+                <a routerLink="/declaration/fill/{{declarationId()}}" class="text-xs text-gs-dark hover:underline">Edit
                     Fields</a>
             </div>
 
@@ -163,26 +163,19 @@
             </div>
         </div>
 
-    </div>
 
-    <!-- Actions -->
-    <div class="mt-8 flex justify-between items-center bg-gs-card p-4 rounded-lg border border-green-900/40">
-        <div>
-            <p class="text-sm text-gs-muted mb-1">Make sure all details are completely accurate.</p>
-            <p class="text-xs text-red-400">Once submitted, this will be verified by an assigned field agent.</p>
-        </div>
-
-        <div class="flex gap-4">
-            <button routerLink="/declaration/vehicles/{{declarationId()}}"
-                class="px-6 py-2 border border-gs-muted text-gs-muted bg-transparent font-semibold rounded hover:bg-white/5 transition-colors disabled:opacity-50">
-                Back
+        <!-- Action Buttons -->
+        <div class="flex justify-end gap-4 mt-8 bg-gs-surface p-4 rounded-lg border border-gs-border">
+            <button routerLink="/declaration/fill/{{declarationId()}}" class="px-6 py-2 rounded-lg border border-gs-dark text-gs-dark hover:bg-gs-dark/10 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-gs-green/50">
+                Back to Edit
             </button>
-            <button (click)="onSubmit()"
-                class="px-6 py-2 bg-gs-green text-gs-bg font-semibold rounded hover:bg-gs-green-hover transition-colors shadow-[0_0_15px_rgba(0,200,90,0.3)] hover:shadow-[0_0_20px_rgba(0,200,90,0.5)]">
+            <button (click)="onSubmit()" class="px-6 py-2 rounded-lg bg-gs-dark text-black hover:bg-green-400 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-gs-green/50">
                 Submit Declaration
             </button>
         </div>
+
     </div>
+
 
     }
 </div>

@@ -51,7 +51,7 @@ export class AgentDashboardComponent implements OnInit {
         switch (status) {
             case 'ASSIGNED': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
             case 'IN_PROGRESS': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-            case 'COMPLETED': return 'bg-gs-green/20 text-gs-green border-gs-green/30';
+            case 'COMPLETED': return 'bg-gs-dark/10 text-gs-dark border-gs-dark/20';
             case 'REASSIGNED': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
             default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
         }

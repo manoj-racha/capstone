@@ -5,7 +5,7 @@
                 Agent Profile
                 @if (agent()) {
                 <span class="px-2 py-0.5 rounded text-xs font-medium border uppercase"
-                    [ngClass]="agent()!.status === 'ACTIVE' ? 'bg-gs-green/10 text-gs-green border-gs-green/30' : 'bg-red-500/10 text-red-400 border-red-500/30'">
+                    [ngClass]="agent()!.status === 'ACTIVE' ? 'bg-gs-dark/10 text-gs-dark border-gs-dark/20' : 'bg-red-500/10 text-red-400 border-red-500/30'">
                     {{ agent()?.status }}
                 </span>
                 @if (agent()!.strikeCount >= 3) {
@@ -18,7 +18,7 @@
             </h2>
             <p class="text-gs-muted mt-1">Detailed view of agent credentials and assignment status.</p>
         </div>
-        <button routerLink="/admin/agents" class="text-sm text-gs-green hover:underline">
+        <button routerLink="/admin/agents" class="text-sm text-gs-dark hover:underline">
             &larr; Back to Agents List
         </button>
     </div>
@@ -33,12 +33,12 @@
 
         <!-- General Info Card -->
         <div
-            class="bg-gs-card border border-green-900/20 rounded-lg p-6 hover:shadow-[0_4px_20px_rgba(0,200,90,0.05)] transition-shadow">
-            <div class="flex flex-col md:flex-row gap-6 mb-6 pb-6 border-b border-green-900/20">
+            class="bg-gs-surface border border-gs-border rounded-lg p-6 hover:shadow-md shadow-gs-dark/5 transition-shadow">
+            <div class="flex flex-col md:flex-row gap-6 mb-6 pb-6 border-b border-gs-border">
 
                 <div
-                    class="w-20 h-20 rounded-full bg-green-900/20 border-2 border-gs-green/30 flex items-center justify-center shrink-0">
-                    <span class="text-3xl font-bold text-gs-green uppercase">{{ agent()?.fullName?.charAt(0) }}</span>
+                    class="w-20 h-20 rounded-full bg-green-900/20 border-2 border-gs-dark/20 flex items-center justify-center shrink-0">
+                    <span class="text-3xl font-bold text-gs-dark uppercase">{{ agent()?.fullName?.charAt(0) }}</span>
                 </div>
 
                 <div class="flex-1">
@@ -47,14 +47,14 @@
                             <h3 class="text-2xl font-bold text-gs-text">{{ agent()?.fullName }}</h3>
                             <div class="flex items-center gap-2 mt-1">
                                 <span
-                                    class="px-2 py-0.5 bg-gs-bg border border-green-900/30 text-gs-muted rounded text-xs uppercase">{{
+                                    class="px-2 py-0.5 bg-gs-bg border border-gs-border text-gs-muted rounded text-xs uppercase">{{
                                     agent()?.agentType }}</span>
                                 <span class="text-sm text-gs-muted font-mono">Emp ID: #{{ agent()?.employeeId }}</span>
                             </div>
                         </div>
 
                         <div class="flex gap-2 text-sm text-gs-muted">
-                            <svg class="w-4 h-4 mt-0.5 text-gs-green" fill="none" stroke="currentColor"
+                            <svg class="w-4 h-4 mt-0.5 text-gs-dark" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
@@ -95,7 +95,7 @@
 
         <!-- Admin Actions Card -->
         <div
-            class="bg-gs-card border border-green-900/40 rounded-lg p-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            class="bg-gs-surface border border-gs-border rounded-lg p-6 flex flex-col md:flex-row justify-between items-center gap-6">
             <div>
                 <h3 class="text-lg font-semibold text-gs-text">Agent Administration</h3>
                 <p class="text-sm text-gs-muted mt-1 max-w-lg">Manage access level or clear strikes if the agent has
@@ -110,7 +110,7 @@
 
                 <button (click)="toggleStatus()" [disabled]="actioning()"
                     class="w-full px-6 py-2 border font-semibold rounded transition-colors disabled:opacity-50"
-                    [ngClass]="agent()!.status === 'ACTIVE' ? 'border-red-500/50 text-red-400 bg-red-500/10 hover:bg-red-500/20' : 'border-gs-green/50 text-gs-green bg-gs-green/10 hover:bg-gs-green/20'">
+                    [ngClass]="agent()!.status === 'ACTIVE' ? 'border-red-500/50 text-red-400 bg-red-500/10 hover:bg-red-500/20' : 'border-gs-dark/20 text-gs-dark bg-gs-dark/10 hover:bg-gs-dark/10'">
                     {{ agent()!.status === 'ACTIVE' ? 'Suspend Agent' : 'Activate Agent' }}
                 </button>
             </div>

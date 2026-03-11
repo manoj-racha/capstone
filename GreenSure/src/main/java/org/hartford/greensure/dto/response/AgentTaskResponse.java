@@ -28,4 +28,7 @@ public class AgentTaskResponse {
 
     private Long declarationId;
     private Integer declarationYear;
+
+    private Long agentId;
+    private String agentName;
 }

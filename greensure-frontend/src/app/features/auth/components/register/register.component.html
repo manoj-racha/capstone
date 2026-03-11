@@ -1,151 +1,172 @@
 <!-- ── REGISTER PAGE ──────────────────────────────────── -->
-<div class="min-h-screen flex items-center justify-center px-4 py-8 bg-gs-bg">
-    <div class="w-full max-w-lg space-y-6">
+<div class="min-h-screen flex items-center justify-center px-4 py-12 bg-gs-bg relative">
+    
+    <!-- Back to landing -->
+    <a routerLink="/landing" class="absolute top-6 left-6 flex items-center gap-2 text-gs-body font-medium hover:text-gs-dark transition-colors">
+        <lucide-icon [img]="ArrowLeft" [size]="18"></lucide-icon>
+        Back to Home
+    </a>
 
-        <!-- Logo -->
+    <div class="w-full max-w-xl space-y-8">
+
+        <!-- Logo / Brand -->
         <div class="text-center">
-            <a routerLink="/landing" class="text-2xl font-bold text-gs-green">
-                🌿 GreenSure
+            <a routerLink="/landing" class="inline-flex items-center gap-2 font-heading text-3xl font-bold text-gs-dark">
+                <lucide-icon [img]="Leaf" [size]="32" class="text-gs-accent"></lucide-icon>
+                GreenSure
             </a>
-            <p class="mt-2 text-gs-muted text-sm">Create your carbon declaration account</p>
+            <p class="mt-3 text-gs-body text-sm font-medium">Create an account to get your green insurance quote</p>
         </div>
 
         <!-- Register Card -->
-        <div class="bg-gs-card border border-green-900/20 rounded-lg p-6 space-y-5">
+        <div class="bg-gs-surface border border-gs-border rounded-xl p-8 shadow-[0_4px_24px_rgba(30,92,58,0.06)] space-y-6">
 
-            <h1 class="text-xl font-semibold text-gs-text">Register</h1>
+            <h1 class="font-heading text-2xl font-bold text-gs-text">Create Your Account</h1>
 
             <!-- Error -->
             @if (errorMessage()) {
-            <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3">
-                {{ errorMessage() }}
+            <div class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 flex items-start gap-3">
+                <lucide-icon [img]="AlertTriangle" [size]="18" class="text-red-500 shrink-0 mt-0.5"></lucide-icon>
+                <span>{{ errorMessage() }}</span>
             </div>
             }
 
             <!-- Success -->
             @if (successMessage()) {
-            <div class="bg-green-500/10 border border-green-500/30 text-green-400 text-sm rounded-lg px-4 py-3">
-                {{ successMessage() }}
+            <div class="bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3 flex items-start gap-3">
+                <lucide-icon [img]="CheckCircle" [size]="18" class="text-green-600 shrink-0 mt-0.5"></lucide-icon>
+                <span>{{ successMessage() }}</span>
             </div>
             }
 
-            <form (ngSubmit)="onRegister()" class="space-y-4">
+            <form #registerForm="ngForm" (ngSubmit)="onRegister(registerForm)" class="space-y-5">
 
                 <!-- User Type Toggle -->
                 <div>
-                    <label class="block text-sm font-medium text-gs-muted mb-2">Account Type</label>
-                    <div class="flex gap-3">
-                        <button type="button" (click)="userType.set('HOUSEHOLD')" [class]="isHousehold()
-                ? 'flex-1 py-2 rounded-lg font-medium bg-gs-green text-gs-bg'
-                : 'flex-1 py-2 rounded-lg font-medium border border-gs-green text-gs-green'">
+                    <label class="block text-sm font-semibold text-gs-text mb-2">Account Type</label>
+                    <div class="flex gap-3 bg-gs-sage p-1 rounded-lg">
+                        <button type="button" (click)="userType.set('HOUSEHOLD')" 
+                                [class]="isHousehold()
+                                ? 'flex-1 py-2 rounded-md font-semibold bg-white text-gs-dark shadow-sm border border-gs-border'
+                                : 'flex-1 py-2 rounded-md font-medium text-gs-muted hover:text-gs-body transition-colors'">
                             Household
                         </button>
-                        <button type="button" (click)="userType.set('MSME')" [class]="!isHousehold()
-                ? 'flex-1 py-2 rounded-lg font-medium bg-gs-green text-gs-bg'
-                : 'flex-1 py-2 rounded-lg font-medium border border-gs-green text-gs-green'">
+                        <button type="button" (click)="userType.set('MSME')" 
+                                [class]="!isHousehold()
+                                ? 'flex-1 py-2 rounded-md font-semibold bg-white text-gs-dark shadow-sm border border-gs-border'
+                                : 'flex-1 py-2 rounded-md font-medium text-gs-muted hover:text-gs-body transition-colors'">
                             MSME
                         </button>
                     </div>
                 </div>
 
+                <div class="border-t border-gs-border/60 pb-1"></div>
+
                 <!-- Full Name -->
                 <div>
-                    <label for="fullName" class="block text-sm font-medium text-gs-muted mb-1">Full Name</label>
+                    <label for="fullName" class="block text-sm font-semibold text-gs-text mb-1.5">Full Name <span class="text-red-500">*</span></label>
                     <input id="fullName" type="text" placeholder="John Doe" [ngModel]="fullName()"
-                        (ngModelChange)="fullName.set($event)" name="fullName" required class="w-full" />
+                        (ngModelChange)="fullName.set($event)" name="fullName" required [class]="(fullNameInput.invalid && (fullNameInput.dirty || fullNameInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #fullNameInput="ngModel" />
                 </div>
 
                 <!-- Email & Mobile -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                        <label for="email" class="block text-sm font-medium text-gs-muted mb-1">Email</label>
+                        <label for="email" class="block text-sm font-semibold text-gs-text mb-1.5">Email <span class="text-red-500">*</span></label>
                         <input id="email" type="email" placeholder="you@example.com" [ngModel]="email()"
-                            (ngModelChange)="email.set($event)" name="email" required class="w-full" />
+                            (ngModelChange)="email.set($event)" name="email" required [class]="(emailInput.invalid && (emailInput.dirty || emailInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #emailInput="ngModel" />
                     </div>
                     <div>
-                        <label for="mobile" class="block text-sm font-medium text-gs-muted mb-1">Mobile</label>
+                        <label for="mobile" class="block text-sm font-semibold text-gs-text mb-1.5">Mobile Number <span class="text-red-500">*</span></label>
                         <input id="mobile" type="tel" placeholder="9876543210" [ngModel]="mobile()"
-                            (ngModelChange)="mobile.set($event)" name="mobile" required class="w-full" />
+                            (ngModelChange)="mobile.set($event)" name="mobile" required [class]="(mobileInput.invalid && (mobileInput.dirty || mobileInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #mobileInput="ngModel" />
                     </div>
                 </div>
+
+                <div class="border-t border-gs-border/60 pb-1 pt-1"></div>
 
                 <!-- Address -->
                 <div>
-                    <label for="address" class="block text-sm font-medium text-gs-muted mb-1">Address</label>
+                    <label for="address" class="block text-sm font-semibold text-gs-text mb-1.5">Address <span class="text-red-500">*</span></label>
                     <input id="address" type="text" placeholder="123, Main Street" [ngModel]="address()"
-                        (ngModelChange)="address.set($event)" name="address" required class="w-full" />
+                        (ngModelChange)="address.set($event)" name="address" required [class]="(addressInput.invalid && (addressInput.dirty || addressInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #addressInput="ngModel" />
                 </div>
 
                 <!-- Pin Code, City, State -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                     <div>
-                        <label for="pinCode" class="block text-sm font-medium text-gs-muted mb-1">Pin Code</label>
+                        <label for="pinCode" class="block text-sm font-semibold text-gs-text mb-1.5">Pin Code <span class="text-red-500">*</span></label>
                         <input id="pinCode" type="text" placeholder="560001" [ngModel]="pinCode()"
-                            (ngModelChange)="pinCode.set($event)" name="pinCode" required class="w-full" />
+                            (ngModelChange)="pinCode.set($event)" (blur)="pinCodeTouched.set(true)" name="pinCode"
+                            required [class]="(pinCodeError() || (pinCodeInput.invalid && (pinCodeInput.dirty || pinCodeInput.touched || submitted()))) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #pinCodeInput="ngModel" />
+                        @if (pinCodeError()) {
+                        <p class="text-red-500 text-xs mt-1.5 font-medium">{{ pinCodeError() }}</p>
+                        }
                     </div>
                     <div>
-                        <label for="city" class="block text-sm font-medium text-gs-muted mb-1">City</label>
+                        <label for="city" class="block text-sm font-semibold text-gs-text mb-1.5">City <span class="text-red-500">*</span></label>
                         <input id="city" type="text" placeholder="Bangalore" [ngModel]="city()"
-                            (ngModelChange)="city.set($event)" name="city" required class="w-full" />
+                            (ngModelChange)="city.set($event)" name="city" required [class]="(cityInput.invalid && (cityInput.dirty || cityInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #cityInput="ngModel" />
                     </div>
                     <div>
-                        <label for="state" class="block text-sm font-medium text-gs-muted mb-1">State</label>
+                        <label for="state" class="block text-sm font-semibold text-gs-text mb-1.5">State <span class="text-red-500">*</span></label>
                         <input id="state" type="text" placeholder="Karnataka" [ngModel]="state()"
-                            (ngModelChange)="state.set($event)" name="state" required class="w-full" />
+                            (ngModelChange)="state.set($event)" name="state" required [class]="(stateInput.invalid && (stateInput.dirty || stateInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #stateInput="ngModel" />
                     </div>
                 </div>
 
+                <div class="border-t border-gs-border/60 pb-1 pt-1"></div>
+
                 <!-- ── HOUSEHOLD FIELDS ────────────────────────────── -->
                 @if (isHousehold()) {
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 bg-gs-sage/30 p-4 rounded-lg border border-gs-border/50">
                     <div>
-                        <label for="numberOfMembers" class="block text-sm font-medium text-gs-muted mb-1">
-                            Family Members
-                        </label>
+                        <label for="numberOfMembers" class="block text-sm font-semibold text-gs-text mb-1.5">
+                            Family Members <span class="text-red-500">*</span></label>
                         <input id="numberOfMembers" type="number" placeholder="4" min="1" max="20"
                             [ngModel]="numberOfMembers()" (ngModelChange)="numberOfMembers.set($event)"
-                            name="numberOfMembers" class="w-full" />
+                            name="numberOfMembers" [class]="(numberOfMembersInput.invalid && (numberOfMembersInput.dirty || numberOfMembersInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" required #numberOfMembersInput="ngModel" />
                     </div>
                     <div>
-                        <label for="dwellingType" class="block text-sm font-medium text-gs-muted mb-1">
-                            Dwelling Type
-                        </label>
+                        <label for="dwellingType" class="block text-sm font-semibold text-gs-text mb-1.5">
+                            Dwelling Type <span class="text-red-500">*</span></label>
                         <select id="dwellingType" [ngModel]="dwellingType()" (ngModelChange)="dwellingType.set($event)"
-                            name="dwellingType" class="w-full">
+                            (blur)="dwellingTypeTouched.set(true)" name="dwellingType" 
+                            [class]="(dwellingTypeError() || (dwellingTypeInput.invalid && (dwellingTypeInput.dirty || dwellingTypeInput.touched || submitted()))) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" required #dwellingTypeInput="ngModel">
                             <option value="">Select</option>
                             <option value="APARTMENT">Apartment</option>
                             <option value="INDEPENDENT_HOUSE">Independent House</option>
                         </select>
+                        @if (dwellingTypeError()) {
+                        <p class="text-red-500 text-xs mt-1.5 font-medium">{{ dwellingTypeError() }}</p>
+                        }
                     </div>
                 </div>
                 }
 
                 <!-- ── MSME FIELDS ─────────────────────────────────── -->
                 @if (!isHousehold()) {
-                <div class="space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-5 bg-gs-sage/30 p-4 rounded-lg border border-gs-border/50">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div>
-                            <label for="businessName" class="block text-sm font-medium text-gs-muted mb-1">
-                                Business Name
-                            </label>
+                            <label for="businessName" class="block text-sm font-semibold text-gs-text mb-1.5">
+                                Business Name <span class="text-red-500">*</span></label>
                             <input id="businessName" type="text" placeholder="Acme Corp" [ngModel]="businessName()"
-                                (ngModelChange)="businessName.set($event)" name="businessName" class="w-full" />
+                                (ngModelChange)="businessName.set($event)" name="businessName" [class]="(businessNameInput.invalid && (businessNameInput.dirty || businessNameInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" required #businessNameInput="ngModel" />
                         </div>
                         <div>
-                            <label for="gstNumber" class="block text-sm font-medium text-gs-muted mb-1">
-                                GST Number
-                            </label>
+                            <label for="gstNumber" class="block text-sm font-semibold text-gs-text mb-1.5">
+                                GST Number <span class="text-red-500">*</span></label>
                             <input id="gstNumber" type="text" placeholder="22AAAAA0000A1Z5" [ngModel]="gstNumber()"
-                                (ngModelChange)="gstNumber.set($event)" name="gstNumber" class="w-full" />
+                                (ngModelChange)="gstNumber.set($event)" name="gstNumber" [class]="(gstNumberInput.invalid && (gstNumberInput.dirty || gstNumberInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" required #gstNumberInput="ngModel" />
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div>
-                            <label for="businessType" class="block text-sm font-medium text-gs-muted mb-1">
-                                Business Type
-                            </label>
+                            <label for="businessType" class="block text-sm font-semibold text-gs-text mb-1.5">
+                                Business Industry <span class="text-red-500">*</span></label>
                             <select id="businessType" [ngModel]="businessType()"
-                                (ngModelChange)="businessType.set($event)" name="businessType" class="w-full">
+                                (ngModelChange)="businessType.set($event)" name="businessType" [class]="(businessTypeInput.invalid && (businessTypeInput.dirty || businessTypeInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" required #businessTypeInput="ngModel">
                                 <option value="">Select</option>
                                 <option value="MANUFACTURING">Manufacturing</option>
                                 <option value="RETAIL">Retail</option>
@@ -154,47 +175,50 @@
                             </select>
                         </div>
                         <div>
-                            <label for="numEmployees" class="block text-sm font-medium text-gs-muted mb-1">
-                                Number of Employees
-                            </label>
+                            <label for="numEmployees" class="block text-sm font-semibold text-gs-text mb-1.5">
+                                Number of Employees <span class="text-red-500">*</span></label>
                             <input id="numEmployees" type="number" placeholder="10" min="1" [ngModel]="numEmployees()"
-                                (ngModelChange)="numEmployees.set($event)" name="numEmployees" class="w-full" />
+                                (ngModelChange)="numEmployees.set($event)" name="numEmployees" [class]="(numEmployeesInput.invalid && (numEmployeesInput.dirty || numEmployeesInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" required #numEmployeesInput="ngModel" />
                         </div>
                     </div>
                 </div>
                 }
 
+                <div class="border-t border-gs-border/60 pb-1 pt-1"></div>
+
                 <!-- Password & Confirm -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                        <label for="password" class="block text-sm font-medium text-gs-muted mb-1">Password</label>
+                        <label for="password" class="block text-sm font-semibold text-gs-text mb-1.5">Password <span class="text-red-500">*</span></label>
                         <input id="password" type="password" placeholder="Min 8 characters" [ngModel]="password()"
-                            (ngModelChange)="password.set($event)" name="password" required class="w-full" />
+                            (ngModelChange)="password.set($event)" name="password" required [class]="(passwordInput.invalid && (passwordInput.dirty || passwordInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #passwordInput="ngModel" />
                     </div>
                     <div>
-                        <label for="confirmPassword" class="block text-sm font-medium text-gs-muted mb-1">
-                            Confirm Password
-                        </label>
+                        <label for="confirmPassword" class="block text-sm font-semibold text-gs-text mb-1.5">
+                            Confirm Password <span class="text-red-500">*</span></label>
                         <input id="confirmPassword" type="password" placeholder="••••••••" [ngModel]="confirmPassword()"
                             (ngModelChange)="confirmPassword.set($event)" name="confirmPassword" required
-                            class="w-full" />
+                            [class]="(confirmPasswordInput.invalid && (confirmPasswordInput.dirty || confirmPasswordInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #confirmPasswordInput="ngModel" />
                     </div>
                 </div>
 
-                <!-- Submit -->
+                <!-- Submit Button -->
                 <button type="submit"
-                    class="w-full bg-gs-green text-gs-bg font-semibold py-2.5 rounded-lg hover:bg-gs-green-hover transition-colors">
+                    class="w-full bg-gs-dark text-white font-semibold py-3.5 rounded-lg hover:bg-gs-mid transition-colors mt-4 text-lg">
                     Create Account
                 </button>
 
             </form>
 
-            <p class="text-center text-sm text-gs-muted">
-                Already have an account?
-                <a routerLink="/login" class="text-gs-green hover:text-gs-green-hover font-medium">
-                    Sign in
-                </a>
-            </p>
+            <!-- Login Link -->
+            <div class="pt-4 border-t border-gs-border text-center">
+                <p class="text-sm text-gs-body">
+                    Already have an account?
+                    <a routerLink="/login" class="text-gs-dark hover:text-gs-accent font-semibold transition-colors">
+                        Sign in
+                    </a>
+                </p>
+            </div>
 
         </div>
     </div>
