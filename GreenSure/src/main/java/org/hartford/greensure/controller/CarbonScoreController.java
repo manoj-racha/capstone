@@ -1,12 +1,12 @@
 package org.hartford.greensure.controller;
 
 import org.hartford.greensure.dto.response.*;
-import org.hartford.greensure.security.JwtUtil;
+import org.hartford.greensure.security.SecurityUser;
 import org.hartford.greensure.engine.CarbonScoreService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,15 +16,13 @@ import java.util.List;
 public class CarbonScoreController {
 
     @Autowired private CarbonScoreService carbonScoreService;
-    @Autowired private JwtUtil jwtUtil;
 
     @GetMapping("/my-score")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<CarbonScoreResponse>>
-            getMyScore(HttpServletRequest request) {
+            getMyScore(@AuthenticationPrincipal SecurityUser user) {
 
-        Long userId = extractUserId(request);
-        CarbonScoreResponse score = carbonScoreService.getMyScore(userId);
+        CarbonScoreResponse score = carbonScoreService.getMyScore(user.getId());
         return ResponseEntity.ok(
             ApiResponse.success("Score fetched", score));
     }
@@ -32,10 +30,9 @@ public class CarbonScoreController {
     @GetMapping("/my-history")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<List<CarbonScoreResponse>>>
-            getMyHistory(HttpServletRequest request) {
+            getMyHistory(@AuthenticationPrincipal SecurityUser user) {
 
-        Long userId = extractUserId(request);
-        List<CarbonScoreResponse> history = carbonScoreService.getScoreHistory(userId);
+        List<CarbonScoreResponse> history = carbonScoreService.getScoreHistory(user.getId());
         return ResponseEntity.ok(
             ApiResponse.success("Score history fetched", history));
     }
@@ -58,10 +55,5 @@ public class CarbonScoreController {
         carbonScoreService.generateScore(declarationId);
         return ResponseEntity.ok(
             ApiResponse.success("Score generation triggered"));
-    }
-
-    private Long extractUserId(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").substring(7);
-        return jwtUtil.extractId(token);
     }
 }

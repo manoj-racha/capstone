@@ -154,24 +154,7 @@
         </a>
     </div>
 
-    <!-- Discount Teaser (only when verified score exists) -->
-    @if (dashboard()?.latestScore) {
-    <div
-        class="bg-gradient-to-r from-gs-green/20 to-gs-bg border border-gs-dark/20 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="flex items-start gap-4">
-            <span class="text-3xl">🏆</span>
-            <div>
-                <h3 class="text-lg font-bold text-gs-text">You qualify for a premium discount</h3>
-                <p class="text-sm text-gs-muted mt-1">Your verified carbon score unlocks savings on all GreenSure
-                    policies.</p>
-            </div>
-        </div>
-        <a routerLink="/user/policies"
-            class="shrink-0 bg-gs-dark text-white px-6 py-2.5 text-sm rounded-lg font-bold hover:bg-gs-mid transition-colors">
-            View My Policies
-        </a>
-    </div>
-    }
+
 
     @if (dashboard()?.latestScore; as s) {
     <!-- Comparison Metrics -->

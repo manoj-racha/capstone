@@ -13,11 +13,7 @@ export class DeclarationService {
     private httpClient: HttpClient = inject(HttpClient);
     private apiUrl: string = environment.apiUrl;
 
-    // POST /declaration/start
-    // Creates a new DRAFT declaration for the current year.
-    // Backend enforces one declaration per year per user.
-    // Returns the new DeclarationResponse with declarationId.
-    // After this, navigate to the fill form using that id.
+
     startDeclaration(): Observable<ApiResponse<DeclarationResponse>> {
         return this.httpClient.post<ApiResponse<DeclarationResponse>>(
             `${this.apiUrl}/declaration/start`,
@@ -25,10 +21,7 @@ export class DeclarationService {
         );
     }
 
-    // PUT /declaration/{id}/save
-    // Saves the declaration form as a draft (auto-save or manual save).
-    // All fields are optional — only changed fields need to be sent.
-    // Does NOT submit — user can keep editing after saving.
+
     saveDraft(id: number, data: DeclarationRequest): Observable<ApiResponse<DeclarationResponse>> {
         return this.httpClient.put<ApiResponse<DeclarationResponse>>(
             `${this.apiUrl}/declaration/${id}/save`,
@@ -36,10 +29,7 @@ export class DeclarationService {
         );
     }
 
-    // PUT /declaration/{id}/submit
-    // Submits the declaration for verification.
-    // Changes status from DRAFT → SUBMITTED.
-    // Backend auto-assigns an agent within 30 minutes via scheduler.
+
     submitDeclaration(id: number): Observable<ApiResponse<DeclarationResponse>> {
         return this.httpClient.put<ApiResponse<DeclarationResponse>>(
             `${this.apiUrl}/declaration/${id}/submit`,

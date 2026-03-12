@@ -3,13 +3,13 @@ package org.hartford.greensure.controller;
 import org.hartford.greensure.dto.request.VerificationRequest;
 import org.hartford.greensure.dto.response.*;
 import org.hartford.greensure.entity.AgentAssignment;
-import org.hartford.greensure.security.JwtUtil;
+import org.hartford.greensure.security.SecurityUser;
 import org.hartford.greensure.service.AgentService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,25 +21,22 @@ public class AgentController {
 
     @Autowired
     private AgentService agentService;
-    @Autowired
-    private JwtUtil jwtUtil;
 
     @GetMapping("/dashboard")
-    public ResponseEntity<ApiResponse<List<AgentTaskResponse>>> getDashboard(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<List<AgentTaskResponse>>> getDashboard(
+            @AuthenticationPrincipal SecurityUser user) {
 
-        Long agentId = extractAgentId(request);
-        List<AgentTaskResponse> tasks = agentService.getDashboard(agentId);
+        List<AgentTaskResponse> tasks = agentService.getDashboard(user.getId());
         return ResponseEntity.ok(
                 ApiResponse.success("Dashboard fetched", tasks));
     }
 
     @GetMapping("/assignments")
     public ResponseEntity<ApiResponse<List<AgentTaskResponse>>> getAssignments(
-            HttpServletRequest request,
+            @AuthenticationPrincipal SecurityUser user,
             @RequestParam(required = false) AgentAssignment.AssignmentStatus status) {
 
-        Long agentId = extractAgentId(request);
-        List<AgentTaskResponse> tasks = agentService.getAssignments(agentId, status);
+        List<AgentTaskResponse> tasks = agentService.getAssignments(user.getId(), status);
         return ResponseEntity.ok(
                 ApiResponse.success("Assignments fetched", tasks));
     }
@@ -47,10 +44,9 @@ public class AgentController {
     @GetMapping("/assignment/{id}")
     public ResponseEntity<ApiResponse<AgentTaskResponse>> getAssignment(
             @PathVariable Long id,
-            HttpServletRequest request) {
+            @AuthenticationPrincipal SecurityUser user) {
 
-        Long agentId = extractAgentId(request);
-        List<AgentTaskResponse> all = agentService.getDashboard(agentId);
+        List<AgentTaskResponse> all = agentService.getDashboard(user.getId());
         AgentTaskResponse task = all.stream()
                 .filter(t -> t.getAssignmentId().equals(id))
                 .findFirst()
@@ -62,10 +58,9 @@ public class AgentController {
     @PutMapping("/assignment/{id}/start")
     public ResponseEntity<ApiResponse<AgentTaskResponse>> startAssignment(
             @PathVariable Long id,
-            HttpServletRequest request) {
+            @AuthenticationPrincipal SecurityUser user) {
 
-        Long agentId = extractAgentId(request);
-        AgentTaskResponse task = agentService.startAssignment(id, agentId);
+        AgentTaskResponse task = agentService.startAssignment(id, user.getId());
         return ResponseEntity.ok(
                 ApiResponse.success("Assignment started", task));
     }
@@ -73,21 +68,20 @@ public class AgentController {
     @PostMapping("/verification/{assignmentId}/submit")
     public ResponseEntity<ApiResponse<Void>> submitVerification(
             @PathVariable Long assignmentId,
-            HttpServletRequest request,
+            @AuthenticationPrincipal SecurityUser user,
             @Valid @RequestBody VerificationRequest body) {
 
-        Long agentId = extractAgentId(request);
-        agentService.submitVerification(assignmentId, agentId, body);
+        agentService.submitVerification(assignmentId, user.getId(), body);
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Verification submitted successfully. Carbon score will be calculated shortly."));
     }
 
     @GetMapping("/performance")
-    public ResponseEntity<ApiResponse<AgentPerformanceResponse>> getPerformance(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<AgentPerformanceResponse>> getPerformance(
+            @AuthenticationPrincipal SecurityUser user) {
 
-        Long agentId = extractAgentId(request);
-        AgentPerformanceResponse performance = agentService.getPerformance(agentId);
+        AgentPerformanceResponse performance = agentService.getPerformance(user.getId());
         return ResponseEntity.ok(
                 ApiResponse.success("Performance fetched", performance));
     }
@@ -95,16 +89,10 @@ public class AgentController {
     @GetMapping("/assignment/{id}/declaration")
     public ResponseEntity<ApiResponse<DeclarationResponse>> getDeclarationForAssignment(
             @PathVariable Long id,
-            HttpServletRequest request) {
+            @AuthenticationPrincipal SecurityUser user) {
 
-        Long agentId = extractAgentId(request);
-        DeclarationResponse declaration = agentService.getDeclarationForAssignment(id, agentId);
+        DeclarationResponse declaration = agentService.getDeclarationForAssignment(id, user.getId());
         return ResponseEntity.ok(
                 ApiResponse.success("Declaration fetched successfully", declaration));
-    }
-
-    private Long extractAgentId(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").substring(7);
-        return jwtUtil.extractId(token);
     }
 }

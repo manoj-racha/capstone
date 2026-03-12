@@ -45,8 +45,6 @@ public class AdminController {
         @Autowired
         private PasswordEncoder passwordEncoder;
         @Autowired
-        private JwtUtil jwtUtil;
-        @Autowired
         private EmailService emailService;
 
         @GetMapping("/users")

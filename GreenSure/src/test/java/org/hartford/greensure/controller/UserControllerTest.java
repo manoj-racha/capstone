@@ -3,7 +3,7 @@ package org.hartford.greensure.controller;
 import org.hartford.greensure.dto.response.ApiResponse;
 import org.hartford.greensure.dto.response.DashboardResponse;
 import org.hartford.greensure.dto.response.UserProfileResponse;
-import org.hartford.greensure.security.JwtUtil;
+import org.hartford.greensure.security.SecurityUser;
 import org.hartford.greensure.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import jakarta.servlet.http.HttpServletRequest;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -26,15 +25,11 @@ public class UserControllerTest {
     private UserService userService;
 
     @Mock
-    private JwtUtil jwtUtil;
-
-    @Mock
-    private HttpServletRequest request;
+    private SecurityUser securityUser;
 
     @InjectMocks
     private UserController userController;
 
-    private final String dummyToken = "Bearer dummy.jwt.token";
     private final Long userId = 1L;
 
     @BeforeEach
@@ -44,8 +39,7 @@ public class UserControllerTest {
 
     @Test
     void testGetProfile() {
-        when(request.getHeader("Authorization")).thenReturn(dummyToken);
-        when(jwtUtil.extractId("dummy.jwt.token")).thenReturn(userId);
+        when(securityUser.getId()).thenReturn(userId);
 
         UserProfileResponse mockProfile = UserProfileResponse.builder()
                 .userId(userId)
@@ -54,7 +48,7 @@ public class UserControllerTest {
         
         when(userService.getProfile(userId)).thenReturn(mockProfile);
 
-        ResponseEntity<ApiResponse<UserProfileResponse>> response = userController.getProfile(request);
+        ResponseEntity<ApiResponse<UserProfileResponse>> response = userController.getProfile(securityUser);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -63,14 +57,12 @@ public class UserControllerTest {
         assertEquals("Profile fetched", response.getBody().getMessage());
         assertEquals(mockProfile, response.getBody().getData());
 
-        verify(jwtUtil, times(1)).extractId(anyString());
         verify(userService, times(1)).getProfile(userId);
     }
 
     @Test
     void testUpdateProfile() {
-        when(request.getHeader("Authorization")).thenReturn(dummyToken);
-        when(jwtUtil.extractId("dummy.jwt.token")).thenReturn(userId);
+        when(securityUser.getId()).thenReturn(userId);
 
         UserProfileResponse updateRequest = UserProfileResponse.builder()
                 .fullName("John Updated")
@@ -83,7 +75,7 @@ public class UserControllerTest {
 
         when(userService.updateProfile(userId, updateRequest)).thenReturn(updatedProfile);
 
-        ResponseEntity<ApiResponse<UserProfileResponse>> response = userController.updateProfile(request, updateRequest);
+        ResponseEntity<ApiResponse<UserProfileResponse>> response = userController.updateProfile(securityUser, updateRequest);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -92,14 +84,12 @@ public class UserControllerTest {
         assertEquals("Profile updated", response.getBody().getMessage());
         assertEquals(updatedProfile, response.getBody().getData());
 
-        verify(jwtUtil, times(1)).extractId(anyString());
         verify(userService, times(1)).updateProfile(userId, updateRequest);
     }
 
     @Test
     void testGetDashboard() {
-        when(request.getHeader("Authorization")).thenReturn(dummyToken);
-        when(jwtUtil.extractId("dummy.jwt.token")).thenReturn(userId);
+        when(securityUser.getId()).thenReturn(userId);
 
         DashboardResponse mockDashboard = DashboardResponse.builder()
                 .userId(userId)
@@ -108,7 +98,7 @@ public class UserControllerTest {
 
         when(userService.getDashboard(userId)).thenReturn(mockDashboard);
 
-        ResponseEntity<ApiResponse<DashboardResponse>> response = userController.getDashboard(request);
+        ResponseEntity<ApiResponse<DashboardResponse>> response = userController.getDashboard(securityUser);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -117,7 +107,6 @@ public class UserControllerTest {
         assertEquals("Dashboard fetched", response.getBody().getMessage());
         assertEquals(mockDashboard, response.getBody().getData());
 
-        verify(jwtUtil, times(1)).extractId(anyString());
         verify(userService, times(1)).getDashboard(userId);
     }
 }

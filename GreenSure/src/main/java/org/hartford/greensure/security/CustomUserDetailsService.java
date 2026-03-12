@@ -32,6 +32,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmail(email).orElse(null);
         if (user != null) {
             return buildUserDetails(
+                    user.getUserId(),
                     user.getEmail(),
                     user.getPasswordHash(),
                     "ROLE_USER"
@@ -45,6 +46,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                     ? "ROLE_ADMIN"
                     : "ROLE_AGENT";
             return buildUserDetails(
+                    agent.getAgentId(),
                     agent.getEmail(),
                     agent.getPasswordHash(),
                     role
@@ -58,8 +60,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     // ── Private helper to build UserDetails ───────────────────
 
     private UserDetails buildUserDetails(
-            String email, String passwordHash, String role) {
-        return new org.springframework.security.core.userdetails.User(
+            Long id, String email, String passwordHash, String role) {
+        return new SecurityUser(
+                id,
                 email,
                 passwordHash,
                 List.of(new SimpleGrantedAuthority(role))

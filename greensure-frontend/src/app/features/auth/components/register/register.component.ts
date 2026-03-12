@@ -157,7 +157,7 @@ export class RegisterComponent {
         setTimeout(() => {
             const firstInvalidControl = document.querySelector('.ng-invalid');
             if (firstInvalidControl) {
-                firstInvalidControl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalidControl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         }, 100);
     }

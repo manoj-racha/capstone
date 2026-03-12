@@ -1,8 +1,9 @@
 <!-- ── LOGIN PAGE ─────────────────────────────────────── -->
 <div class="min-h-screen flex items-center justify-center px-4 py-12 bg-gs-bg relative">
-    
+
     <!-- Back to landing -->
-    <a routerLink="/landing" class="absolute top-6 left-6 flex items-center gap-2 text-gs-body font-medium hover:text-gs-dark transition-colors">
+    <a routerLink="/landing"
+        class="absolute top-6 left-6 flex items-center gap-2 text-gs-body font-medium hover:text-gs-dark transition-colors">
         <lucide-icon [img]="ArrowLeft" [size]="18"></lucide-icon>
         Back to Home
     </a>
@@ -11,7 +12,8 @@
 
         <!-- Logo / Brand -->
         <div class="text-center">
-            <a routerLink="/landing" class="inline-flex items-center gap-2 font-heading text-3xl font-bold text-gs-dark">
+            <a routerLink="/landing"
+                class="inline-flex items-center gap-2 font-heading text-3xl font-bold text-gs-dark">
                 <lucide-icon [img]="Leaf" [size]="32" class="text-gs-accent"></lucide-icon>
                 GreenSure
             </a>
@@ -42,13 +44,15 @@
         } @else {
 
         <!-- Login Card -->
-        <div class="bg-gs-surface border border-gs-border rounded-xl p-8 shadow-[0_4px_24px_rgba(30,92,58,0.06)] space-y-6">
+        <div
+            class="bg-gs-surface border border-gs-border rounded-xl p-8 shadow-[0_4px_24px_rgba(30,92,58,0.06)] space-y-6">
 
             <h1 class="font-heading text-2xl font-bold text-gs-text">Login to Your Account</h1>
 
             <!-- Error Message -->
             @if (errorMessage()) {
-            <div class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 flex items-start gap-3">
+            <div
+                class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 flex items-start gap-3">
                 <lucide-icon [img]="AlertTriangle" [size]="18" class="text-red-500 shrink-0 mt-0.5"></lucide-icon>
                 <span>{{ errorMessage() }}</span>
             </div>
@@ -59,33 +63,35 @@
 
                 <!-- Email -->
                 <div>
-                    <label for="email" class="block text-sm font-semibold text-gs-text mb-1.5">Email <span class="text-red-500">*</span></label>
+                    <label for="email" class="block text-sm font-semibold text-gs-text mb-1.5">Email <span
+                            class="text-red-500">*</span></label>
                     <input id="email" type="email" placeholder="you@example.com" [ngModel]="email()"
                         (ngModelChange)="email.set($event)" name="email" required email #emailInput="ngModel"
                         [class]="(emailInput.invalid && (emailInput.dirty || emailInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
                     @if (emailInput.invalid && (emailInput.dirty || emailInput.touched || submitted())) {
-                        @if (emailInput.errors?.['required']) {
-                            <p class="text-red-500 text-xs mt-1.5 font-medium">Email is required</p>
-                        }
-                        @if (emailInput.errors?.['email']) {
-                            <p class="text-red-500 text-xs mt-1.5 font-medium">Enter a valid email address</p>
-                        }
+                    @if (emailInput.errors?.['required']) {
+                    <p class="text-red-500 text-xs mt-1.5 font-medium">Email is required</p>
+                    }
+                    @if (emailInput.errors?.['email']) {
+                    <p class="text-red-500 text-xs mt-1.5 font-medium">Enter a valid email address</p>
+                    }
                     }
                 </div>
 
                 <!-- Password -->
                 <div>
                     <div class="flex justify-between items-center mb-1.5">
-                        <label for="password" class="block text-sm font-semibold text-gs-text">Password <span class="text-red-500">*</span></label>
-                        <a routerLink="/forgot-password" class="text-xs font-semibold text-gs-accent hover:text-gs-mid transition-colors">
+                        <label for="password" class="block text-sm font-semibold text-gs-text">Password <span
+                                class="text-red-500">*</span></label>
+                        <!-- <a routerLink="/forgot-password" class="text-xs font-semibold text-gs-accent hover:text-gs-mid transition-colors">
                             Forgot password?
-                        </a>
+                        </a> -->
                     </div>
                     <input id="password" type="password" placeholder="••••••••" [ngModel]="password()"
                         (ngModelChange)="password.set($event)" name="password" required #passwordInput="ngModel"
                         [class]="(passwordInput.invalid && (passwordInput.dirty || passwordInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
                     @if (passwordInput.invalid && (passwordInput.dirty || passwordInput.touched || submitted())) {
-                        <p class="text-red-500 text-xs mt-1.5 font-medium">Password is required</p>
+                    <p class="text-red-500 text-xs mt-1.5 font-medium">Password is required</p>
                     }
                 </div>
 

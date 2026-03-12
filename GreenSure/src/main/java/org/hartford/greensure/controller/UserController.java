@@ -1,12 +1,12 @@
 package org.hartford.greensure.controller;
 
 import org.hartford.greensure.dto.response.*;
-import org.hartford.greensure.security.JwtUtil;
+import org.hartford.greensure.security.SecurityUser;
 import org.hartford.greensure.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,14 +15,12 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     @Autowired private UserService userService;
-    @Autowired private JwtUtil jwtUtil;
 
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<UserProfileResponse>>
-            getProfile(HttpServletRequest request) {
+            getProfile(@AuthenticationPrincipal SecurityUser user) {
 
-        Long userId = extractUserId(request);
-        UserProfileResponse profile = userService.getProfile(userId);
+        UserProfileResponse profile = userService.getProfile(user.getId());
         return ResponseEntity.ok(
             ApiResponse.success("Profile fetched", profile));
     }
@@ -30,27 +28,20 @@ public class UserController {
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<UserProfileResponse>>
             updateProfile(
-                HttpServletRequest request,
+                @AuthenticationPrincipal SecurityUser user,
                 @RequestBody UserProfileResponse updateRequest) {
 
-        Long userId = extractUserId(request);
-        UserProfileResponse updated = userService.updateProfile(userId, updateRequest);
+        UserProfileResponse updated = userService.updateProfile(user.getId(), updateRequest);
         return ResponseEntity.ok(
             ApiResponse.success("Profile updated", updated));
     }
 
     @GetMapping("/dashboard")
     public ResponseEntity<ApiResponse<DashboardResponse>>
-            getDashboard(HttpServletRequest request) {
+            getDashboard(@AuthenticationPrincipal SecurityUser user) {
 
-        Long userId = extractUserId(request);
-        DashboardResponse dashboard = userService.getDashboard(userId);
+        DashboardResponse dashboard = userService.getDashboard(user.getId());
         return ResponseEntity.ok(
             ApiResponse.success("Dashboard fetched", dashboard));
-    }
-
-    private Long extractUserId(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").substring(7);
-        return jwtUtil.extractId(token);
     }
 }
