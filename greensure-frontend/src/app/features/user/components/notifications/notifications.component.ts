@@ -40,9 +40,20 @@ export class NotificationsComponent implements OnInit {
         this.notificationService.markAsRead(id).subscribe({
             next: (res) => {
                 if (res.success) {
-                    // Update local state without full reload
                     this.notifications.update(list =>
                         list.map(n => n.notificationId === id ? { ...n, status: 'READ' } : n)
+                    );
+                }
+            }
+        });
+    }
+
+    markAllAsRead(): void {
+        this.notificationService.markAllAsRead().subscribe({
+            next: (res) => {
+                if (res.success) {
+                    this.notifications.update(list =>
+                        list.map(n => ({ ...n, status: 'READ' }))
                     );
                 }
             }

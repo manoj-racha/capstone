@@ -28,6 +28,14 @@ export class NotificationService {
         );
     }
 
+    // PUT /notifications/mark-all-read — mark all notifications as read
+    markAllAsRead(): Observable<ApiResponse<void>> {
+        return this.httpClient.put<ApiResponse<void>>(
+            `${this.apiUrl}/notifications/mark-all-read`,
+            {}
+        );
+    }
+
     // GET /notifications/unread-count — fetch count for the notification bell badge
     getUnreadCount(): Observable<ApiResponse<number>> {
         return this.httpClient.get<ApiResponse<number>>(

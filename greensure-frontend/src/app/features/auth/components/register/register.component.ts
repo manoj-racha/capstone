@@ -67,6 +67,10 @@ export class RegisterComponent {
         return '';
     });
 
+    passwordsMatch = computed(() => {
+        return this.password() === this.confirmPassword();
+    });
+
     // ── UI state ─────────────────────────────────────────────
     errorMessage = signal('');
     successMessage = signal('');
@@ -94,7 +98,7 @@ export class RegisterComponent {
         }
 
         // Client-side password match check
-        if (this.password() !== this.confirmPassword()) {
+        if (!this.passwordsMatch()) {
             this.errorMessage.set('Passwords do not match');
             return;
         }

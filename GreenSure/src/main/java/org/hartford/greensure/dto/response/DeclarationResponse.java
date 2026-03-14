@@ -18,6 +18,7 @@ public class DeclarationResponse {
     private Integer resubmissionCount;
     private LocalDateTime submittedAt;
     private LocalDateTime createdAt;
+    private String rejectionReason;
 
     private Double electricityUnits;
     private Boolean hasSolar;

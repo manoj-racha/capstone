@@ -4,6 +4,7 @@ import org.hartford.greensure.dto.request.*;
 import org.hartford.greensure.dto.response.*;
 import org.hartford.greensure.entity.*;
 import org.hartford.greensure.repository.*;
+import org.hartford.greensure.exception.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,16 +31,18 @@ public class DeclarationService {
                     .orElseThrow();
 
             if (existing.getStatus() != CarbonDeclaration.DeclarationStatus.REJECTED) {
-                throw new RuntimeException("You already have an active declaration for " + currentYear);
+                throw new BadRequestException("You already have an active declaration for " + currentYear);
             }
 
             if (existing.getResubmissionCount() >= 3) {
-                throw new RuntimeException("Maximum resubmissions reached. Contact admin to unlock your account.");
+                throw new BadRequestException("Maximum resubmissions reached. Contact admin to unlock your account.");
             }
+            
+            return mapToResponse(existing);
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         CarbonDeclaration declaration = CarbonDeclaration.builder()
                 .user(user)
@@ -56,8 +59,13 @@ public class DeclarationService {
     public DeclarationResponse saveDraft(Long declarationId, Long userId, DeclarationRequest request) {
         CarbonDeclaration declaration = getAndValidateDeclaration(declarationId, userId);
 
-        if (declaration.getStatus() != CarbonDeclaration.DeclarationStatus.DRAFT) {
-            throw new RuntimeException("Declaration cannot be edited in its current status: " + declaration.getStatus());
+        if (declaration.getStatus() != CarbonDeclaration.DeclarationStatus.DRAFT && 
+            declaration.getStatus() != CarbonDeclaration.DeclarationStatus.REJECTED) {
+            throw new BadRequestException("Declaration cannot be edited in its current status: " + declaration.getStatus());
+        }
+
+        if (declaration.getResubmissionCount() >= 3) {
+            throw new BadRequestException("Maximum resubmissions reached. Declaration cannot be edited.");
         }
 
         populateDeclarationFields(declaration, request);
@@ -69,12 +77,21 @@ public class DeclarationService {
     public DeclarationResponse submitDeclaration(Long declarationId, Long userId) {
         CarbonDeclaration declaration = getAndValidateDeclaration(declarationId, userId);
 
-        if (declaration.getStatus() != CarbonDeclaration.DeclarationStatus.DRAFT) {
-            throw new RuntimeException("Only DRAFT declarations can be submitted");
+        if (declaration.getStatus() != CarbonDeclaration.DeclarationStatus.DRAFT && 
+            declaration.getStatus() != CarbonDeclaration.DeclarationStatus.REJECTED) {
+            throw new BadRequestException("Only DRAFT or REJECTED declarations can be submitted");
+        }
+
+        if (declaration.getResubmissionCount() >= 3) {
+            throw new BadRequestException("Maximum resubmissions reached. Declaration cannot be submitted.");
         }
 
         if (declaration.getElectricityUnits() == null) {
-            throw new RuntimeException("Electricity units are required before submission");
+            throw new BadRequestException("Electricity units are required before submission");
+        }
+
+        if (declaration.getStatus() == CarbonDeclaration.DeclarationStatus.REJECTED) {
+            declaration.setResubmissionCount(declaration.getResubmissionCount() + 1);
         }
 
         declaration.setStatus(CarbonDeclaration.DeclarationStatus.SUBMITTED);
@@ -94,8 +111,13 @@ public class DeclarationService {
     public VehicleResponse addVehicle(Long declarationId, Long userId, VehicleRequest request) {
         CarbonDeclaration declaration = getAndValidateDeclaration(declarationId, userId);
 
-        if (declaration.getStatus() != CarbonDeclaration.DeclarationStatus.DRAFT) {
-            throw new RuntimeException("Vehicles can only be added to DRAFT declarations");
+        if (declaration.getStatus() != CarbonDeclaration.DeclarationStatus.DRAFT && 
+            declaration.getStatus() != CarbonDeclaration.DeclarationStatus.REJECTED) {
+            throw new BadRequestException("Vehicles can only be added to DRAFT or REJECTED declarations");
+        }
+
+        if (declaration.getResubmissionCount() >= 3) {
+            throw new BadRequestException("Maximum resubmissions reached. Vehicles cannot be added.");
         }
 
         DeclarationVehicle vehicle = DeclarationVehicle.builder()
@@ -114,15 +136,20 @@ public class DeclarationService {
     public void removeVehicle(Long declarationId, Long userId, Long vehicleId) {
         CarbonDeclaration declaration = getAndValidateDeclaration(declarationId, userId);
 
-        if (declaration.getStatus() != CarbonDeclaration.DeclarationStatus.DRAFT) {
-            throw new RuntimeException("Vehicles can only be removed from DRAFT declarations");
+        if (declaration.getStatus() != CarbonDeclaration.DeclarationStatus.DRAFT && 
+            declaration.getStatus() != CarbonDeclaration.DeclarationStatus.REJECTED) {
+            throw new BadRequestException("Vehicles can only be removed from DRAFT or REJECTED declarations");
+        }
+
+        if (declaration.getResubmissionCount() >= 3) {
+            throw new BadRequestException("Maximum resubmissions reached. Vehicles cannot be removed.");
         }
 
         DeclarationVehicle vehicle = vehicleRepo.findById(vehicleId)
-                .orElseThrow(() -> new RuntimeException("Vehicle not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found"));
 
         if (!vehicle.getDeclaration().getDeclarationId().equals(declarationId)) {
-            throw new RuntimeException("Vehicle does not belong to this declaration");
+            throw new BadRequestException("Vehicle does not belong to this declaration");
         }
 
         vehicleRepo.delete(vehicle);
@@ -142,10 +169,10 @@ public class DeclarationService {
 
     private CarbonDeclaration getAndValidateDeclaration(Long declarationId, Long userId) {
         CarbonDeclaration declaration = declarationRepo.findById(declarationId)
-                .orElseThrow(() -> new RuntimeException("Declaration not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Declaration not found"));
 
         if (!declaration.getUser().getUserId().equals(userId)) {
-            throw new RuntimeException("Access denied — this declaration does not belong to you");
+            throw new UnauthorizedException("Access denied — this declaration does not belong to you");
         }
 
         return declaration;
@@ -197,6 +224,7 @@ public class DeclarationService {
                 .resubmissionCount(d.getResubmissionCount())
                 .submittedAt(d.getSubmittedAt())
                 .createdAt(d.getCreatedAt())
+                .rejectionReason(d.getRejectionReason())
                 .electricityUnits(d.getElectricityUnits())
                 .hasSolar(d.getHasSolar())
                 .solarUnits(d.getSolarUnits())

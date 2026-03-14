@@ -40,6 +40,9 @@ public class CarbonDeclaration {
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
 
+    @Column(name = "rejection_reason", length = 1000)
+    private String rejectionReason;
+
     // ── ENERGY FIELDS — Both Household and MSME ────────────────
 
     @Column(name = "electricity_units")

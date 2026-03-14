@@ -1,0 +1,122 @@
+<div class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gs-border pb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gs-text">My Policies</h1>
+            <p class="text-gs-muted mt-2">Manage and view details of your active insurance coverages.</p>
+        </div>
+        <a routerLink="/user/policies" class="inline-flex items-center px-4 py-2 bg-gs-dark text-white text-sm font-semibold rounded-lg hover:bg-gs-mid transition-all shadow-md active:scale-95">
+            <span>+</span> Browse New Policies
+        </a>
+    </div>
+
+    <!-- Error State -->
+    @if (error()) {
+    <div class="bg-red-500/10 border border-red-500/30 text-red-500 p-6 rounded-xl flex items-center gap-4 animate-shake">
+        <span class="text-2xl">⚠️</span>
+        <div class="flex-grow">
+            <h3 class="font-bold">Error loading policies</h3>
+            <p class="text-sm opacity-90">{{ error() }}</p>
+        </div>
+        <button (click)="loadMyPolicies()" class="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition-colors">Retry</button>
+    </div>
+    }
+
+    <!-- Loading State -->
+    @if (loading()) {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (i of [1,2,3]; track i) {
+        <div class="bg-gs-surface border border-gs-border rounded-2xl p-6 space-y-4 animate-pulse">
+            <div class="h-8 w-8 bg-gs-bg rounded-lg"></div>
+            <div class="h-6 w-3/4 bg-gs-bg rounded"></div>
+            <div class="h-20 w-full bg-gs-bg rounded-xl"></div>
+            <div class="flex justify-between items-center">
+                <div class="h-4 w-20 bg-gs-bg rounded"></div>
+                <div class="h-8 w-24 bg-gs-bg rounded-lg"></div>
+            </div>
+        </div>
+        }
+    </div>
+    }
+
+    <!-- No Policies State -->
+    @if (!loading() && !error() && policies().length === 0) {
+    <div class="bg-gs-surface border border-gs-border rounded-3xl p-16 text-center shadow-lg">
+        <div class="relative w-24 h-24 mx-auto mb-6">
+            <div class="absolute inset-0 bg-gs-dark/10 rounded-full animate-ping"></div>
+            <div class="relative bg-gs-bg rounded-full p-6 text-5xl">📄</div>
+        </div>
+        <h2 class="text-2xl font-bold text-gs-text mb-3">No active policies found</h2>
+        <p class="text-gs-muted max-w-md mx-auto mb-8 text-lg">You haven't purchased any policies yet. Browse our eco-friendly insurance options to get started and lower your carbon footprint footprint.</p>
+        <a routerLink="/user/policies" class="px-8 py-3 bg-gs-dark text-white font-bold rounded-xl hover:bg-gs-mid transition-all shadow-xl hover:-translate-y-1">
+            Browse Policies
+        </a>
+    </div>
+    }
+
+    <!-- Active Policies Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (p of policies(); track p.id) {
+        <div class="group bg-gs-surface border border-gs-border rounded-2xl p-6 hover:border-gs-dark/30 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1 overflow-hidden relative">
+            <!-- Background Decoration -->
+            <div class="absolute -right-4 -top-8 text-8xl opacity-5 grayscale group-hover:scale-125 transition-transform duration-700 select-none">🛡️</div>
+            
+            <div class="relative z-10">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-gs-dark/10 text-gs-dark flex items-center justify-center text-2xl">
+                        {{ p.policyType === 'HOME' ? '🏠' : (p.policyType === 'VEHICLE' ? '🚗' : '💼') }}
+                    </div>
+                    <span class="px-3 py-1 bg-green-500/10 text-green-500 text-xs font-bold rounded-full uppercase tracking-wider border border-green-500/20">Active</span>
+                </div>
+
+                <h3 class="text-lg font-bold text-gs-text mb-1">{{ p.policyName }}</h3>
+                <p class="text-sm text-gs-muted font-medium mb-4">{{ p.planName }}</p>
+
+                <div class="bg-gs-bg/50 rounded-xl p-4 mb-6 grid grid-cols-2 gap-4 border border-gs-border/30">
+                    <div>
+                        <p class="text-[10px] text-gs-muted uppercase font-bold tracking-widest mb-1">Coverage</p>
+                        <p class="font-bold text-gs-text">{{ formatCoverage(p.coverageAmount) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gs-muted uppercase font-bold tracking-widest mb-1">Duration</p>
+                        <p class="font-bold text-gs-text">{{ p.durationMonths }} Mo</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3 mb-6">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gs-muted font-medium">Purchased On</span>
+                        <span class="text-gs-text font-bold">{{ p.purchasedAt | date:'mediumDate' }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gs-muted font-medium">Days Remaining</span>
+                        <span class="text-gs-text font-bold" [class.text-red-500]="getDaysRemaining(p.purchasedAt, p.durationMonths) < 30">
+                            {{ getDaysRemaining(p.purchasedAt, p.durationMonths) }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gs-border/50 flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] text-gs-muted uppercase font-bold tracking-widest mb-1">Premium Paid</p>
+                        <p class="text-xl font-bold text-gs-dark">{{ formatCurrency(p.finalPrice) }}</p>
+                    </div>
+                    <button class="px-4 py-2 text-gs-dark font-bold text-sm hover:bg-gs-dark/5 rounded-lg transition-colors flex items-center gap-2 group/btn">
+                        Details
+                        <svg class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Expiry Warning Banner -->
+            @if (isExpiringSoon(p.purchasedAt, p.durationMonths)) {
+                <div class="absolute bottom-0 left-0 right-0 bg-yellow-500 text-white text-[10px] font-bold py-1 text-center uppercase tracking-widest animate-pulse">
+                    Expiring Soon!
+                </div>
+            }
+        </div>
+        }
+    </div>
+</div>

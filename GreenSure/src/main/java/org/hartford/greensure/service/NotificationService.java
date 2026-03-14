@@ -36,6 +36,13 @@ public class NotificationService {
         });
     }
 
+    public void markAllAsRead(Notification.RecipientType type, Long recipientId) {
+        List<Notification> unread = notificationRepo.findByRecipientTypeAndRecipientIdAndStatus(
+                type, recipientId, Notification.NotificationStatus.SENT);
+        unread.forEach(n -> n.setStatus(Notification.NotificationStatus.DELIVERED));
+        notificationRepo.saveAll(unread);
+    }
+
     public long getUnreadCount(Notification.RecipientType type, Long recipientId) {
         return notificationRepo.countByRecipientTypeAndRecipientIdAndStatus(
                 type, recipientId, Notification.NotificationStatus.SENT);

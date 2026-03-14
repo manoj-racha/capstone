@@ -1,7 +1,17 @@
 <div class="max-w-4xl mx-auto px-4 py-8 space-y-8">
-    <div class="border-b border-gs-border pb-4">
-        <h1 class="text-2xl font-bold text-gs-text flex items-center gap-2"><span>🔔</span> Notifications</h1>
-        <p class="text-gs-muted mt-1">Updates on your declarations and account activity</p>
+    <div class="flex items-center justify-between border-b border-gs-border pb-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gs-text flex items-center gap-2"><span>🔔</span> Notifications</h1>
+            <p class="text-gs-muted mt-1">Updates on your declarations and account activity</p>
+        </div>
+        @if (notifications().length > 0) {
+            <button (click)="markAllAsRead()" class="text-sm font-semibold text-gs-dark hover:text-gs-mid transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Mark all as read
+            </button>
+        }
     </div>
 
 

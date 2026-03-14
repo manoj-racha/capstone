@@ -18,7 +18,11 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm font-semibold">Electricity Units (Monthly) <span class="text-red-500">*</span></label>
           <input type="number" min="0" formControlName="electricityUnits"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('electricityUnits')?.invalid && fillForm.get('electricityUnits')?.touched"
+            [class.border-gs-border]="!(fillForm.get('electricityUnits')?.invalid && fillForm.get('electricityUnits')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('electricityUnits')?.invalid && fillForm.get('electricityUnits')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('electricityUnits')?.invalid && fillForm.get('electricityUnits')?.touched">
         </div>
         <div class="flex items-center space-x-2 mt-6">
           <input type="checkbox" formControlName="hasSolar" id="hasSolar" class="accent-gs-green w-4 h-4">
@@ -29,14 +33,22 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Solar Units Generated</label>
           <input type="number" min="0" formControlName="solarUnits"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('solarUnits')?.invalid && fillForm.get('solarUnits')?.touched"
+            [class.border-gs-border]="!(fillForm.get('solarUnits')?.invalid && fillForm.get('solarUnits')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('solarUnits')?.invalid && fillForm.get('solarUnits')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('solarUnits')?.invalid && fillForm.get('solarUnits')?.touched">
         </div>
         }
 
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Cooking Fuel Type</label>
           <select formControlName="cookingFuelType"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('cookingFuelType')?.invalid && fillForm.get('cookingFuelType')?.touched"
+            [class.border-gs-border]="!(fillForm.get('cookingFuelType')?.invalid && fillForm.get('cookingFuelType')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('cookingFuelType')?.invalid && fillForm.get('cookingFuelType')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('cookingFuelType')?.invalid && fillForm.get('cookingFuelType')?.touched">
             <option value="NONE">None</option>
             <option value="LPG">LPG</option>
             <option value="PNG">PNG</option>
@@ -50,21 +62,33 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">LPG Cylinders per Month</label>
           <input type="number" min="0" formControlName="lpgCylinders"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('lpgCylinders')?.invalid && fillForm.get('lpgCylinders')?.touched"
+            [class.border-gs-border]="!(fillForm.get('lpgCylinders')?.invalid && fillForm.get('lpgCylinders')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('lpgCylinders')?.invalid && fillForm.get('lpgCylinders')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('lpgCylinders')?.invalid && fillForm.get('lpgCylinders')?.touched">
         </div>
         }
         @case ('PNG') {
         <div>
           <label class="block text-gs-muted mb-1 text-sm">PNG Units per Month</label>
           <input type="number" min="0" formControlName="pngUnits"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('pngUnits')?.invalid && fillForm.get('pngUnits')?.touched"
+            [class.border-gs-border]="!(fillForm.get('pngUnits')?.invalid && fillForm.get('pngUnits')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('pngUnits')?.invalid && fillForm.get('pngUnits')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('pngUnits')?.invalid && fillForm.get('pngUnits')?.touched">
         </div>
         }
         @case ('BIOMASS') {
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Biomass (kg per day)</label>
           <input type="number" min="0" formControlName="biomassKgPerDay"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('biomassKgPerDay')?.invalid && fillForm.get('biomassKgPerDay')?.touched"
+            [class.border-gs-border]="!(fillForm.get('biomassKgPerDay')?.invalid && fillForm.get('biomassKgPerDay')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('biomassKgPerDay')?.invalid && fillForm.get('biomassKgPerDay')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('biomassKgPerDay')?.invalid && fillForm.get('biomassKgPerDay')?.touched">
         </div>
         }
         }
@@ -72,12 +96,20 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Number of AC Units</label>
           <input type="number" min="0" formControlName="numAcUnits"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('numAcUnits')?.invalid && fillForm.get('numAcUnits')?.touched"
+            [class.border-gs-border]="!(fillForm.get('numAcUnits')?.invalid && fillForm.get('numAcUnits')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('numAcUnits')?.invalid && fillForm.get('numAcUnits')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('numAcUnits')?.invalid && fillForm.get('numAcUnits')?.touched">
         </div>
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Avg AC Hours / Day</label>
           <input type="number" min="0" formControlName="acHoursPerDay"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('acHoursPerDay')?.invalid && fillForm.get('acHoursPerDay')?.touched"
+            [class.border-gs-border]="!(fillForm.get('acHoursPerDay')?.invalid && fillForm.get('acHoursPerDay')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('acHoursPerDay')?.invalid && fillForm.get('acHoursPerDay')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('acHoursPerDay')?.invalid && fillForm.get('acHoursPerDay')?.touched">
         </div>
 
         <div class="flex items-center space-x-2 mt-6">
@@ -89,7 +121,11 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Generator Hours / Month</label>
           <input type="number" min="0" formControlName="generatorHoursPerMonth"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('generatorHoursPerMonth')?.invalid && fillForm.get('generatorHoursPerMonth')?.touched"
+            [class.border-gs-border]="!(fillForm.get('generatorHoursPerMonth')?.invalid && fillForm.get('generatorHoursPerMonth')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('generatorHoursPerMonth')?.invalid && fillForm.get('generatorHoursPerMonth')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('generatorHoursPerMonth')?.invalid && fillForm.get('generatorHoursPerMonth')?.touched">
         </div>
         }
       </div>
@@ -108,7 +144,11 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Public Transport Distance (km / month)</label>
           <input type="number" min="0" formControlName="publicTransportKm"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('publicTransportKm')?.invalid && fillForm.get('publicTransportKm')?.touched"
+            [class.border-gs-border]="!(fillForm.get('publicTransportKm')?.invalid && fillForm.get('publicTransportKm')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('publicTransportKm')?.invalid && fillForm.get('publicTransportKm')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('publicTransportKm')?.invalid && fillForm.get('publicTransportKm')?.touched">
         </div>
         }
       </div>
@@ -122,7 +162,11 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Dietary Pattern</label>
           <select formControlName="dietaryPattern"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('dietaryPattern')?.invalid && fillForm.get('dietaryPattern')?.touched"
+            [class.border-gs-border]="!(fillForm.get('dietaryPattern')?.invalid && fillForm.get('dietaryPattern')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('dietaryPattern')?.invalid && fillForm.get('dietaryPattern')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('dietaryPattern')?.invalid && fillForm.get('dietaryPattern')?.touched">
             <option value="VEGAN">Vegan</option>
             <option value="VEGETARIAN">Vegetarian</option>
             <option value="EGGETARIAN">Eggetarian</option>
@@ -133,7 +177,11 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Online Shopping Orders / Month</label>
           <select formControlName="shoppingOrdersPerMonth"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('shoppingOrdersPerMonth')?.invalid && fillForm.get('shoppingOrdersPerMonth')?.touched"
+            [class.border-gs-border]="!(fillForm.get('shoppingOrdersPerMonth')?.invalid && fillForm.get('shoppingOrdersPerMonth')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('shoppingOrdersPerMonth')?.invalid && fillForm.get('shoppingOrdersPerMonth')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('shoppingOrdersPerMonth')?.invalid && fillForm.get('shoppingOrdersPerMonth')?.touched">
             <option value="ZERO_TO_FIVE">0 to 5</option>
             <option value="SIX_TO_FIFTEEN">6 to 15</option>
             <option value="ABOVE_FIFTEEN">Above 15</option>
@@ -159,7 +207,11 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Commercial Vehicle (km / month)</label>
           <input type="number" min="0" formControlName="commercialVehicleKm"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('commercialVehicleKm')?.invalid && fillForm.get('commercialVehicleKm')?.touched"
+            [class.border-gs-border]="!(fillForm.get('commercialVehicleKm')?.invalid && fillForm.get('commercialVehicleKm')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('commercialVehicleKm')?.invalid && fillForm.get('commercialVehicleKm')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('commercialVehicleKm')?.invalid && fillForm.get('commercialVehicleKm')?.touched">
         </div>
         }
 
@@ -167,22 +219,38 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Third Party Shipments / Month</label>
           <input type="number" min="0" formControlName="thirdPartyShipments"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('thirdPartyShipments')?.invalid && fillForm.get('thirdPartyShipments')?.touched"
+            [class.border-gs-border]="!(fillForm.get('thirdPartyShipments')?.invalid && fillForm.get('thirdPartyShipments')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('thirdPartyShipments')?.invalid && fillForm.get('thirdPartyShipments')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('thirdPartyShipments')?.invalid && fillForm.get('thirdPartyShipments')?.touched">
         </div>
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Employees using Private Vehicles</label>
           <input type="number" min="0" formControlName="employeesPrivateVehicle"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('employeesPrivateVehicle')?.invalid && fillForm.get('employeesPrivateVehicle')?.touched"
+            [class.border-gs-border]="!(fillForm.get('employeesPrivateVehicle')?.invalid && fillForm.get('employeesPrivateVehicle')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('employeesPrivateVehicle')?.invalid && fillForm.get('employeesPrivateVehicle')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('employeesPrivateVehicle')?.invalid && fillForm.get('employeesPrivateVehicle')?.touched">
         </div>
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Employees using Public Transport</label>
           <input type="number" min="0" formControlName="employeesPublicTransport"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('employeesPublicTransport')?.invalid && fillForm.get('employeesPublicTransport')?.touched"
+            [class.border-gs-border]="!(fillForm.get('employeesPublicTransport')?.invalid && fillForm.get('employeesPublicTransport')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('employeesPublicTransport')?.invalid && fillForm.get('employeesPublicTransport')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('employeesPublicTransport')?.invalid && fillForm.get('employeesPublicTransport')?.touched">
         </div>
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Generator Fuel (Liters / month)</label>
           <input type="number" min="0" formControlName="generatorLitersPerMonth"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('generatorLitersPerMonth')?.invalid && fillForm.get('generatorLitersPerMonth')?.touched"
+            [class.border-gs-border]="!(fillForm.get('generatorLitersPerMonth')?.invalid && fillForm.get('generatorLitersPerMonth')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('generatorLitersPerMonth')?.invalid && fillForm.get('generatorLitersPerMonth')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('generatorLitersPerMonth')?.invalid && fillForm.get('generatorLitersPerMonth')?.touched">
         </div>
 
         <!-- Boiler -->
@@ -194,7 +262,11 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Boiler Fuel Type</label>
           <select formControlName="boilerFuelType"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('boilerFuelType')?.invalid && fillForm.get('boilerFuelType')?.touched"
+            [class.border-gs-border]="!(fillForm.get('boilerFuelType')?.invalid && fillForm.get('boilerFuelType')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('boilerFuelType')?.invalid && fillForm.get('boilerFuelType')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('boilerFuelType')?.invalid && fillForm.get('boilerFuelType')?.touched">
             <option value="NONE">None</option>
             <option value="COAL">Coal</option>
             <option value="NATURAL_GAS">Natural Gas</option>
@@ -206,14 +278,22 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Boiler Coal (kg)</label>
           <input type="number" min="0" formControlName="boilerCoalKg"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('boilerCoalKg')?.invalid && fillForm.get('boilerCoalKg')?.touched"
+            [class.border-gs-border]="!(fillForm.get('boilerCoalKg')?.invalid && fillForm.get('boilerCoalKg')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('boilerCoalKg')?.invalid && fillForm.get('boilerCoalKg')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('boilerCoalKg')?.invalid && fillForm.get('boilerCoalKg')?.touched">
         </div>
         }
         @case ('NATURAL_GAS') {
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Boiler Gas (SCM)</label>
           <input type="number" min="0" formControlName="boilerGasScm"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('boilerGasScm')?.invalid && fillForm.get('boilerGasScm')?.touched"
+            [class.border-gs-border]="!(fillForm.get('boilerGasScm')?.invalid && fillForm.get('boilerGasScm')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('boilerGasScm')?.invalid && fillForm.get('boilerGasScm')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('boilerGasScm')?.invalid && fillForm.get('boilerGasScm')?.touched">
         </div>
         }
         }
@@ -223,7 +303,11 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Paper Reams / Month</label>
           <input type="number" min="0" formControlName="paperReamsPerMonth"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('paperReamsPerMonth')?.invalid && fillForm.get('paperReamsPerMonth')?.touched"
+            [class.border-gs-border]="!(fillForm.get('paperReamsPerMonth')?.invalid && fillForm.get('paperReamsPerMonth')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('paperReamsPerMonth')?.invalid && fillForm.get('paperReamsPerMonth')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('paperReamsPerMonth')?.invalid && fillForm.get('paperReamsPerMonth')?.touched">
         </div>
         <div class="flex items-center space-x-2 mt-6">
           <input type="checkbox" formControlName="usesRecycledPaper" id="usesRecycledPaper"
@@ -233,7 +317,11 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Raw Material Type</label>
           <select formControlName="rawMaterialType"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('rawMaterialType')?.invalid && fillForm.get('rawMaterialType')?.touched"
+            [class.border-gs-border]="!(fillForm.get('rawMaterialType')?.invalid && fillForm.get('rawMaterialType')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('rawMaterialType')?.invalid && fillForm.get('rawMaterialType')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('rawMaterialType')?.invalid && fillForm.get('rawMaterialType')?.touched">
             <option value="VIRGIN">Virgin</option>
             <option value="RECYCLED">Recycled</option>
             <option value="MIXED">Mixed</option>
@@ -242,7 +330,11 @@
         <div>
           <label class="block text-gs-muted mb-1 text-sm">Raw Material (kg)</label>
           <input type="number" min="0" formControlName="rawMaterialKg"
-            class="w-full bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-2 focus:outline-none focus:border-gs-dark">
+            class="w-full bg-gs-bg border text-gs-text rounded px-3 py-2 focus:outline-none"
+            [class.border-red-500]="fillForm.get('rawMaterialKg')?.invalid && fillForm.get('rawMaterialKg')?.touched"
+            [class.border-gs-border]="!(fillForm.get('rawMaterialKg')?.invalid && fillForm.get('rawMaterialKg')?.touched)"
+            [class.focus:border-gs-dark]="!(fillForm.get('rawMaterialKg')?.invalid && fillForm.get('rawMaterialKg')?.touched)"
+            [class.focus:border-red-500]="fillForm.get('rawMaterialKg')?.invalid && fillForm.get('rawMaterialKg')?.touched">
         </div>
       </div>
     </div>
@@ -253,8 +345,8 @@
         class="px-6 py-2 border border-gs-dark text-gs-dark bg-transparent font-semibold rounded hover:bg-gs-dark/10 transition-colors">
         Cancel
       </button>
-      <button type="submit" [disabled]="fillForm.invalid"
-        class="px-6 py-2 bg-gs-dark text-white font-semibold rounded hover:bg-gs-mid transition-colors disabled:opacity-50">
+      <button type="submit"
+        class="px-6 py-2 bg-gs-dark text-white font-semibold rounded hover:bg-gs-mid transition-colors">
         Save & Continue
       </button>
     </div>

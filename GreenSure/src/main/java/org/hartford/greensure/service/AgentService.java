@@ -135,6 +135,7 @@ public class AgentService {
 
                 if (request.getOverallAction() == Verification.VerificationAction.REJECTED) {
                         declaration.setStatus(CarbonDeclaration.DeclarationStatus.REJECTED);
+                        declaration.setRejectionReason(request.getAgentRemarks());
                         declaration.setResubmissionCount(declaration.getResubmissionCount() + 1);
                         declarationRepo.save(declaration);
 
@@ -263,6 +264,7 @@ public class AgentService {
                                 .resubmissionCount(d.getResubmissionCount())
                                 .submittedAt(d.getSubmittedAt())
                                 .createdAt(d.getCreatedAt())
+                                .rejectionReason(d.getRejectionReason())
                                 .electricityUnits(d.getElectricityUnits())
                                 .hasSolar(d.getHasSolar())
                                 .solarUnits(d.getSolarUnits())

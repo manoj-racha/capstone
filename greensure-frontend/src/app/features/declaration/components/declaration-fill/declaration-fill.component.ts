@@ -92,14 +92,25 @@ export class DeclarationFillComponent implements OnInit {
   }
 
   onSaveAndContinue(): void {
-    this.error.set('');
+    if (this.fillForm.invalid) {
+      this.fillForm.markAllAsTouched();
+      // Scroll to first error
+      setTimeout(() => {
+        const firstError = document.querySelector('.ng-invalid:not(form)');
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          (firstError as HTMLElement).focus();
+        }
+      }, 100);
+      return;
+    }
 
+    this.error.set('');
     const formValue = this.fillForm.value as DeclarationRequest;
 
     this.declarationService.saveDraft(this.declarationId(), formValue).subscribe({
       next: (res) => {
         if (res.success) {
-          // Navigate to add vehicles step
           this.router.navigate(['/declaration/vehicles', this.declarationId()]);
         } else {
           this.error.set(res.error || 'Failed to save draft.');

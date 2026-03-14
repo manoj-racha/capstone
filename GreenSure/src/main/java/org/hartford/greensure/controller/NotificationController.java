@@ -45,6 +45,20 @@ public class NotificationController {
             ApiResponse.success("Notification marked as read"));
     }
 
+    @PutMapping("/mark-all-read")
+    public ResponseEntity<ApiResponse<Void>> markAllAsRead(@AuthenticationPrincipal SecurityUser user) {
+        boolean isAgentOrAdmin = user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_AGENT")) ||
+                                 user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+
+        Notification.RecipientType type = isAgentOrAdmin
+                ? Notification.RecipientType.AGENT
+                : Notification.RecipientType.USER;
+
+        notificationService.markAllAsRead(type, user.getId());
+        return ResponseEntity.ok(
+            ApiResponse.success("All notifications marked as read"));
+    }
+
     @GetMapping("/unread-count")
     public ResponseEntity<ApiResponse<Long>> getUnreadCount(
             @AuthenticationPrincipal SecurityUser user) {

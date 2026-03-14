@@ -36,6 +36,11 @@ public interface NotificationRepository
             Long recipientId,
             Notification.NotificationStatus status);
 
+    List<Notification> findByRecipientTypeAndRecipientIdAndStatus(
+            Notification.RecipientType recipientType,
+            Long recipientId,
+            Notification.NotificationStatus status);
+
     // Used by NOTIFICATION SERVICE — check if a specific
     // notification type was already sent to a recipient
     // Prevents sending duplicate notifications

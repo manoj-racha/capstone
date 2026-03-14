@@ -44,6 +44,16 @@ export class DeclarationHistoryComponent implements OnInit {
     }
 
     getStatusDisplay(status: string): string {
-        return status.replace('_', ' ');
+        return status.replace(/_/g, ' ');
+    }
+
+    selectedRejectionReason = signal<string | null>(null);
+
+    showRejectionReason(reason: string | undefined): void {
+        this.selectedRejectionReason.set(reason || 'No reason provided by the agent.');
+    }
+
+    closeModal(): void {
+        this.selectedRejectionReason.set(null);
     }
 }

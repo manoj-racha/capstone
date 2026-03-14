@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ScoreService } from '../../../../core/services/score.service';
 import { CarbonScoreResponse } from '../../../../core/models/score';
+import { PolicyService, Policy } from '../../../../core/services/policy.service';
 
 interface PolicyPlan {
     planId: number;
@@ -43,6 +44,7 @@ interface PriceResult {
 })
 export class PoliciesComponent implements OnInit {
     private scoreService = inject(ScoreService);
+    private policyService = inject(PolicyService);
 
     // ── Score state ──────────────────────────────────────────
     score = signal<CarbonScoreResponse | null>(null);
@@ -54,81 +56,18 @@ export class PoliciesComponent implements OnInit {
     durationMonths = signal<number>(12);
     showConfirmModal = signal(false);
     policyConfirmed = signal(false);
+    buying = signal(false);
 
     // ── User type ────────────────────────────────────────────
     userType = signal(localStorage.getItem('userType') || 'HOUSEHOLD');
 
-    // ── Static policy data ───────────────────────────────────
-    policies: PolicyType[] = [
-        {
-            policyType: 'HOME_SHIELD',
-            name: 'Home Shield',
-            icon: '🏠',
-            description: 'Complete protection for your home or business premises',
-            plans: [
-                {
-                    planId: 1, planName: 'Basic', coverageAmount: 500000, basePremiumYearly: 4999,
-                    features: ['Fire and natural disaster coverage', 'Burglary protection', '24x7 claim support']
-                },
-                {
-                    planId: 2, planName: 'Standard', coverageAmount: 1500000, basePremiumYearly: 9999,
-                    features: ['Everything in Basic', 'Flood and earthquake coverage', 'Temporary accommodation benefit', 'Personal belongings cover']
-                },
-                {
-                    planId: 3, planName: 'Premium', coverageAmount: 5000000, basePremiumYearly: 19999,
-                    features: ['Everything in Standard', 'Full reconstruction coverage', 'Loss of rent benefit', 'Dedicated claim manager']
-                }
-            ]
-        },
-        {
-            policyType: 'VEHICLE_GUARD',
-            name: 'Vehicle Guard',
-            icon: '🚗',
-            description: 'Comprehensive coverage for all your declared vehicles',
-            plans: [
-                {
-                    planId: 4, planName: 'Basic', coverageAmount: 500000, basePremiumYearly: 2999,
-                    features: ['Third party liability', 'Theft protection', 'Basic own damage']
-                },
-                {
-                    planId: 5, planName: 'Standard', coverageAmount: 1500000, basePremiumYearly: 5999,
-                    features: ['Everything in Basic', 'Full own damage coverage', 'Zero depreciation', 'Roadside assistance']
-                },
-                {
-                    planId: 6, planName: 'Premium', coverageAmount: 2500000, basePremiumYearly: 9999,
-                    features: ['Everything in Standard', 'Engine protection', 'Key replacement', 'Return to invoice cover']
-                }
-            ]
-        },
-        {
-            policyType: 'BUSINESS_PROTECT',
-            name: 'Business Protect',
-            icon: '🏭',
-            description: 'Protect your MSME operations against unexpected losses',
-            eligibility: 'MSME',
-            plans: [
-                {
-                    planId: 7, planName: 'Basic', coverageAmount: 1000000, basePremiumYearly: 9999,
-                    features: ['Equipment breakdown cover', 'Fire and theft protection', 'Basic liability coverage']
-                },
-                {
-                    planId: 8, planName: 'Standard', coverageAmount: 5000000, basePremiumYearly: 19999,
-                    features: ['Everything in Basic', 'Business interruption cover', 'Employee liability', 'Inventory protection']
-                },
-                {
-                    planId: 9, planName: 'Premium', coverageAmount: 10000000, basePremiumYearly: 34999,
-                    features: ['Everything in Standard', 'Directors liability', 'Cyber risk cover', 'Export credit insurance']
-                }
-            ]
-        }
-    ];
+    // ── Dynamic policy data ──────────────────────────────────
+    policies = signal<Policy[]>([]);
+    policiesLoaded = signal(false);
 
     // ── Computed: visible policies based on user type ─────────
     visiblePolicies = computed(() => {
-        if (this.userType() === 'HOUSEHOLD') {
-            return this.policies.filter(p => p.eligibility !== 'MSME');
-        }
-        return this.policies;
+        return this.policies();
     });
 
     // ── Computed: discount from score ────────────────────────
@@ -148,6 +87,18 @@ export class PoliciesComponent implements OnInit {
             },
             error: () => {
                 this.scoreLoaded.set(true);
+            }
+        });
+
+        this.policyService.getPolicies().subscribe({
+            next: (res) => {
+                this.policiesLoaded.set(true);
+                if (res.success && res.data) {
+                    this.policies.set(res.data);
+                }
+            },
+            error: () => {
+                this.policiesLoaded.set(true);
             }
         });
     }
@@ -236,19 +187,27 @@ export class PoliciesComponent implements OnInit {
         const plan = policy.plans[pli];
         const price = this.calculateFinalPrice(plan.basePremiumYearly);
 
-        const selectedPolicy = {
-            policyType: policy.policyType,
-            policyName: policy.name,
-            planName: plan.planName,
-            coverageAmount: plan.coverageAmount,
+        this.buying.set(true);
+        this.policyService.buyPolicy({
+            planId: plan.planId,
             durationMonths: this.durationMonths(),
-            finalPrice: price.finalPrice,
-            selectedAt: new Date().toISOString()
-        };
-
-        localStorage.setItem('selectedPolicy', JSON.stringify(selectedPolicy));
-        this.showConfirmModal.set(false);
-        this.policyConfirmed.set(true);
+            finalPrice: price.finalPrice
+        }).subscribe({
+            next: (res) => {
+                this.buying.set(false);
+                if (res.success) {
+                    this.showConfirmModal.set(false);
+                    this.policyConfirmed.set(true);
+                    
+                    // Also store in localStorage for immediate UI feedback if needed
+                    localStorage.setItem('selectedPolicy', JSON.stringify(res.data));
+                }
+            },
+            error: () => {
+                this.buying.set(false);
+                alert('Failed to purchase policy. Please try again.');
+            }
+        });
     }
 
     // ── Helpers ──────────────────────────────────────────────

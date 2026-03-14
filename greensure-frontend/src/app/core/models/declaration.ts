@@ -15,6 +15,7 @@ export interface DeclarationResponse {
   resubmissionCount: number;
   submittedAt?: string;
   createdAt: string;
+  rejectionReason?: string;
 
   // Energy fields
   electricityUnits?: number;

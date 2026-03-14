@@ -1,0 +1,34 @@
+
+> greensure-frontend@0.0.0 build
+> ng build
+
+[33m❯[39m Building...
+[32m✔[39m Building...
+Application bundle generation failed. [20.937 seconds] - 2026-03-12T17:08:59.697Z
+
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/user/components/policies/policies.component.html:50:76:
+[37m      50 │ ...font-bold text-gs-text">{{ score()!.zone?.[32mreplace[37m('_', ' ') }}</p>
+         ╵                                              [32m~~~~~~~[0m
+
+  Warning occurs in the template of component PoliciesComponent.
+
+    src/app/features/user/components/policies/policies.component.ts:43:17:
+[37m      43 │     templateUrl: [32m'./policies.component.html'[37m
+         ╵                  [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5002: Unexpected closing tag "div". It may happen when the tag has already been closed by another tag. For more info see https://www.w3.org/TR/html5/syntax.html#closing-elements-that-have-implied-end-tags[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/user/components/notifications/notifications.component.html:100:0:
+[37m      100 │ [32m</div>[37m
+          ╵ [32m~~~~~~[0m
+
+  Error occurs in the template of component NotificationsComponent.
+
+    src/app/features/user/components/notifications/notifications.component.ts:9:17:
+[37m      9 │     templateUrl: [32m'./notifications.component.html'[37m
+        ╵                  [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
