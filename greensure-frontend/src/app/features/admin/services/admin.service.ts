@@ -1,12 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
-import { ApiResponse, Page } from '../models/api-response';
-import { AdminOverview, CreateAgentRequest } from '../models/admin';
-import { UserProfile } from '../models/user';
-import { AgentPerformanceResponse, AgentTaskResponse } from '../models/agent';
-import { DeclarationResponse } from '../models/declaration';
+import { environment } from '../../../environments/environment';
+import { ApiResponse, Page } from '../../../core/models/api-response';
+import { AdminOverview, CreateAgentRequest } from '../../../core/models/admin';
+import { UserProfile } from '../../../core/models/user';
+import { AgentPerformanceResponse, AgentTaskResponse } from '../../../core/models/agent';
+import { DeclarationResponse } from '../../../core/models/declaration';
 
 @Injectable({
     providedIn: 'root'

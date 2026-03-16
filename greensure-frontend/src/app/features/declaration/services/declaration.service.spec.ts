@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 
 import { DeclarationService } from './declaration.service';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../environments/environment';
 
 describe('DeclarationService', () => {
   let service: DeclarationService;

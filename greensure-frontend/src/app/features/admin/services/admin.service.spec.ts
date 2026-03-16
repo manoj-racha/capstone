@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideHttpClient } from '@angular/common/http';
 
 import { AdminService } from './admin.service';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../environments/environment';
 
 describe('AdminService', () => {
   let service: AdminService;

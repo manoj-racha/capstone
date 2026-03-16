@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
-import { AgentService } from '../../../../core/services/agent.service';
+import { AgentService } from '../../../../features/agent/services/agent.service';
 import { AgentTaskResponse } from '../../../../core/models/agent';
 
 @Component({

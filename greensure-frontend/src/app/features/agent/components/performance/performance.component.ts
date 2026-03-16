@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AgentService } from '../../../../core/services/agent.service';
+import { AgentService } from '../../../../features/agent/services/agent.service';
 import { AgentPerformanceResponse } from '../../../../core/models/agent';
 
 @Component({

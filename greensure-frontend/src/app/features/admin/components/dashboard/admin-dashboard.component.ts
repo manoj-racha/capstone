@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AdminService } from '../../../../core/services/admin.service';
+import { AdminService } from '../../../../features/admin/services/admin.service';
 import { AdminOverview } from '../../../../core/models/admin';
 
 @Component({

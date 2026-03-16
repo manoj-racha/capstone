@@ -2,8 +2,8 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AgentService } from '../../../../core/services/agent.service';
-import { DeclarationService } from '../../../../core/services/declaration.service';
+import { AgentService } from '../../../../features/agent/services/agent.service';
+import { DeclarationService } from '../../../../features/declaration/services/declaration.service';
 import { AgentTaskResponse, VerificationRequest } from '../../../../core/models/agent';
 import { DeclarationResponse } from '../../../../core/models/declaration';
 

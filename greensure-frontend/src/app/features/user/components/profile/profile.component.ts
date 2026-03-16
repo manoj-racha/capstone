@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { UserService } from '../../../../core/services/user.service';
+import { UserService } from '../../../../features/user/services/user.service';
 
 @Component({
     selector: 'app-profile',

@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AdminService } from '../../../../core/services/admin.service';
+import { AdminService } from '../../../../features/admin/services/admin.service';
 
 @Component({
     selector: 'app-create-agent',

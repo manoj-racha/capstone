@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { UserService } from '../../../../core/services/user.service';
+import { UserService } from '../../../../features/user/services/user.service';
 import { DashboardResponse } from '../../../../core/models/user';
 
 @Component({

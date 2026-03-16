@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
-import { AdminService } from '../../../../core/services/admin.service';
+import { AdminService } from '../../../../features/admin/services/admin.service';
 
 @Component({
     selector: 'app-agent-detail',

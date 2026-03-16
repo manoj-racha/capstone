@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
-import { DeclarationService } from '../../../../core/services/declaration.service';
+import { DeclarationService } from '../../../../features/declaration/services/declaration.service';
 import { DeclarationResponse } from '../../../../core/models/declaration';
 
 @Component({

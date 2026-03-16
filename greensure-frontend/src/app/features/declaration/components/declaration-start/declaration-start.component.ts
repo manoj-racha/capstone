@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { DeclarationService } from '../../../../core/services/declaration.service';
+import { DeclarationService } from '../../../../features/declaration/services/declaration.service';
 
 @Component({
     selector: 'app-declaration-start',
