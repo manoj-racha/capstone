@@ -82,6 +82,8 @@ public class AssignmentEngine {
                                         .declaration(declaration)
                                         .agent(selectedAgent)
                                         .status(AgentAssignment.AssignmentStatus.ASSIGNED)
+                                        .assignmentStatus(AgentAssignment.AssignmentLifecycleStatus.ACTIVE)
+                                        .assignedBy("SYSTEM")
                                         .build();
 
                         assignmentRepo.save(assignment);

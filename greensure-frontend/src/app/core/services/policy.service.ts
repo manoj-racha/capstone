@@ -38,17 +38,17 @@ export interface UserPolicy {
 })
 export class PolicyService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:9090/api/policies';
+    private apiUrl = 'http://localhost:9090';
 
     getPolicies(): Observable<ApiResponse<Policy[]>> {
-        return this.http.get<ApiResponse<Policy[]>>(this.apiUrl);
+        return this.http.get<ApiResponse<Policy[]>>(`${this.apiUrl}/policy`);
     }
 
-    buyPolicy(request: { planId: number; durationMonths: number; finalPrice: number }): Observable<ApiResponse<UserPolicy>> {
-        return this.http.post<ApiResponse<UserPolicy>>(`${this.apiUrl}/buy`, request);
+    buyPolicy(policyId: string, request: { planId: number; durationMonths: number; finalPrice: number }): Observable<ApiResponse<UserPolicy>> {
+        return this.http.post<ApiResponse<UserPolicy>>(`${this.apiUrl}/policy/purchase/${policyId}`, request);
     }
 
     getMyPolicies(): Observable<ApiResponse<UserPolicy[]>> {
-        return this.http.get<ApiResponse<UserPolicy[]>>(`${this.apiUrl}/my-policies`);
+        return this.http.get<ApiResponse<UserPolicy[]>>(`${this.apiUrl}/user/my-policies`);
     }
 }

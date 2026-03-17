@@ -6,7 +6,6 @@ import org.hartford.greensure.entity.CarbonDeclaration;
 import org.hartford.greensure.entity.Notification;
 import org.hartford.greensure.repository.AgentAssignmentRepository;
 import org.hartford.greensure.repository.AgentRepository;
-import org.hartford.greensure.repository.CarbonDeclarationRepository;
 import org.hartford.greensure.repository.NotificationRepository;
 import org.hartford.greensure.service.NotificationService;
 import org.slf4j.Logger;
@@ -30,8 +29,6 @@ public class DeadlineMonitor {
         @Autowired
         private AgentRepository agentRepository;
         @Autowired
-        private CarbonDeclarationRepository declarationRepo;
-        @Autowired
         private NotificationRepository notificationRepo;
         @Autowired
         private NotificationService notificationService;
@@ -49,13 +46,13 @@ public class DeadlineMonitor {
                 log.info("Deadline check complete.");
         }
 
-        // ── STEP 1 — Send 48-hour reminders ───────────────────────
+        // ── STEP 1 — Send 24-hour reminders ───────────────────────
 
         private void checkAndSendReminders() {
 
                 // Find assignments whose deadline is between
                 // 23 hours and 25 hours from now
-                // (the 48-hour mark ± 1 hour window)
+                // (the 24-hour mark +/- 1 hour window)
                 LocalDateTime reminderStart = LocalDateTime.now().plusHours(23);
                 LocalDateTime reminderEnd = LocalDateTime.now().plusHours(25);
 
@@ -90,7 +87,7 @@ public class DeadlineMonitor {
                                                                 ". Deadline: " + assignment.getDeadline() +
                                                                 ". Failure to submit will result in a strike.");
 
-                                log.info("Sent 48h reminder to agent: {}",
+                                log.info("Sent 24h reminder to agent: {}",
                                                 assignment.getAgent().getFullName());
                         }
                 }
@@ -115,6 +112,8 @@ public class DeadlineMonitor {
                         // Step A — Mark original assignment REASSIGNED
                         overdueAssignment.setStatus(
                                         AgentAssignment.AssignmentStatus.REASSIGNED);
+                        overdueAssignment.setAssignmentStatus(AgentAssignment.AssignmentLifecycleStatus.REASSIGNED);
+                        overdueAssignment.setReassignReason("Missed deadline");
                         assignmentRepo.save(overdueAssignment);
 
                         // Step B — Add strike to original agent
@@ -183,6 +182,9 @@ public class DeadlineMonitor {
                                         .declaration(declaration)
                                         .agent(newAgent)
                                         .status(AgentAssignment.AssignmentStatus.ASSIGNED)
+                                        .assignmentStatus(AgentAssignment.AssignmentLifecycleStatus.ACTIVE)
+                                        .assignedBy("SYSTEM")
+                                        .reassignReason("Missed deadline")
                                         .build();
 
                         assignmentRepo.save(newAssignment);

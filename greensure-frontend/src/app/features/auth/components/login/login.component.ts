@@ -1,7 +1,8 @@
 import { Component, signal, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../../features/auth/services/auth.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import {
     LucideAngularModule,
     Leaf,
@@ -11,15 +12,11 @@ import {
 
 @Component({
     selector: 'app-login',
-    imports: [FormsModule, RouterLink, LucideAngularModule],
+    imports: [ReactiveFormsModule, RouterLink, LucideAngularModule],
     templateUrl: './login.component.html'
 })
 
 export class LoginComponent {
-
-    // ── Form fields ──────────────────────────────────────────
-    email = signal('');
-    password = signal('');
 
     // ── UI state ─────────────────────────────────────────────
     errorMessage = signal('');
@@ -31,13 +28,22 @@ export class LoginComponent {
     readonly AlertTriangle = AlertTriangle;
     readonly ArrowLeft = ArrowLeft;
 
+    private fb = inject(FormBuilder);
     private authService: AuthService = inject(AuthService);
     private router: Router = inject(Router);
+    private toastService = inject(ToastService);
+
+    loginForm = this.fb.group({
+        email: ['', [Validators.required, Validators.email]],
+        password: ['', [Validators.required]]
+    });
 
     // ── LOGIN ────────────────────────────────────────────────
-    onLogin(form?: any): void {
+    onLogin(): void {
         this.submitted.set(true);
-        if (form && form.invalid) {
+        if (this.loginForm.invalid) {
+            this.loginForm.markAllAsTouched();
+            this.toastService.warning('Please fix the highlighted fields before signing in.');
             this.scrollToFirstInvalid();
             return;
         }
@@ -46,8 +52,8 @@ export class LoginComponent {
         this.isSuspended.set(false);
 
         this.authService.login({
-            email: this.email(),
-            password: this.password()
+            email: this.loginForm.controls.email.value || '',
+            password: this.loginForm.controls.password.value || ''
         }).subscribe({
             next: (res) => {
                 if (res.success) {
@@ -90,9 +96,10 @@ export class LoginComponent {
 
     private scrollToFirstInvalid(): void {
         setTimeout(() => {
-            const firstInvalidControl = document.querySelector('.ng-invalid');
+            const firstInvalidControl = document.querySelector('form .ng-invalid');
             if (firstInvalidControl) {
                 firstInvalidControl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                (firstInvalidControl as HTMLElement).focus();
             }
         }, 100);
     }

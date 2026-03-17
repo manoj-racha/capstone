@@ -39,20 +39,20 @@
             </div>
             }
 
-            <form #registerForm="ngForm" (ngSubmit)="onRegister(registerForm)" class="space-y-5">
+            <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="space-y-5">
 
                 <!-- User Type Toggle -->
                 <div>
                     <label class="block text-sm font-semibold text-gs-text mb-2">Account Type</label>
                     <div class="flex gap-3 bg-gs-sage p-1 rounded-lg">
-                        <button type="button" (click)="userType.set('HOUSEHOLD')" 
-                                [class]="isHousehold()
+                        <button type="button" (click)="setUserType('HOUSEHOLD')" 
+                            [class]="isHousehold
                                 ? 'flex-1 py-2 rounded-md font-semibold bg-white text-gs-dark shadow-sm border border-gs-border'
                                 : 'flex-1 py-2 rounded-md font-medium text-gs-muted hover:text-gs-body transition-colors'">
                             Household
                         </button>
-                        <button type="button" (click)="userType.set('MSME')" 
-                                [class]="!isHousehold()
+                        <button type="button" (click)="setUserType('MSME')" 
+                            [class]="!isHousehold
                                 ? 'flex-1 py-2 rounded-md font-semibold bg-white text-gs-dark shadow-sm border border-gs-border'
                                 : 'flex-1 py-2 rounded-md font-medium text-gs-muted hover:text-gs-body transition-colors'">
                             MSME
@@ -65,10 +65,9 @@
                 <!-- Full Name -->
                 <div>
                     <label for="fullName" class="block text-sm font-semibold text-gs-text mb-1.5">Full Name <span class="text-red-500">*</span></label>
-                    <input id="fullName" type="text" placeholder="John Doe" [ngModel]="fullName()"
-                        (ngModelChange)="fullName.set($event)" name="fullName" required 
-                        [class]="(fullNameInput.invalid && (fullNameInput.dirty || fullNameInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #fullNameInput="ngModel" />
-                    @if (fullNameInput.invalid && (fullNameInput.dirty || fullNameInput.touched || submitted())) {
+                    <input id="fullName" type="text" placeholder="John Doe" formControlName="fullName"
+                        [class]="isInvalid('fullName') ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                    @if (isInvalid('fullName')) {
                         <p class="text-red-500 text-xs mt-1 font-medium">Full name is required</p>
                     }
                 </div>
@@ -77,26 +76,24 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
                         <label for="email" class="block text-sm font-semibold text-gs-text mb-1.5">Email <span class="text-red-500">*</span></label>
-                        <input id="email" type="email" placeholder="you@example.com" [ngModel]="email()"
-                            (ngModelChange)="email.set($event)" name="email" required email
-                            [class]="(emailInput.invalid && (emailInput.dirty || emailInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #emailInput="ngModel" />
-                        @if (emailInput.invalid && (emailInput.dirty || emailInput.touched || submitted())) {
-                            @if (emailInput.errors?.['required']) {
+                        <input id="email" type="email" placeholder="you@example.com" formControlName="email"
+                            [class]="isInvalid('email') ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                        @if (isInvalid('email')) {
+                            @if (registerForm.controls.email.errors?.['required']) {
                                 <p class="text-red-500 text-xs mt-1 font-medium">Email is required</p>
-                            } @else if (emailInput.errors?.['email']) {
+                            } @else if (registerForm.controls.email.errors?.['email']) {
                                 <p class="text-red-500 text-xs mt-1 font-medium">Invalid email format</p>
                             }
                         }
                     </div>
                     <div>
                         <label for="mobile" class="block text-sm font-semibold text-gs-text mb-1.5">Mobile Number <span class="text-red-500">*</span></label>
-                        <input id="mobile" type="tel" placeholder="9876543210" [ngModel]="mobile()"
-                            (ngModelChange)="mobile.set($event)" name="mobile" required pattern="[0-9]{10}"
-                            [class]="(mobileInput.invalid && (mobileInput.dirty || mobileInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #mobileInput="ngModel" />
-                        @if (mobileInput.invalid && (mobileInput.dirty || mobileInput.touched || submitted())) {
-                            @if (mobileInput.errors?.['required']) {
+                        <input id="mobile" type="tel" placeholder="9876543210" formControlName="mobile"
+                            [class]="isInvalid('mobile') ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                        @if (isInvalid('mobile')) {
+                            @if (registerForm.controls.mobile.errors?.['required']) {
                                 <p class="text-red-500 text-xs mt-1 font-medium">Mobile number is required</p>
-                            } @else if (mobileInput.errors?.['pattern']) {
+                            } @else if (registerForm.controls.mobile.errors?.['pattern']) {
                                 <p class="text-red-500 text-xs mt-1 font-medium">Enter a valid 10-digit mobile number</p>
                             }
                         }
@@ -108,10 +105,9 @@
                 <!-- Address -->
                 <div>
                     <label for="address" class="block text-sm font-semibold text-gs-text mb-1.5">Address <span class="text-red-500">*</span></label>
-                    <input id="address" type="text" placeholder="123, Main Street" [ngModel]="address()"
-                        (ngModelChange)="address.set($event)" name="address" required 
-                        [class]="(addressInput.invalid && (addressInput.dirty || addressInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #addressInput="ngModel" />
-                    @if (addressInput.invalid && (addressInput.dirty || addressInput.touched || submitted())) {
+                    <input id="address" type="text" placeholder="123, Main Street" formControlName="address"
+                        [class]="isInvalid('address') ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                    @if (isInvalid('address')) {
                         <p class="text-red-500 text-xs mt-1 font-medium">Address is required</p>
                     }
                 </div>
@@ -120,28 +116,27 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                     <div>
                         <label for="pinCode" class="block text-sm font-semibold text-gs-text mb-1.5">Pin Code <span class="text-red-500">*</span></label>
-                        <input id="pinCode" type="text" placeholder="560001" [ngModel]="pinCode()"
-                            (ngModelChange)="pinCode.set($event)" (blur)="pinCodeTouched.set(true)" name="pinCode"
-                            required [class]="(pinCodeError() || (pinCodeInput.invalid && (pinCodeInput.dirty || pinCodeInput.touched || submitted()))) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #pinCodeInput="ngModel" />
-                        @if (pinCodeError()) {
-                        <p class="text-red-500 text-xs mt-1 font-medium">{{ pinCodeError() }}</p>
+                        <input id="pinCode" type="text" placeholder="560001" formControlName="pinCode"
+                            [class]="isInvalid('pinCode') ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                        @if (isInvalid('pinCode')) {
+                        <p class="text-red-500 text-xs mt-1 font-medium">
+                            {{ registerForm.controls.pinCode.errors?.['required'] ? 'Pin code is required' : 'Enter a valid 6-digit pin code' }}
+                        </p>
                         }
                     </div>
                     <div>
                         <label for="city" class="block text-sm font-semibold text-gs-text mb-1.5">City <span class="text-red-500">*</span></label>
-                        <input id="city" type="text" placeholder="Bangalore" [ngModel]="city()"
-                            (ngModelChange)="city.set($event)" name="city" required 
-                            [class]="(cityInput.invalid && (cityInput.dirty || cityInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #cityInput="ngModel" />
-                        @if (cityInput.invalid && (cityInput.dirty || cityInput.touched || submitted())) {
+                        <input id="city" type="text" placeholder="Bangalore" formControlName="city"
+                            [class]="isInvalid('city') ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                        @if (isInvalid('city')) {
                             <p class="text-red-500 text-xs mt-1 font-medium">City is required</p>
                         }
                     </div>
                     <div>
                         <label for="state" class="block text-sm font-semibold text-gs-text mb-1.5">State <span class="text-red-500">*</span></label>
-                        <input id="state" type="text" placeholder="Karnataka" [ngModel]="state()"
-                            (ngModelChange)="state.set($event)" name="state" required 
-                            [class]="(stateInput.invalid && (stateInput.dirty || stateInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #stateInput="ngModel" />
-                        @if (stateInput.invalid && (stateInput.dirty || stateInput.touched || submitted())) {
+                        <input id="state" type="text" placeholder="Karnataka" formControlName="state"
+                            [class]="isInvalid('state') ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                        @if (isInvalid('state')) {
                             <p class="text-red-500 text-xs mt-1 font-medium">State is required</p>
                         }
                     </div>
@@ -150,54 +145,52 @@
                 <div class="border-t border-gs-border/60 pb-1 pt-1"></div>
 
                 <!-- ── HOUSEHOLD FIELDS ────────────────────────────── -->
-                @if (isHousehold()) {
+                @if (isHousehold) {
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 bg-gs-sage/30 p-4 rounded-lg border border-gs-border/50">
                     <div>
                         <label for="numberOfMembers" class="block text-sm font-semibold text-gs-text mb-1.5">
                             Family Members <span class="text-red-500">*</span></label>
-                        <input id="numberOfMembers" type="number" placeholder="4" min="1" max="20"
-                            [ngModel]="numberOfMembers()" (ngModelChange)="numberOfMembers.set($event)"
-                            name="numberOfMembers" [class]="(numberOfMembersInput.invalid && (numberOfMembersInput.dirty || numberOfMembersInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" required #numberOfMembersInput="ngModel" />
-                        @if (numberOfMembersInput.invalid && (numberOfMembersInput.dirty || numberOfMembersInput.touched || submitted())) {
+                        <input id="numberOfMembers" type="number" placeholder="4" min="1" max="20" formControlName="numberOfMembers"
+                            [class]="isInvalid('numberOfMembers') ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                        @if (isInvalid('numberOfMembers')) {
                             <p class="text-red-500 text-xs mt-1 font-medium">Required (1-20)</p>
                         }
                     </div>
                     <div>
                         <label for="dwellingType" class="block text-sm font-semibold text-gs-text mb-1.5">
                             Dwelling Type <span class="text-red-500">*</span></label>
-                        <select id="dwellingType" [ngModel]="dwellingType()" (ngModelChange)="dwellingType.set($event)"
-                            (blur)="dwellingTypeTouched.set(true)" name="dwellingType" 
-                            [class]="(dwellingTypeError() || (dwellingTypeInput.invalid && (dwellingTypeInput.dirty || dwellingTypeInput.touched || submitted()))) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" required #dwellingTypeInput="ngModel">
+                        <select id="dwellingType" formControlName="dwellingType"
+                            [class]="isInvalid('dwellingType') ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'">
                             <option value="">Select</option>
                             <option value="APARTMENT">Apartment</option>
                             <option value="INDEPENDENT_HOUSE">Independent House</option>
                         </select>
-                        @if (dwellingTypeError()) {
-                        <p class="text-red-500 text-xs mt-1 font-medium">{{ dwellingTypeError() }}</p>
+                        @if (isInvalid('dwellingType')) {
+                        <p class="text-red-500 text-xs mt-1 font-medium">Please select your dwelling type</p>
                         }
                     </div>
                 </div>
                 }
 
                 <!-- ── MSME FIELDS ─────────────────────────────────── -->
-                @if (!isHousehold()) {
+                @if (!isHousehold) {
                 <div class="space-y-5 bg-gs-sage/30 p-4 rounded-lg border border-gs-border/50">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div>
                             <label for="businessName" class="block text-sm font-semibold text-gs-text mb-1.5">
                                 Business Name <span class="text-red-500">*</span></label>
-                            <input id="businessName" type="text" placeholder="Acme Corp" [ngModel]="businessName()"
-                                (ngModelChange)="businessName.set($event)" name="businessName" [class]="(businessNameInput.invalid && (businessNameInput.dirty || businessNameInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" required #businessNameInput="ngModel" />
-                            @if (businessNameInput.invalid && (businessNameInput.dirty || businessNameInput.touched || submitted())) {
+                            <input id="businessName" type="text" placeholder="Acme Corp" formControlName="businessName"
+                                [class]="isInvalid('businessName') ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                            @if (isInvalid('businessName')) {
                                 <p class="text-red-500 text-xs mt-1 font-medium">Business name is required</p>
                             }
                         </div>
                         <div>
                             <label for="gstNumber" class="block text-sm font-semibold text-gs-text mb-1.5">
                                 GST Number <span class="text-red-500">*</span></label>
-                            <input id="gstNumber" type="text" placeholder="22AAAAA0000A1Z5" [ngModel]="gstNumber()"
-                                (ngModelChange)="gstNumber.set($event)" name="gstNumber" [class]="(gstNumberInput.invalid && (gstNumberInput.dirty || gstNumberInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" required #gstNumberInput="ngModel" />
-                            @if (gstNumberInput.invalid && (gstNumberInput.dirty || gstNumberInput.touched || submitted())) {
+                            <input id="gstNumber" type="text" placeholder="22AAAAA0000A1Z5" formControlName="gstNumber"
+                                [class]="isInvalid('gstNumber') ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                            @if (isInvalid('gstNumber')) {
                                 <p class="text-red-500 text-xs mt-1 font-medium">GST number is required</p>
                             }
                         </div>
@@ -206,24 +199,23 @@
                         <div>
                             <label for="businessType" class="block text-sm font-semibold text-gs-text mb-1.5">
                                 Business Industry <span class="text-red-500">*</span></label>
-                            <select id="businessType" [ngModel]="businessType()"
-                                (ngModelChange)="businessType.set($event)" name="businessType" [class]="(businessTypeInput.invalid && (businessTypeInput.dirty || businessTypeInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" required #businessTypeInput="ngModel">
+                            <select id="businessType" formControlName="businessType" [class]="isInvalid('businessType') ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'">
                                 <option value="">Select</option>
                                 <option value="MANUFACTURING">Manufacturing</option>
                                 <option value="RETAIL">Retail</option>
                                 <option value="SERVICE">Service</option>
                                 <option value="FOOD">Food</option>
                             </select>
-                            @if (businessTypeInput.invalid && (businessTypeInput.dirty || businessTypeInput.touched || submitted())) {
+                            @if (isInvalid('businessType')) {
                                 <p class="text-red-500 text-xs mt-1 font-medium">Please select industry</p>
                             }
                         </div>
                         <div>
                             <label for="numEmployees" class="block text-sm font-semibold text-gs-text mb-1.5">
                                 Number of Employees <span class="text-red-500">*</span></label>
-                            <input id="numEmployees" type="number" placeholder="10" min="1" [ngModel]="numEmployees()"
-                                (ngModelChange)="numEmployees.set($event)" name="numEmployees" [class]="(numEmployeesInput.invalid && (numEmployeesInput.dirty || numEmployeesInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" required #numEmployeesInput="ngModel" />
-                            @if (numEmployeesInput.invalid && (numEmployeesInput.dirty || numEmployeesInput.touched || submitted())) {
+                            <input id="numEmployees" type="number" placeholder="10" min="1" formControlName="numEmployees"
+                                [class]="isInvalid('numEmployees') ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                            @if (isInvalid('numEmployees')) {
                                 <p class="text-red-500 text-xs mt-1 font-medium">Min 1 employee required</p>
                             }
                         </div>
@@ -237,13 +229,12 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
                         <label for="password" class="block text-sm font-semibold text-gs-text mb-1.5">Password <span class="text-red-500">*</span></label>
-                        <input id="password" type="password" placeholder="Min 8 characters" [ngModel]="password()"
-                            (ngModelChange)="password.set($event)" name="password" required minlength="8"
-                            [class]="(passwordInput.invalid && (passwordInput.dirty || passwordInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #passwordInput="ngModel" />
-                        @if (passwordInput.invalid && (passwordInput.dirty || passwordInput.touched || submitted())) {
-                            @if (passwordInput.errors?.['required']) {
+                        <input id="password" type="password" placeholder="Min 8 characters" formControlName="password"
+                            [class]="isInvalid('password') ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                        @if (isInvalid('password')) {
+                            @if (registerForm.controls.password.errors?.['required']) {
                                 <p class="text-red-500 text-xs mt-1 font-medium">Password is required</p>
-                            } @else if (passwordInput.errors?.['minlength']) {
+                            } @else if (registerForm.controls.password.errors?.['minlength']) {
                                 <p class="text-red-500 text-xs mt-1 font-medium">Password must be at least 8 characters</p>
                             }
                         }
@@ -251,13 +242,12 @@
                     <div>
                         <label for="confirmPassword" class="block text-sm font-semibold text-gs-text mb-1.5">
                             Confirm Password <span class="text-red-500">*</span></label>
-                        <input id="confirmPassword" type="password" placeholder="••••••••" [ngModel]="confirmPassword()"
-                            (ngModelChange)="confirmPassword.set($event)" name="confirmPassword" required
-                            [class]="((confirmPasswordInput.invalid || !passwordsMatch()) && (confirmPasswordInput.dirty || confirmPasswordInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" #confirmPasswordInput="ngModel" />
-                        @if ((confirmPasswordInput.invalid || !passwordsMatch()) && (confirmPasswordInput.dirty || confirmPasswordInput.touched || submitted())) {
-                            @if (confirmPasswordInput.errors?.['required']) {
+                        <input id="confirmPassword" type="password" placeholder="••••••••" formControlName="confirmPassword"
+                            [class]="(isInvalid('confirmPassword') || registerForm.errors?.['passwordsMismatch']) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                        @if ((isInvalid('confirmPassword') || registerForm.errors?.['passwordsMismatch']) && (registerForm.controls.confirmPassword.dirty || registerForm.controls.confirmPassword.touched || submitted())) {
+                            @if (registerForm.controls.confirmPassword.errors?.['required']) {
                                 <p class="text-red-500 text-xs mt-1 font-medium">Please confirm your password</p>
-                            } @else if (!passwordsMatch()) {
+                            } @else if (registerForm.errors?.['passwordsMismatch']) {
                                 <p class="text-red-500 text-xs mt-1 font-medium">Passwords do not match</p>
                             }
                         }

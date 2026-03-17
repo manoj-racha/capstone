@@ -56,11 +56,11 @@ public class User {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "reset_token")
-    private String resetToken;
+    @Column(name = "password_reset_token")
+    private String passwordResetToken;
 
-    @Column(name = "reset_token_expiry")
-    private LocalDateTime resetTokenExpiry;
+    @Column(name = "password_reset_token_expiry")
+    private LocalDateTime passwordResetTokenExpiry;
 
     // ── MAPPINGS ───────────────────────────────────────────────
 

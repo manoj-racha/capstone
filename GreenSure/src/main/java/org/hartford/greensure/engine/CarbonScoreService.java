@@ -3,8 +3,8 @@ package org.hartford.greensure.engine;
 
 
 import org.hartford.greensure.dto.response.CarbonScoreResponse;
-import org.hartford.greensure.engine.EmissionFactors;
 import org.hartford.greensure.entity.*;
+import org.hartford.greensure.exception.ResourceNotFoundException;
 import org.hartford.greensure.repository.*;
 import org.hartford.greensure.service.RecommendationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,7 +125,7 @@ public class CarbonScoreService {
     public CarbonScoreResponse getMyScore(Long userId) {
         CarbonScore score = scoreRepo
                 .findTopByUserUserIdOrderByScoreYearDesc(userId)
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "No score found yet"));
         return mapToResponse(score);
     }

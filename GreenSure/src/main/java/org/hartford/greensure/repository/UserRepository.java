@@ -51,5 +51,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> searchByNameOrEmail(@Param("keyword") String keyword);
 
     // Used by PASSWORD RESET — find user by reset token
-    Optional<User> findByResetToken(String resetToken);
+    Optional<User> findByPasswordResetToken(String passwordResetToken);
 }

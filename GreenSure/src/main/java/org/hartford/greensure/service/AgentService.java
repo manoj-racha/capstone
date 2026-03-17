@@ -1,8 +1,18 @@
 package org.hartford.greensure.service;
 
+import org.hartford.greensure.dto.request.ChangeAssignmentAgentRequest;
+import org.hartford.greensure.dto.request.ManualAssignmentRequest;
+import org.hartford.greensure.dto.request.ReassignDeclarationRequest;
 import org.hartford.greensure.dto.request.VerificationRequest;
 import org.hartford.greensure.dto.response.*;
 import org.hartford.greensure.entity.*;
+import org.hartford.greensure.exception.AgentNotAvailableException;
+import org.hartford.greensure.exception.AgentNotFoundException;
+import org.hartford.greensure.exception.AssignmentNotFoundException;
+import org.hartford.greensure.exception.BadRequestException;
+import org.hartford.greensure.exception.DeclarationAlreadyAssignedException;
+import org.hartford.greensure.exception.ResourceNotFoundException;
+import org.hartford.greensure.exception.UnauthorizedException;
 import org.hartford.greensure.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,6 +24,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class AgentService {
+
+        private static final int MAX_ACTIVE_ASSIGNMENTS = 5;
 
         @Autowired
         private AgentRepository agentRepository;
@@ -54,7 +66,7 @@ public class AgentService {
                 AgentAssignment assignment = getAndValidateAssignment(assignmentId, agentId);
 
                 if (assignment.getStatus() != AgentAssignment.AssignmentStatus.ASSIGNED) {
-                        throw new RuntimeException("Assignment is not in ASSIGNED status");
+                        throw new BadRequestException("Assignment is not in ASSIGNED status");
                 }
 
                 assignment.setStatus(AgentAssignment.AssignmentStatus.IN_PROGRESS);
@@ -62,23 +74,115 @@ public class AgentService {
                 return mapToTaskResponse(assignment);
         }
 
+        public List<CarbonDeclaration> getUnassignedDeclarations() {
+                return declarationRepo.findByStatus(CarbonDeclaration.DeclarationStatus.SUBMITTED)
+                                .stream()
+                                .filter(d -> !assignmentRepo.existsByDeclarationDeclarationIdAndAssignmentStatus(
+                                                d.getDeclarationId(),
+                                                AgentAssignment.AssignmentLifecycleStatus.ACTIVE))
+                                .toList();
+        }
+
+        public List<AgentTaskResponse> getActiveAssignments() {
+                return assignmentRepo
+                                .findByAssignmentStatusOrderByAssignedAtDesc(
+                                                AgentAssignment.AssignmentLifecycleStatus.ACTIVE)
+                                .stream()
+                                .map(this::mapToTaskResponse)
+                                .toList();
+        }
+
+        public List<Agent> getAvailableAgents() {
+                return agentRepository.findByAgentTypeAndStatus(
+                                Agent.AgentType.FIELD_AGENT,
+                                Agent.AgentStatus.ACTIVE)
+                                .stream()
+                                .filter(this::isAgentAvailable)
+                                .toList();
+        }
+
+        @Transactional
+        public AgentTaskResponse assignDeclaration(ManualAssignmentRequest request) {
+                CarbonDeclaration declaration = declarationRepo.findById(request.getDeclarationId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Declaration not found"));
+
+                if (assignmentRepo.existsByDeclarationDeclarationIdAndAssignmentStatus(
+                                declaration.getDeclarationId(),
+                                AgentAssignment.AssignmentLifecycleStatus.ACTIVE)) {
+                        throw new DeclarationAlreadyAssignedException("Declaration already has an active assignment.");
+                }
+
+                Agent agent = agentRepository.findById(request.getAgentId())
+                                .orElseThrow(() -> new AgentNotFoundException("Agent not found"));
+
+                ensureAgentAvailable(agent);
+
+                AgentAssignment assignment = AgentAssignment.builder()
+                                .declaration(declaration)
+                                .agent(agent)
+                                .status(AgentAssignment.AssignmentStatus.ASSIGNED)
+                                .assignmentStatus(AgentAssignment.AssignmentLifecycleStatus.ACTIVE)
+                                .assignedBy("ADMIN")
+                                .build();
+                assignment = assignmentRepo.save(assignment);
+
+                declaration.setStatus(CarbonDeclaration.DeclarationStatus.UNDER_VERIFICATION);
+                declarationRepo.save(declaration);
+
+                return mapToTaskResponse(assignment);
+        }
+
+        @Transactional
+        public AgentTaskResponse reassignDeclaration(ReassignDeclarationRequest request) {
+                AgentAssignment activeAssignment = assignmentRepo.findActiveAssignmentByDeclarationId(request.getDeclarationId())
+                                .orElseThrow(() -> new AssignmentNotFoundException("Active assignment not found for declaration."));
+
+                return performReassignment(activeAssignment, request.getNewAgentId(), request.getReason());
+        }
+
+        @Transactional
+        public AgentTaskResponse changeAgent(ChangeAssignmentAgentRequest request) {
+                AgentAssignment assignment = assignmentRepo.findById(request.getAssignmentId())
+                                .orElseThrow(() -> new AssignmentNotFoundException("Assignment not found."));
+
+                if (assignment.getAssignmentStatus() != AgentAssignment.AssignmentLifecycleStatus.ACTIVE) {
+                        throw new AssignmentNotFoundException("Assignment is not active.");
+                }
+
+                return performReassignment(assignment, request.getNewAgentId(), request.getReason());
+        }
+
+        @Transactional
+        public void cancelAssignment(Long declarationId) {
+                AgentAssignment assignment = assignmentRepo.findActiveAssignmentByDeclarationId(declarationId)
+                                .orElseThrow(() -> new AssignmentNotFoundException("Active assignment not found for declaration."));
+
+                assignment.setStatus(AgentAssignment.AssignmentStatus.REASSIGNED);
+                assignment.setAssignmentStatus(AgentAssignment.AssignmentLifecycleStatus.CANCELLED);
+                assignmentRepo.save(assignment);
+
+                CarbonDeclaration declaration = assignment.getDeclaration();
+                declaration.setStatus(CarbonDeclaration.DeclarationStatus.SUBMITTED);
+                declarationRepo.save(declaration);
+        }
+
         @Transactional
         public void submitVerification(Long assignmentId, Long agentId, VerificationRequest request) {
                 AgentAssignment assignment = getAndValidateAssignment(assignmentId, agentId);
 
                 if (assignment.getStatus() != AgentAssignment.AssignmentStatus.IN_PROGRESS) {
-                        throw new RuntimeException("Assignment must be IN_PROGRESS before submitting verification");
+                        throw new BadRequestException("Assignment must be IN_PROGRESS before submitting verification");
                 }
 
                 if ((request.getOverallAction() == Verification.VerificationAction.MODIFIED ||
                                 request.getOverallAction() == Verification.VerificationAction.REJECTED) &&
                                 (request.getAgentRemarks() == null || request.getAgentRemarks().isBlank())) {
-                        throw new RuntimeException("Agent remarks are required when action is MODIFIED or REJECTED");
+                        throw new BadRequestException("Agent remarks are required when action is MODIFIED or REJECTED");
                 }
 
                 if (verificationRepo.existsByDeclarationDeclarationId(
                                 assignment.getDeclaration().getDeclarationId())) {
-                        throw new RuntimeException("Verification already submitted for this declaration");
+                        throw new BadRequestException("Verification already submitted for this declaration");
                 }
 
                 CarbonDeclaration declaration = assignment.getDeclaration();
@@ -115,7 +219,7 @@ public class AgentService {
                 if (request.getCorrectedVehicles() != null) {
                         for (var vr : request.getCorrectedVehicles()) {
                                 DeclarationVehicle dv = vehicleRepo.findById(vr.getVehicleId())
-                                                .orElseThrow(() -> new RuntimeException(
+                                                .orElseThrow(() -> new ResourceNotFoundException(
                                                                 "Vehicle not found: " + vr.getVehicleId()));
 
                                 VerifiedVehicle vv = VerifiedVehicle.builder()
@@ -131,12 +235,12 @@ public class AgentService {
 
                 assignment.setStatus(AgentAssignment.AssignmentStatus.COMPLETED);
                 assignment.setCompletedAt(LocalDateTime.now());
+                assignment.setAssignmentStatus(AgentAssignment.AssignmentLifecycleStatus.COMPLETED);
                 assignmentRepo.save(assignment);
 
                 if (request.getOverallAction() == Verification.VerificationAction.REJECTED) {
                         declaration.setStatus(CarbonDeclaration.DeclarationStatus.REJECTED);
                         declaration.setRejectionReason(request.getAgentRemarks());
-                        declaration.setResubmissionCount(declaration.getResubmissionCount() + 1);
                         declarationRepo.save(declaration);
 
                         notificationService.sendToUser(
@@ -160,7 +264,7 @@ public class AgentService {
 
         public AgentPerformanceResponse getPerformance(Long agentId) {
                 Agent agent = agentRepository.findById(agentId)
-                                .orElseThrow(() -> new RuntimeException("Agent not found"));
+                                .orElseThrow(() -> new AgentNotFoundException("Agent not found"));
 
                 long total = assignmentRepo.countByAgentAgentIdAndStatus(agentId,
                                 AgentAssignment.AssignmentStatus.COMPLETED) +
@@ -205,10 +309,10 @@ public class AgentService {
 
         private AgentAssignment getAndValidateAssignment(Long assignmentId, Long agentId) {
                 AgentAssignment assignment = assignmentRepo.findById(assignmentId)
-                                .orElseThrow(() -> new RuntimeException("Assignment not found"));
+                                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
 
                 if (!assignment.getAgent().getAgentId().equals(agentId)) {
-                        throw new RuntimeException("Access denied — this assignment does not belong to you");
+                        throw new UnauthorizedException("Access denied — this assignment does not belong to you");
                 }
 
                 return assignment;
@@ -219,9 +323,12 @@ public class AgentService {
                 return AgentTaskResponse.builder()
                                 .assignmentId(a.getAssignmentId())
                                 .status(a.getStatus())
+                                .assignmentStatus(a.getAssignmentStatus())
                                 .assignedAt(a.getAssignedAt())
                                 .deadline(a.getDeadline())
                                 .completedAt(a.getCompletedAt())
+                                .assignedBy(a.getAssignedBy())
+                                .reassignReason(a.getReassignReason())
                                 .isOverdue(LocalDateTime.now().isAfter(a.getDeadline()) &&
                                                 a.getStatus() != AgentAssignment.AssignmentStatus.COMPLETED)
                                 .userId(user.getUserId())
@@ -233,14 +340,59 @@ public class AgentService {
                                 .userType(user.getUserType())
                                 .declarationId(a.getDeclaration().getDeclarationId())
                                 .declarationYear(a.getDeclaration().getDeclarationYear())
+                                .agentId(a.getAgent().getAgentId())
+                                .agentName(a.getAgent().getFullName())
                                 .build();
+        }
+
+        private AgentTaskResponse performReassignment(AgentAssignment currentAssignment, Long newAgentId, String reason) {
+                Agent oldAgent = currentAssignment.getAgent();
+                Agent newAgent = agentRepository.findById(newAgentId)
+                                .orElseThrow(() -> new AgentNotFoundException("Agent not found"));
+
+                if (oldAgent.getAgentId().equals(newAgent.getAgentId())) {
+                        throw new BadRequestException("New agent must be different from current agent.");
+                }
+
+                ensureAgentAvailable(newAgent);
+
+                currentAssignment.setStatus(AgentAssignment.AssignmentStatus.REASSIGNED);
+                currentAssignment.setAssignmentStatus(AgentAssignment.AssignmentLifecycleStatus.REASSIGNED);
+                currentAssignment.setReassignReason(reason);
+                assignmentRepo.save(currentAssignment);
+
+                AgentAssignment newAssignment = AgentAssignment.builder()
+                                .declaration(currentAssignment.getDeclaration())
+                                .agent(newAgent)
+                                .status(AgentAssignment.AssignmentStatus.ASSIGNED)
+                                .assignmentStatus(AgentAssignment.AssignmentLifecycleStatus.ACTIVE)
+                                .assignedBy("ADMIN")
+                                .reassignReason(reason)
+                                .build();
+                newAssignment = assignmentRepo.save(newAssignment);
+
+                return mapToTaskResponse(newAssignment);
+        }
+
+        private void ensureAgentAvailable(Agent agent) {
+                if (agent.getAgentType() != Agent.AgentType.FIELD_AGENT || agent.getStatus() != Agent.AgentStatus.ACTIVE) {
+                        throw new AgentNotAvailableException("Selected agent is not available for assignment.");
+                }
+
+                if (!isAgentAvailable(agent)) {
+                        throw new AgentNotAvailableException("Selected agent is at full capacity.");
+                }
+        }
+
+        private boolean isAgentAvailable(Agent agent) {
+                long active = assignmentRepo.countActiveAssignmentsByAgentId(agent.getAgentId());
+                return active < MAX_ACTIVE_ASSIGNMENTS;
         }
 
         public DeclarationResponse getDeclarationForAssignment(Long assignmentId, Long agentId) {
                 AgentAssignment assignment = getAndValidateAssignment(assignmentId, agentId);
 
                 // Use the existing logic to map the declaration to a response object
-                DeclarationService declarationService = new DeclarationService();
                 return mapDeclarationToResponse(assignment.getDeclaration());
         }
 

@@ -2,6 +2,7 @@ package org.hartford.greensure.service;
 
 import org.hartford.greensure.dto.response.*;
 import org.hartford.greensure.entity.*;
+import org.hartford.greensure.exception.UserNotFoundException;
 import org.hartford.greensure.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ public class UserService {
 
     public UserProfileResponse getProfile(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         UserProfileResponse.UserProfileResponseBuilder builder = UserProfileResponse.builder()
                 .userId(user.getUserId())
@@ -52,7 +53,7 @@ public class UserService {
 
     public UserProfileResponse updateProfile(Long userId, UserProfileResponse request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (request.getFullName() != null) {
             user.setFullName(request.getFullName());
@@ -76,7 +77,7 @@ public class UserService {
 
     public DashboardResponse getDashboard(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         boolean hasDeclaration = declarationRepo.existsByUserUserId(userId);
 

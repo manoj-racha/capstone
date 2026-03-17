@@ -2,6 +2,7 @@ package org.hartford.greensure.controller;
 
 import org.hartford.greensure.dto.response.*;
 import org.hartford.greensure.security.SecurityUser;
+import org.hartford.greensure.service.PolicyService;
 import org.hartford.greensure.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     @Autowired private UserService userService;
+    @Autowired private PolicyService policyService;
 
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<UserProfileResponse>>
@@ -43,5 +45,14 @@ public class UserController {
         DashboardResponse dashboard = userService.getDashboard(user.getId());
         return ResponseEntity.ok(
             ApiResponse.success("Dashboard fetched", dashboard));
+    }
+
+    @GetMapping("/my-policies")
+    public ResponseEntity<ApiResponse<java.util.List<UserPolicyResponse>>>
+            getMyPolicies(@AuthenticationPrincipal SecurityUser user) {
+
+        java.util.List<UserPolicyResponse> policies = policyService.getMyPolicies(user.getId());
+        return ResponseEntity.ok(
+                ApiResponse.success("My policies fetched", policies));
     }
 }

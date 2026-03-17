@@ -9,7 +9,9 @@ import org.hartford.greensure.entity.PolicyPlan;
 import org.hartford.greensure.entity.User;
 import org.hartford.greensure.entity.UserPolicy;
 import org.hartford.greensure.exception.BadRequestException;
+import org.hartford.greensure.exception.PolicyAlreadyPurchasedException;
 import org.hartford.greensure.exception.ResourceNotFoundException;
+import org.hartford.greensure.exception.UserNotFoundException;
 import org.hartford.greensure.repository.PolicyPlanRepository;
 import org.hartford.greensure.repository.PolicyRepository;
 import org.hartford.greensure.repository.UserPolicyRepository;
@@ -32,7 +34,7 @@ public class PolicyService {
 
     public List<PolicyResponse> getAvailablePolicies(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         String userType = user.getUserType().name();
         
@@ -49,12 +51,23 @@ public class PolicyService {
     }
 
     @Transactional
-    public UserPolicyResponse buyPolicy(Long userId, BuyPolicyRequest request) {
+    public UserPolicyResponse buyPolicy(Long userId, String policyId, BuyPolicyRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        Policy policy = policyRepository.findById(policyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Policy not found"));
 
         PolicyPlan plan = policyPlanRepository.findById(request.getPlanId())
                 .orElseThrow(() -> new ResourceNotFoundException("Policy Plan not found"));
+
+        if (!plan.getPolicy().getPolicyType().equals(policy.getPolicyType())) {
+            throw new BadRequestException("Selected plan does not belong to this policy");
+        }
+
+        if (userPolicyRepository.existsByUserUserIdAndPlanPlanId(userId, request.getPlanId())) {
+            throw new PolicyAlreadyPurchasedException("You have already purchased this policy plan.");
+        }
 
         UserPolicy userPolicy = UserPolicy.builder()
                 .user(user)
@@ -69,6 +82,9 @@ public class PolicyService {
     }
     
     public List<UserPolicyResponse> getMyPolicies(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
         return userPolicyRepository.findByUserUserIdOrderByPurchasedAtDesc(userId)
                 .stream()
                 .map(this::mapToUserPolicyResponse)

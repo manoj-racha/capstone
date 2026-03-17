@@ -59,20 +59,19 @@
             }
 
             <!-- Login Form -->
-            <form #loginForm="ngForm" (ngSubmit)="onLogin(loginForm)" class="space-y-4">
+            <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="space-y-4">
 
                 <!-- Email -->
                 <div>
                     <label for="email" class="block text-sm font-semibold text-gs-text mb-1.5">Email <span
                             class="text-red-500">*</span></label>
-                    <input id="email" type="email" placeholder="you@example.com" [ngModel]="email()"
-                        (ngModelChange)="email.set($event)" name="email" required email #emailInput="ngModel"
-                        [class]="(emailInput.invalid && (emailInput.dirty || emailInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
-                    @if (emailInput.invalid && (emailInput.dirty || emailInput.touched || submitted())) {
-                    @if (emailInput.errors?.['required']) {
+                    <input id="email" type="email" placeholder="you@example.com" formControlName="email"
+                        [class]="(loginForm.controls.email.invalid && (loginForm.controls.email.dirty || loginForm.controls.email.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                    @if (loginForm.controls.email.invalid && (loginForm.controls.email.dirty || loginForm.controls.email.touched || submitted())) {
+                    @if (loginForm.controls.email.errors?.['required']) {
                     <p class="text-red-500 text-xs mt-1.5 font-medium">Email is required</p>
                     }
-                    @if (emailInput.errors?.['email']) {
+                    @if (loginForm.controls.email.errors?.['email']) {
                     <p class="text-red-500 text-xs mt-1.5 font-medium">Enter a valid email address</p>
                     }
                     }
@@ -83,14 +82,13 @@
                     <div class="flex justify-between items-center mb-1.5">
                         <label for="password" class="block text-sm font-semibold text-gs-text">Password <span
                                 class="text-red-500">*</span></label>
-                        <!-- <a routerLink="/forgot-password" class="text-xs font-semibold text-gs-accent hover:text-gs-mid transition-colors">
-                            Forgot password?
-                        </a> -->
+                        <a routerLink="/forgot-password" class="text-xs font-semibold text-gs-accent hover:text-gs-mid transition-colors">
+                            Forgot Password?
+                        </a>
                     </div>
-                    <input id="password" type="password" placeholder="••••••••" [ngModel]="password()"
-                        (ngModelChange)="password.set($event)" name="password" required #passwordInput="ngModel"
-                        [class]="(passwordInput.invalid && (passwordInput.dirty || passwordInput.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
-                    @if (passwordInput.invalid && (passwordInput.dirty || passwordInput.touched || submitted())) {
+                    <input id="password" type="password" placeholder="••••••••" formControlName="password"
+                        [class]="(loginForm.controls.password.invalid && (loginForm.controls.password.dirty || loginForm.controls.password.touched || submitted())) ? 'w-full bg-white border-red-500 focus:border-red-600' : 'w-full bg-white border-gs-border focus:border-gs-dark'" />
+                    @if (loginForm.controls.password.invalid && (loginForm.controls.password.dirty || loginForm.controls.password.touched || submitted())) {
                     <p class="text-red-500 text-xs mt-1.5 font-medium">Password is required</p>
                     }
                 </div>

@@ -35,7 +35,17 @@
     <div class="space-y-2">
         <h2 class="text-lg font-bold text-gs-text">Step 1 — Your Carbon Discount</h2>
 
-        @if (score()) {
+        @if (!hasDeclarationStarted()) {
+        <div class="bg-gs-surface border border-gs-border rounded-xl p-6 text-center">
+            <p class="text-sm text-gs-muted mb-4">You need a verified carbon score to see your personalised premium.
+                Complete your carbon declaration first.</p>
+            <a routerLink="/declaration/start" class="px-6 py-2 bg-gs-dark text-white font-semibold rounded-lg hover:bg-gs-mid transition-colors text-sm">
+                Start Declaration
+            </a>
+            <p class="text-xs text-gs-muted mt-4">Policies are shown below with base prices only
+                - no discount applied.</p>
+        </div>
+        } @else if (score()) {
         <div class="bg-gs-surface border-2 border-gs-dark/20 rounded-xl p-6">
             <div class="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div class="flex items-center gap-4">
@@ -68,12 +78,8 @@
         </div>
         } @else {
         <div class="bg-gs-surface border border-gs-border rounded-xl p-6 text-center">
-            <p class="text-sm text-gs-muted mb-4">You need a verified carbon score to see your personalised premium. 
-                Complete your carbon declaration first.</p>
-            <a routerLink="/declaration/start" class="px-6 py-2 bg-gs-dark text-white font-semibold rounded-lg hover:bg-gs-mid transition-colors text-sm">
-                Start Declaration
-            </a>
-            <p class="text-xs text-gs-muted mt-4">Policies are shown below with base prices only — no discount applied. </p>
+            <p class="text-sm text-gs-muted mb-2">Your declaration is in progress. Discounts appear after verification.</p>
+            <p class="text-xs text-gs-muted">Policies are shown below with base prices only - no discount applied.</p>
         </div>
         }
     </div>

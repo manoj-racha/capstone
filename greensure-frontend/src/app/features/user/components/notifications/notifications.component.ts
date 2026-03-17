@@ -35,14 +35,12 @@ export class NotificationsComponent implements OnInit {
     }
 
     markAsRead(id: number, currentStatus: string): void {
-        if (currentStatus === 'READ') return;
+        if (currentStatus === 'READ' || currentStatus === 'DELIVERED') return;
 
         this.notificationService.markAsRead(id).subscribe({
             next: (res) => {
                 if (res.success) {
-                    this.notifications.update(list =>
-                        list.map(n => n.notificationId === id ? { ...n, status: 'READ' } : n)
-                    );
+                    this.notifications.update(list => list.filter(n => n.notificationId !== id));
                 }
             }
         });
@@ -52,9 +50,7 @@ export class NotificationsComponent implements OnInit {
         this.notificationService.markAllAsRead().subscribe({
             next: (res) => {
                 if (res.success) {
-                    this.notifications.update(list =>
-                        list.map(n => ({ ...n, status: 'READ' }))
-                    );
+                    this.notifications.set([]);
                 }
             }
         });

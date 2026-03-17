@@ -40,13 +40,101 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
+    @ExceptionHandler(DeclarationNotEditableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDeclarationNotEditable(
+            DeclarationNotEditableException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(MaxResubmissionLimitExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMaxResubmission(
+            MaxResubmissionLimitExceededException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(PolicyAlreadyPurchasedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAlreadyPurchased(
+            PolicyAlreadyPurchasedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(DeclarationNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDeclarationNotFound(
+            DeclarationNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUserNotFound(
+            UserNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AgentNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAgentNotFound(
+            AgentNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidToken(
+            InvalidTokenException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(DeclarationAlreadyAssignedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDeclarationAlreadyAssigned(
+            DeclarationAlreadyAssignedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AgentNotAvailableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAgentNotAvailable(
+            AgentNotAvailableException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AssignmentNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAssignmentNotFound(
+            AssignmentNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateAgentFieldException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicateAgentField(
+            DuplicateAgentFieldException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
     // Fallback handler for all other RuntimeExceptions
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntime(
             RuntimeException ex) {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("Internal server error: " + ex.getMessage()));
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
     // Handles @Valid validation failures on request bodies

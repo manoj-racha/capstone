@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, Page } from '../../../core/models/api-response';
-import { AdminOverview, CreateAgentRequest } from '../../../core/models/admin';
+import { AdminOverview, AvailableAgent, CreateAgentRequest, UnassignedDeclaration } from '../../../core/models/admin';
 import { UserProfile } from '../../../core/models/user';
 import { AgentPerformanceResponse, AgentTaskResponse } from '../../../core/models/agent';
 import { DeclarationResponse } from '../../../core/models/declaration';
@@ -168,6 +168,51 @@ export class AdminService {
         return this.httpClient.post<ApiResponse<void>>(
             `${this.apiUrl}/admin/assignments/reassign/${id}?newAgentId=${newAgentId}`,
             {}
+        );
+    }
+
+    getUnassignedDeclarations(): Observable<ApiResponse<UnassignedDeclaration[]>> {
+        return this.httpClient.get<ApiResponse<UnassignedDeclaration[]>>(
+            `${this.apiUrl}/admin/declarations/unassigned`
+        );
+    }
+
+    getAssignedDeclarations(): Observable<ApiResponse<AgentTaskResponse[]>> {
+        return this.httpClient.get<ApiResponse<AgentTaskResponse[]>>(
+            `${this.apiUrl}/admin/declarations/assigned`
+        );
+    }
+
+    getAvailableAgents(): Observable<ApiResponse<AvailableAgent[]>> {
+        return this.httpClient.get<ApiResponse<AvailableAgent[]>>(
+            `${this.apiUrl}/admin/agents/available`
+        );
+    }
+
+    assignAgent(declarationId: number, agentId: number): Observable<ApiResponse<AgentTaskResponse>> {
+        return this.httpClient.post<ApiResponse<AgentTaskResponse>>(
+            `${this.apiUrl}/admin/assignment/assign`,
+            { declarationId, agentId }
+        );
+    }
+
+    reassignDeclaration(declarationId: number, newAgentId: number, reason: string): Observable<ApiResponse<AgentTaskResponse>> {
+        return this.httpClient.put<ApiResponse<AgentTaskResponse>>(
+            `${this.apiUrl}/admin/assignment/reassign`,
+            { declarationId, newAgentId, reason }
+        );
+    }
+
+    changeAssignmentAgent(assignmentId: number, newAgentId: number, reason: string): Observable<ApiResponse<AgentTaskResponse>> {
+        return this.httpClient.put<ApiResponse<AgentTaskResponse>>(
+            `${this.apiUrl}/admin/assignment/change-agent`,
+            { assignmentId, newAgentId, reason }
+        );
+    }
+
+    cancelAssignment(declarationId: number): Observable<ApiResponse<void>> {
+        return this.httpClient.delete<ApiResponse<void>>(
+            `${this.apiUrl}/admin/assignment/cancel/${declarationId}`
         );
     }
 

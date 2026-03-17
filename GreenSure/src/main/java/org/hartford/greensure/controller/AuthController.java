@@ -56,7 +56,7 @@ public class AuthController {
 
         authService.forgotPassword(request);
         return ResponseEntity.ok(
-            ApiResponse.success("If this email exists, a reset link has been sent."));
+            ApiResponse.success("If this email is registered, you will receive a reset link shortly."));
     }
 
     @PostMapping("/reset-password")
@@ -65,6 +65,6 @@ public class AuthController {
 
         authService.resetPassword(request);
         return ResponseEntity.ok(
-            ApiResponse.success("Password reset successfully. Please login with your new password."));
+            ApiResponse.success("Password reset successfully."));
     }
 }

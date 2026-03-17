@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/policies")
+@RequestMapping("/policy")
 public class PolicyController {
 
     @Autowired
@@ -26,17 +26,20 @@ public class PolicyController {
         List<PolicyResponse> policies = policyService.getAvailablePolicies(securityUser.getId());
         return ResponseEntity.ok(ApiResponse.<List<PolicyResponse>>builder()
                 .success(true)
+                .message("Policies fetched")
                 .data(policies)
                 .build());
     }
 
-    @PostMapping("/buy")
+    @PostMapping("/purchase/{policyId}")
     public ResponseEntity<ApiResponse<UserPolicyResponse>> buyPolicy(
             @AuthenticationPrincipal SecurityUser securityUser,
+            @PathVariable String policyId,
             @Valid @RequestBody BuyPolicyRequest request) {
-        UserPolicyResponse response = policyService.buyPolicy(securityUser.getId(), request);
+        UserPolicyResponse response = policyService.buyPolicy(securityUser.getId(), policyId, request);
         return ResponseEntity.ok(ApiResponse.<UserPolicyResponse>builder()
                 .success(true)
+                .message("Policy purchased successfully")
                 .data(response)
                 .build());
     }
@@ -46,6 +49,7 @@ public class PolicyController {
         List<UserPolicyResponse> myPolicies = policyService.getMyPolicies(securityUser.getId());
         return ResponseEntity.ok(ApiResponse.<List<UserPolicyResponse>>builder()
                 .success(true)
+                .message("My policies fetched")
                 .data(myPolicies)
                 .build());
     }

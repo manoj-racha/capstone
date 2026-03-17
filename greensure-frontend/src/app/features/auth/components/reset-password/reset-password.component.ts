@@ -1,30 +1,33 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../../features/auth/services/auth.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
     selector: 'app-reset-password',
-    imports: [FormsModule, RouterLink],
+    imports: [ReactiveFormsModule, RouterLink],
     templateUrl: './reset-password.component.html'
 })
 export class ResetPasswordComponent implements OnInit {
 
-    // The reset token is auto-read from URL query params (?token=...)
     token = signal('');
-    newPassword = signal('');
-    confirmPassword = signal('');
-
-    errorMessage = signal('');
-    successMessage = signal('');
     tokenExpired = signal(false);
+    submitted = signal(false);
+    submitting = signal(false);
 
+    private fb = inject(FormBuilder);
     private authService: AuthService = inject(AuthService);
+    private toast = inject(ToastService);
     private router: Router = inject(Router);
     private route: ActivatedRoute = inject(ActivatedRoute);
 
+    form = this.fb.group({
+        newPassword: ['', [Validators.required, Validators.minLength(8)]],
+        confirmPassword: ['', [Validators.required]]
+    });
+
     ngOnInit(): void {
-        // Auto-read token from URL: /reset-password?token=abc123
         this.route.queryParams.subscribe(params => {
             if (params['token']) {
                 this.token.set(params['token']);
@@ -33,45 +36,68 @@ export class ResetPasswordComponent implements OnInit {
     }
 
     onSubmit(): void {
-        this.errorMessage.set('');
-        this.successMessage.set('');
+        this.submitted.set(true);
         this.tokenExpired.set(false);
 
         if (!this.token()) {
-            this.errorMessage.set('No reset token found. Please use the link from your email.');
+            this.tokenExpired.set(true);
             return;
         }
 
-        if (this.newPassword() !== this.confirmPassword()) {
-            this.errorMessage.set('Passwords do not match');
+        if (this.form.invalid || this.passwordMismatch()) {
+            this.form.markAllAsTouched();
+            this.scrollToFirstError();
             return;
         }
 
-        if (this.newPassword().length < 8) {
-            this.errorMessage.set('Password must be at least 8 characters');
-            return;
-        }
+        const newPassword = this.form.controls.newPassword.value || '';
 
-        this.authService.resetPassword(this.token(), this.newPassword()).subscribe({
+        this.submitting.set(true);
+        this.authService.resetPassword(this.token(), newPassword).subscribe({
             next: (res) => {
-                if (res.success) {
-                    this.successMessage.set('Password reset successfully! Redirecting to login...');
-                    setTimeout(() => this.router.navigate(['/login']), 2000);
-                } else {
-                    this.handleResetError(res.error || 'Reset failed');
+                this.submitting.set(false);
+                if (!res.success) {
+                    this.handleResetError(res.error || 'Unable to reset password.');
+                    return;
                 }
+
+                this.toast.success('Password reset successfully. Please login.');
+                setTimeout(() => this.router.navigate(['/login']), 2000);
             },
             error: (err) => {
-                this.handleResetError(err.error?.error || 'Reset failed. Token may have expired.');
+                this.submitting.set(false);
+                this.handleResetError(err.error?.error || 'Unable to reset password.');
             }
         });
     }
 
+    passwordMismatch(): boolean {
+        const password = this.form.controls.newPassword.value || '';
+        const confirm = this.form.controls.confirmPassword.value || '';
+        return !!password && !!confirm && password !== confirm;
+    }
+
+    isInvalid(field: 'newPassword' | 'confirmPassword'): boolean {
+        const control = this.form.controls[field];
+        return control.invalid && (control.touched || this.submitted());
+    }
+
     private handleResetError(message: string): void {
-        if (message.toLowerCase().includes('expired')) {
+        const normalized = message.toLowerCase();
+        if (normalized.includes('invalid reset link') || normalized.includes('expired')) {
             this.tokenExpired.set(true);
         } else {
-            this.errorMessage.set(message);
+            this.toast.error(message);
         }
+    }
+
+    private scrollToFirstError(): void {
+        setTimeout(() => {
+            const firstInvalid = document.querySelector('form .ng-invalid');
+            if (firstInvalid) {
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                (firstInvalid as HTMLElement).focus();
+            }
+        }, 100);
     }
 }

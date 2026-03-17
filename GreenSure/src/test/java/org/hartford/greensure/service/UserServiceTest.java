@@ -1,6 +1,5 @@
 package org.hartford.greensure.service;
 
-import org.hartford.greensure.dto.response.CarbonScoreResponse;
 import org.hartford.greensure.dto.response.DashboardResponse;
 import org.hartford.greensure.dto.response.UserProfileResponse;
 import org.hartford.greensure.entity.*;
@@ -12,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;

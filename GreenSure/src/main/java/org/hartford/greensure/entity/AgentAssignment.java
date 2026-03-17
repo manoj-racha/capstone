@@ -32,6 +32,18 @@ public class AgentAssignment {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
+    @Column(name = "assigned_by", length = 20)
+    @Builder.Default
+    private String assignedBy = "SYSTEM";
+
+    @Column(name = "reassign_reason", columnDefinition = "TEXT")
+    private String reassignReason;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "assignment_status")
+    @Builder.Default
+    private AssignmentLifecycleStatus assignmentStatus = AssignmentLifecycleStatus.ACTIVE;
+
     // ── MAPPINGS ───────────────────────────────────────────────
 
     // Many assignments can belong to one declaration
@@ -52,6 +64,10 @@ public class AgentAssignment {
         ASSIGNED, IN_PROGRESS, COMPLETED, REASSIGNED
     }
 
+    public enum AssignmentLifecycleStatus {
+        ACTIVE, COMPLETED, REASSIGNED, CANCELLED
+    }
+
     // ── LIFECYCLE ──────────────────────────────────────────────
 
     @PrePersist
@@ -59,5 +75,11 @@ public class AgentAssignment {
         this.assignedAt = LocalDateTime.now();
         // Deadline is always 72 hours from assignment time
         this.deadline = this.assignedAt.plusHours(72);
+        if (this.assignmentStatus == null) {
+            this.assignmentStatus = AssignmentLifecycleStatus.ACTIVE;
+        }
+        if (this.assignedBy == null || this.assignedBy.isBlank()) {
+            this.assignedBy = "SYSTEM";
+        }
     }
 }

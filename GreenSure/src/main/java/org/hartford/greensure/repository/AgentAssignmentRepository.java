@@ -4,9 +4,11 @@ import org.hartford.greensure.entity.AgentAssignment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,6 +34,7 @@ public interface AgentAssignmentRepository
         // Active means ASSIGNED or IN_PROGRESS
         @Query("SELECT aa FROM AgentAssignment aa " +
                         "WHERE aa.declaration.declarationId = :declarationId " +
+                        "AND aa.assignmentStatus = 'ACTIVE' " +
                         "AND aa.status IN ('ASSIGNED', 'IN_PROGRESS')")
         Optional<AgentAssignment> findActiveAssignmentByDeclarationId(
                         @Param("declarationId") Long declarationId);
@@ -45,7 +48,8 @@ public interface AgentAssignmentRepository
         // that have breached the 72 hour deadline
         // and are still not completed
         @Query("SELECT aa FROM AgentAssignment aa " +
-                        "WHERE aa.status IN ('ASSIGNED', 'IN_PROGRESS') " +
+                        "WHERE aa.assignmentStatus = 'ACTIVE' " +
+                        "AND aa.status IN ('ASSIGNED', 'IN_PROGRESS') " +
                         "AND aa.deadline < :now")
         List<AgentAssignment> findOverdueAssignments(
                         @Param("now") LocalDateTime now);
@@ -54,7 +58,8 @@ public interface AgentAssignmentRepository
         // the 48 hour reminder window
         // These agents need a reminder notification
         @Query("SELECT aa FROM AgentAssignment aa " +
-                        "WHERE aa.status IN ('ASSIGNED', 'IN_PROGRESS') " +
+                        "WHERE aa.assignmentStatus = 'ACTIVE' " +
+                        "AND aa.status IN ('ASSIGNED', 'IN_PROGRESS') " +
                         "AND aa.deadline BETWEEN :reminderStart AND :reminderEnd")
         List<AgentAssignment> findAssignmentsNeedingReminder(
                         @Param("reminderStart") LocalDateTime reminderStart,
@@ -78,6 +83,7 @@ public interface AgentAssignmentRepository
         // for an agent to check if they are under max workload
         @Query("SELECT COUNT(aa) FROM AgentAssignment aa " +
                         "WHERE aa.agent.agentId = :agentId " +
+                        "AND aa.assignmentStatus = 'ACTIVE' " +
                         "AND aa.status IN ('ASSIGNED', 'IN_PROGRESS')")
         long countActiveAssignmentsByAgentId(
                         @Param("agentId") Long agentId);
@@ -102,4 +108,25 @@ public interface AgentAssignmentRepository
         // Prevents duplicate assignments for same declaration
         boolean existsByDeclarationDeclarationIdAndStatusIn(
                         Long declarationId, List<AgentAssignment.AssignmentStatus> statuses);
+
+        boolean existsByDeclarationDeclarationIdAndAssignmentStatus(
+                        Long declarationId,
+                        AgentAssignment.AssignmentLifecycleStatus assignmentStatus);
+
+        Page<AgentAssignment> findByAssignmentStatusOrderByAssignedAtDesc(
+                        AgentAssignment.AssignmentLifecycleStatus assignmentStatus,
+                        Pageable pageable);
+
+        List<AgentAssignment> findByAssignmentStatusOrderByAssignedAtDesc(
+                        AgentAssignment.AssignmentLifecycleStatus assignmentStatus);
+
+        @Modifying
+        @Transactional
+        @Query("UPDATE AgentAssignment aa SET aa.assignedBy = 'SYSTEM' WHERE aa.assignedBy IS NULL OR TRIM(aa.assignedBy) = ''")
+        int backfillAssignedBy();
+
+        @Modifying
+        @Transactional
+        @Query("UPDATE AgentAssignment aa SET aa.assignmentStatus = org.hartford.greensure.entity.AgentAssignment.AssignmentLifecycleStatus.ACTIVE WHERE aa.assignmentStatus IS NULL")
+        int backfillAssignmentStatus();
 }

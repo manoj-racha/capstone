@@ -51,23 +51,31 @@
             <div class="flex flex-col items-start md:items-end w-full md:w-auto mt-2 md:mt-0">
                 @if (item.status === 'REJECTED') {
                 <p class="text-xs text-red-400 mb-2">Your declaration was rejected. You may edit and resubmit.</p>
+                @if (item.resubmissionCount >= 3) {
+                <p class="text-xs text-red-500 mb-2 font-semibold">You have reached the maximum resubmission limit.</p>
+                }
                 <div class="flex gap-2 w-full md:w-auto">
+                    <button (click)="viewDetails(item)"
+                        class="px-4 py-1.5 flex-grow md:flex-grow-0 border border-gs-muted text-gs-muted font-semibold rounded text-sm hover:text-white hover:border-white transition-colors">
+                        View Details
+                    </button>
                     <button (click)="showRejectionReason(item.rejectionReason)"
                         class="px-4 py-1.5 flex-grow md:flex-grow-0 border border-red-500 text-red-500 font-semibold rounded text-sm hover:bg-red-500/10 transition-colors">
                         View Reason
                     </button>
                     <button routerLink="/declaration/fill/{{item.declarationId}}"
+                        [disabled]="item.resubmissionCount >= 3"
                         class="px-4 py-1.5 flex-grow md:flex-grow-0 bg-amber-500 text-white font-semibold rounded text-sm hover:bg-amber-400 transition-colors">
                         Edit &amp; Resubmit
                     </button>
                 </div>
                 } @else if (item.status === 'DRAFT') {
-                <button routerLink="/declaration/fill/{{item.declarationId}}"
+                <button (click)="viewDetails(item)"
                     class="px-4 py-1.5 w-full md:w-auto border border-gs-dark text-gs-dark bg-transparent font-semibold rounded text-sm hover:bg-gs-dark/10 transition-colors">
-                    Continue Draft
+                    View Details
                 </button>
                 } @else {
-                <button routerLink="/declaration/review/{{item.declarationId}}"
+                <button (click)="viewDetails(item)"
                     class="px-4 py-1.5 w-full md:w-auto border border-gs-muted text-gs-muted bg-transparent font-semibold rounded text-sm hover:text-white hover:border-white transition-colors">
                     View Details
                 </button>
@@ -107,6 +115,50 @@
                 <button (click)="closeModal()" class="px-6 py-2 bg-gs-dark text-white font-bold rounded-lg hover:bg-gs-mid transition-all shadow-lg active:scale-95">
                     Close
                 </button>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Declaration Details Modal -->
+    @if (selectedDeclaration()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60" (click)="closeDetails()"></div>
+        <div class="relative bg-gs-surface border border-gs-border rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden">
+            <div class="p-5 border-b border-gs-border flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-gs-text">Declaration #{{ selectedDeclaration()!.declarationId }}</h3>
+                    <p class="text-xs text-gs-muted mt-1">Status: {{ getStatusDisplay(selectedDeclaration()!.status) }} • Resubmissions: {{ selectedDeclaration()!.resubmissionCount }}</p>
+                </div>
+                <button (click)="closeDetails()" class="text-gs-muted hover:text-gs-text text-xl">&times;</button>
+            </div>
+
+            <div class="p-5 space-y-3">
+                @if (isReadOnlySelected()) {
+                <p class="text-sm text-gs-muted">This declaration is read-only because its status is {{ getStatusDisplay(selectedDeclaration()!.status) }}.</p>
+                } @else {
+                <p class="text-sm text-gs-muted">Edit declaration values below as JSON, then save changes.</p>
+                }
+
+                <textarea
+                    class="w-full min-h-[360px] font-mono text-xs bg-gs-bg border border-gs-border rounded-lg p-3 focus:outline-none focus:border-gs-dark"
+                    [readOnly]="!canEditSelected()"
+                    [value]="declarationEditorJson()"
+                    (input)="onEditorInput($any($event.target).value)"
+                ></textarea>
+            </div>
+
+            <div class="p-5 border-t border-gs-border flex items-center justify-end gap-3">
+                <button (click)="closeDetails()" class="px-4 py-2 border border-gs-border rounded text-gs-muted hover:text-gs-text">Close</button>
+                @if (canEditSelected()) {
+                <button
+                    (click)="saveDetails()"
+                    [disabled]="saving()"
+                    class="px-5 py-2 bg-gs-dark text-white rounded font-semibold hover:bg-gs-mid transition-colors disabled:opacity-60"
+                >
+                    {{ saving() ? 'Saving...' : 'Save Changes' }}
+                </button>
+                }
             </div>
         </div>
     </div>

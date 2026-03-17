@@ -23,16 +23,18 @@ public class NotificationService {
     }
 
     public List<NotificationResponse> getMyNotifications(Notification.RecipientType type, Long recipientId) {
-        return notificationRepo.findByRecipientTypeAndRecipientIdOrderBySentAtDesc(type, recipientId)
+        return notificationRepo.findByRecipientTypeAndRecipientIdAndStatusOrderBySentAtDesc(type, recipientId, Notification.NotificationStatus.SENT)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
-    public void markAsRead(Long notificationId) {
+    public void markAsRead(Notification.RecipientType type, Long recipientId, Long notificationId) {
         notificationRepo.findById(notificationId).ifPresent(n -> {
-            n.setStatus(Notification.NotificationStatus.DELIVERED);
-            notificationRepo.save(n);
+            if (n.getRecipientType() == type && n.getRecipientId().equals(recipientId)) {
+                n.setStatus(Notification.NotificationStatus.DELIVERED);
+                notificationRepo.save(n);
+            }
         });
     }
 

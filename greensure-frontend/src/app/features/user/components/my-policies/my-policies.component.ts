@@ -1,11 +1,12 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { PolicyService, UserPolicy } from '../../../../core/services/policy.service';
 
 @Component({
   selector: 'app-my-policies',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './my-policies.component.html'
 })
 export class MyPoliciesComponent implements OnInit {

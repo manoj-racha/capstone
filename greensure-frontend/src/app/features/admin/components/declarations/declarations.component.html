@@ -78,10 +78,20 @@
                         {{ dec.submittedAt ? (dec.submittedAt | date:'mediumDate') : 'Not Submitted' }}
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <button routerLink="/admin/declarations/{{dec.declarationId}}"
-                            class="px-3 py-1.5 border border-gs-dark/20 text-gs-dark hover:bg-gs-dark/10 rounded transition-colors text-xs font-semibold">
-                            View Data
-                        </button>
+                        <div class="flex justify-end gap-2">
+                            @if (dec.status === 'SUBMITTED' || dec.status === 'UNDER_VERIFICATION') {
+                            <button
+                                (click)="openAssignmentModal(dec)"
+                                class="px-3 py-1.5 border border-gs-dark text-gs-dark hover:bg-gs-dark/10 rounded transition-colors text-xs font-semibold"
+                            >
+                                {{ dec.assignedAgentId ? 'Reassign' : 'Assign' }}
+                            </button>
+                            }
+                            <button routerLink="/admin/declarations/{{dec.declarationId}}"
+                                class="px-3 py-1.5 border border-gs-dark/20 text-gs-dark hover:bg-gs-dark/10 rounded transition-colors text-xs font-semibold">
+                                View Data
+                            </button>
+                        </div>
                     </td>
                 </tr>
                 }
@@ -102,6 +112,58 @@
                 <button [disabled]="currentPage() >= totalPages() - 1" (click)="onPageChange(currentPage() + 1)"
                     class="px-3 py-1 text-sm rounded border border-gs-border text-gs-text hover:bg-green-900/20 disabled:opacity-50 disabled:cursor-not-allowed">
                     Next
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+
+    @if (assignmentModalOpen() && selectedDeclaration()) {
+    <div class="fixed inset-0 z-40 bg-black/40 flex items-center justify-center p-4">
+        <div class="w-full max-w-lg bg-white border border-gs-border rounded-xl p-6 space-y-4">
+            <h3 class="text-lg font-semibold text-gs-text">
+                {{ reassignMode() ? 'Reassign Agent' : 'Assign Agent' }}
+            </h3>
+            <div class="text-sm text-gs-muted space-y-1">
+                <p>Declaration ID: <b class="text-gs-text">#{{ selectedDeclaration()!.declarationId }}</b></p>
+                <p>User ID: <b class="text-gs-text">{{ selectedDeclaration()!.userId }}</b></p>
+                <p>Status: <b class="text-gs-text">{{ selectedDeclaration()!.status }}</b></p>
+                @if (selectedDeclaration()!.assignedAgentName) {
+                <p>Current Agent: <b class="text-gs-text">{{ selectedDeclaration()!.assignedAgentName }}</b></p>
+                }
+            </div>
+
+            <div>
+                <label class="text-sm font-medium text-gs-text">Available Agents</label>
+                <select (change)="onAgentChange($event)" class="w-full mt-1 border border-gs-border rounded-lg px-3 py-2">
+                    <option value="">Select an agent</option>
+                    @for (agent of availableAgents(); track agent.agentId) {
+                    <option [value]="agent.agentId">{{ agent.fullName }} ({{ agent.employeeId }})</option>
+                    }
+                </select>
+            </div>
+
+            @if (reassignMode()) {
+            <div>
+                <label class="text-sm font-medium text-gs-text">Reason</label>
+                <input
+                    type="text"
+                    [value]="reason()"
+                    (input)="onReasonInput($event)"
+                    class="w-full mt-1 border border-gs-border rounded-lg px-3 py-2"
+                    placeholder="Reason for reassignment"
+                />
+            </div>
+            }
+
+            <div class="flex justify-end gap-2 pt-2">
+                <button (click)="closeAssignmentModal()" class="px-4 py-2 border border-gs-border rounded-lg text-sm">Cancel</button>
+                <button
+                    (click)="confirmAssignmentAction()"
+                    [disabled]="actioning() || !selectedAgentId() || (reassignMode() && !reason().trim())"
+                    class="px-4 py-2 bg-gs-dark text-white rounded-lg text-sm disabled:opacity-50"
+                >
+                    {{ reassignMode() ? 'Confirm Reassign' : 'Confirm Assign' }}
                 </button>
             </div>
         </div>

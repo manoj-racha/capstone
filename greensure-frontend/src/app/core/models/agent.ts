@@ -1,10 +1,13 @@
 export interface AgentTaskResponse {
   assignmentId: number;
   status: string;        // "ASSIGNED" | "IN_PROGRESS" | "COMPLETED" | "REASSIGNED"
+  assignmentStatus?: string; // "ACTIVE" | "COMPLETED" | "REASSIGNED" | "CANCELLED"
   assignedAt: string;
   deadline: string;
   completedAt?: string;
   isOverdue: boolean;
+  assignedBy?: string;
+  reassignReason?: string;
 
   // User info — who the agent visits
   userId: number;

@@ -1,9 +1,15 @@
 @if (loadingService.isLoading()) {
 <div
     class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gs-bg/80 backdrop-blur-sm transition-all duration-300">
-    <div
-        class="w-16 h-16 border-4 border-gs-dark border-t-transparent rounded-full animate-spin shadow-md shadow-gs-dark/5 mb-4">
+    <div class="relative mb-5">
+        <div class="w-12 h-12 rounded-full border-2 border-gs-border"></div>
+        <div class="absolute inset-0 w-12 h-12 rounded-full border-2 border-transparent border-t-gs-dark animate-spin"></div>
     </div>
-    <div class="text-gs-dark font-bold text-lg animate-pulse tracking-wide">Processing...</div>
+    <div class="text-gs-dark font-semibold text-base tracking-wide">Loading</div>
+    <div class="mt-4 flex gap-2">
+        <div class="h-1.5 w-10 rounded-full bg-gs-border animate-pulse"></div>
+        <div class="h-1.5 w-10 rounded-full bg-gs-border animate-pulse [animation-delay:150ms]"></div>
+        <div class="h-1.5 w-10 rounded-full bg-gs-border animate-pulse [animation-delay:300ms]"></div>
+    </div>
 </div>
 }

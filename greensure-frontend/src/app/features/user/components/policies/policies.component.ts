@@ -4,6 +4,8 @@ import { RouterLink } from '@angular/router';
 import { ScoreService } from '../../../../core/services/score.service';
 import { CarbonScoreResponse } from '../../../../core/models/score';
 import { PolicyService, Policy } from '../../../../core/services/policy.service';
+import { DeclarationService } from '../../../declaration/services/declaration.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 interface PolicyPlan {
     planId: number;
@@ -45,10 +47,13 @@ interface PriceResult {
 export class PoliciesComponent implements OnInit {
     private scoreService = inject(ScoreService);
     private policyService = inject(PolicyService);
+    private declarationService = inject(DeclarationService);
+    private toastService = inject(ToastService);
 
     // ── Score state ──────────────────────────────────────────
     score = signal<CarbonScoreResponse | null>(null);
     scoreLoaded = signal(false);
+    hasDeclarationStarted = signal(true);
 
     // ── Selection state ──────────────────────────────────────
     selectedPolicyIndex = signal<number | null>(null);
@@ -78,6 +83,19 @@ export class PoliciesComponent implements OnInit {
     });
 
     ngOnInit(): void {
+        this.declarationService.getHistory().subscribe({
+            next: (res) => {
+                const started = !!res.data && res.data.length > 0;
+                this.hasDeclarationStarted.set(started);
+                if (!started) {
+                    this.toastService.info('Complete your declaration to unlock personalised premium discounts.');
+                }
+            },
+            error: () => {
+                this.hasDeclarationStarted.set(false);
+            }
+        });
+
         this.scoreService.getMyScore().subscribe({
             next: (res) => {
                 this.scoreLoaded.set(true);
@@ -87,6 +105,7 @@ export class PoliciesComponent implements OnInit {
             },
             error: () => {
                 this.scoreLoaded.set(true);
+                this.score.set(null);
             }
         });
 
@@ -99,6 +118,7 @@ export class PoliciesComponent implements OnInit {
             },
             error: () => {
                 this.policiesLoaded.set(true);
+                this.toastService.error('Failed to load policies. Please try again.');
             }
         });
     }
@@ -188,7 +208,7 @@ export class PoliciesComponent implements OnInit {
         const price = this.calculateFinalPrice(plan.basePremiumYearly);
 
         this.buying.set(true);
-        this.policyService.buyPolicy({
+        this.policyService.buyPolicy(policy.policyType, {
             planId: plan.planId,
             durationMonths: this.durationMonths(),
             finalPrice: price.finalPrice
@@ -203,9 +223,9 @@ export class PoliciesComponent implements OnInit {
                     localStorage.setItem('selectedPolicy', JSON.stringify(res.data));
                 }
             },
-            error: () => {
+            error: (err) => {
                 this.buying.set(false);
-                alert('Failed to purchase policy. Please try again.');
+                this.toastService.error(err.error?.error || 'Failed to purchase policy. Please try again.');
             }
         });
     }

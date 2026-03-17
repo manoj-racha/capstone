@@ -76,6 +76,7 @@ public class SecurityConfig {
                                                 // ── USER ENDPOINTS — ROLE_USER only ───────────
                                                 .requestMatchers(
                                                                 "/user/**",
+                                                                "/policy/**",
                                                                 "/declaration/**",
                                                                 "/score/**",
                                                                 "/recommendations/**")

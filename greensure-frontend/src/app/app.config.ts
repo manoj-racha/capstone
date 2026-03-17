@@ -5,6 +5,7 @@ import { routes } from './app.routes';
 import { authInterceptor } from './interceptors/auth-interceptor';
 import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { toastInterceptor } from './core/interceptors/toast.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -22,6 +23,6 @@ export const appConfig: ApplicationConfig = {
     ),
 
     // Enables HttpClient so all our services can make API calls, with Auth & Loading interceptors
-    provideHttpClient(withInterceptors([authInterceptor, loadingInterceptor, errorInterceptor]))
+    provideHttpClient(withInterceptors([authInterceptor, loadingInterceptor, toastInterceptor, errorInterceptor]))
   ]
 };

@@ -37,10 +37,19 @@ public class NotificationController {
             ApiResponse.success("Notifications fetched", notifications));
     }
 
-    @PutMapping("/{id}/read")
-    public ResponseEntity<ApiResponse<Void>> markAsRead(@PathVariable Long id) {
+        @PutMapping("/{id}/read")
+        public ResponseEntity<ApiResponse<Void>> markAsRead(
+                        @PathVariable Long id,
+                        @AuthenticationPrincipal SecurityUser user) {
 
-        notificationService.markAsRead(id);
+                boolean isAgentOrAdmin = user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_AGENT")) ||
+                                                                 user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+
+                Notification.RecipientType type = isAgentOrAdmin
+                                ? Notification.RecipientType.AGENT
+                                : Notification.RecipientType.USER;
+
+                notificationService.markAsRead(type, user.getId(), id);
         return ResponseEntity.ok(
             ApiResponse.success("Notification marked as read"));
     }

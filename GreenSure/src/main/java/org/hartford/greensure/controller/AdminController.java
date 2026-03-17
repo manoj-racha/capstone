@@ -1,23 +1,27 @@
 package org.hartford.greensure.controller;
 
+import org.hartford.greensure.dto.request.ChangeAssignmentAgentRequest;
 import org.hartford.greensure.dto.request.CreateAgentRequest;
+import org.hartford.greensure.dto.request.ManualAssignmentRequest;
+import org.hartford.greensure.dto.request.ReassignDeclarationRequest;
 import org.hartford.greensure.dto.response.*;
 import org.hartford.greensure.entity.*;
+import org.hartford.greensure.exception.BadRequestException;
+import org.hartford.greensure.exception.DuplicateAgentFieldException;
 import org.hartford.greensure.repository.*;
-import org.hartford.greensure.security.JwtUtil;
 import org.hartford.greensure.service.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin")
@@ -44,8 +48,6 @@ public class AdminController {
         private DeclarationService declarationService;
         @Autowired
         private PasswordEncoder passwordEncoder;
-        @Autowired
-        private EmailService emailService;
 
         @GetMapping("/users")
         public ResponseEntity<ApiResponse<Page<UserProfileResponse>>> getAllUsers(
@@ -123,13 +125,13 @@ public class AdminController {
                         @Valid @RequestBody CreateAgentRequest request) {
 
                 if (agentRepository.existsByEmail(request.getEmail())) {
-                        throw new RuntimeException("Email already registered");
+                        throw new DuplicateAgentFieldException("email", "Email already registered");
                 }
                 if (agentRepository.existsByMobile(request.getMobile())) {
-                        throw new RuntimeException("Mobile already registered");
+                        throw new DuplicateAgentFieldException("mobile", "Mobile already registered");
                 }
                 if (agentRepository.existsByEmployeeId(request.getEmployeeId())) {
-                        throw new RuntimeException("Employee ID already exists");
+                        throw new DuplicateAgentFieldException("employeeId", "Employee ID already exists");
                 }
 
                 Agent agent = Agent.builder()
@@ -144,16 +146,88 @@ public class AdminController {
                                 .status(Agent.AgentStatus.ACTIVE)
                                 .build();
 
-                agentRepository.save(agent);
-
-                // Send welcome email with credentials (best-effort)
-                emailService.sendAgentWelcomeEmail(
-                                request.getEmail(),
-                                request.getFullName(),
-                                request.getPassword());
+                try {
+                        agentRepository.save(agent);
+                } catch (DataIntegrityViolationException ex) {
+                        throw new DuplicateAgentFieldException(
+                                        "agent",
+                                        "Agent already exists with same email, mobile, or employee ID");
+                }
 
                 return ResponseEntity.ok(
-                                ApiResponse.success("Agent created successfully. Welcome email sent."));
+                                ApiResponse.success("Agent created successfully."));
+        }
+
+        @GetMapping("/declarations/unassigned")
+        public ResponseEntity<ApiResponse<List<java.util.Map<String, Object>>>> getUnassignedDeclarations() {
+                List<java.util.Map<String, Object>> data = agentService.getUnassignedDeclarations()
+                                .stream()
+                                .map(d -> {
+                                        java.util.Map<String, Object> map = new java.util.HashMap<>();
+                                        map.put("declarationId", d.getDeclarationId());
+                                        map.put("userId", d.getUser().getUserId());
+                                        map.put("userName", d.getUser().getFullName());
+                                        map.put("userType", d.getUser().getUserType());
+                                        map.put("submittedAt", d.getSubmittedAt());
+                                        map.put("pinCode", d.getUser().getPinCode());
+                                        return map;
+                                })
+                                .toList();
+
+                return ResponseEntity.ok(ApiResponse.success("Unassigned declarations fetched", data));
+        }
+
+        @GetMapping("/declarations/assigned")
+        public ResponseEntity<ApiResponse<List<AgentTaskResponse>>> getAssignedDeclarations() {
+                return ResponseEntity.ok(ApiResponse.success("Assigned declarations fetched", agentService.getActiveAssignments()));
+        }
+
+        @GetMapping("/agents/available")
+        public ResponseEntity<ApiResponse<List<java.util.Map<String, Object>>>> getAvailableAgents() {
+                List<java.util.Map<String, Object>> data = agentService.getAvailableAgents().stream()
+                                .map(a -> {
+                                        java.util.Map<String, Object> map = new java.util.HashMap<>();
+                                        map.put("agentId", a.getAgentId());
+                                        map.put("fullName", a.getFullName());
+                                        map.put("email", a.getEmail());
+                                        map.put("employeeId", a.getEmployeeId());
+                                        map.put("assignedZones", a.getAssignedZones());
+                                        map.put("strikeCount", a.getStrikeCount());
+                                        return map;
+                                })
+                                .toList();
+
+                return ResponseEntity.ok(ApiResponse.success("Available agents fetched", data));
+        }
+
+        @PostMapping("/assignment/assign")
+        public ResponseEntity<ApiResponse<AgentTaskResponse>> assignAgent(
+                        @Valid @RequestBody ManualAssignmentRequest request) {
+                return ResponseEntity.ok(ApiResponse.success(
+                                "Agent assigned successfully",
+                                agentService.assignDeclaration(request)));
+        }
+
+        @PutMapping("/assignment/reassign")
+        public ResponseEntity<ApiResponse<AgentTaskResponse>> reassignAgent(
+                        @Valid @RequestBody ReassignDeclarationRequest request) {
+                return ResponseEntity.ok(ApiResponse.success(
+                                "Assignment reassigned successfully",
+                                agentService.reassignDeclaration(request)));
+        }
+
+        @PutMapping("/assignment/change-agent")
+        public ResponseEntity<ApiResponse<AgentTaskResponse>> changeAssignmentAgent(
+                        @Valid @RequestBody ChangeAssignmentAgentRequest request) {
+                return ResponseEntity.ok(ApiResponse.success(
+                                "Assignment reassigned successfully",
+                                agentService.changeAgent(request)));
+        }
+
+        @DeleteMapping("/assignment/cancel/{declarationId}")
+        public ResponseEntity<ApiResponse<Void>> cancelAssignment(@PathVariable Long declarationId) {
+                agentService.cancelAssignment(declarationId);
+                return ResponseEntity.ok(ApiResponse.success("Assignment cancelled successfully"));
         }
 
         @GetMapping("/agents")

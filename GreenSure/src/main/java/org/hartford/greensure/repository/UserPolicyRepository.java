@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface UserPolicyRepository extends JpaRepository<UserPolicy, Long> {
     List<UserPolicy> findByUserUserIdOrderByPurchasedAtDesc(Long userId);
+
+    boolean existsByUserUserIdAndPlanPlanId(Long userId, Long planId);
 }

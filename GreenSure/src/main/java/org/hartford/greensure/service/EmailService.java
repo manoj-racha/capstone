@@ -2,11 +2,13 @@ package org.hartford.greensure.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailService {
@@ -16,68 +18,51 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.username:no-reply@greensure.local}")
     private String fromEmail;
 
-    @Value("${app.frontend-url}")
-    private String frontendUrl;
-
-    /**
-     * Send a password reset email with a link containing the reset token.
-     */
-    public void sendPasswordResetEmail(String toEmail, String resetToken) {
+        public void sendEmail(String to, String subject, String body) {
         try {
-            String resetLink = frontendUrl + "/reset-password?token=" + resetToken;
+                        MimeMessage message = mailSender.createMimeMessage();
+                        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(toEmail);
-            message.setSubject("GreenSure — Reset Your Password");
-            message.setText(
-                    "Hello,\n\n" +
-                            "We received a request to reset your GreenSure account password.\n\n" +
-                            "Click the link below to reset your password:\n" +
-                            resetLink + "\n\n" +
-                            "This link will expire in 30 minutes.\n\n" +
-                            "If you did not request this, please ignore this email.\n\n" +
-                            "Best regards,\n" +
-                            "The GreenSure Team");
+                        String fromAddress = (fromEmail == null || fromEmail.isBlank())
+                                        ? "no-reply@greensure.local"
+                                        : fromEmail;
+                        helper.setFrom(fromAddress);
+                        helper.setTo(to);
+                        helper.setSubject(subject);
+                        helper.setText(wrapHtml(body), true);
 
             mailSender.send(message);
-            log.info("Password reset email sent to {}", toEmail);
+                        log.info("Email sent to {} with subject {}", to, subject);
         } catch (Exception e) {
-            log.error("Failed to send password reset email to {}: {}", toEmail, e.getMessage());
-            throw new RuntimeException("Failed to send password reset email. Please try again.");
+                        log.error("Failed to send email to {}: {}", to, e.getMessage());
+                        throw new RuntimeException("Failed to send email.");
         }
     }
 
-    /**
-     * Send a welcome email to a newly created agent with their credentials.
-     */
-    public void sendAgentWelcomeEmail(String toEmail, String fullName, String tempPassword) {
-        try {
-            String loginLink = frontendUrl + "/login";
-
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(toEmail);
-            message.setSubject("Welcome to GreenSure — Your Agent Account");
-            message.setText(
-                    "Hello " + fullName + ",\n\n" +
-                            "Welcome to GreenSure! Your field agent account has been created.\n\n" +
-                            "Your login credentials:\n" +
-                            "Email: " + toEmail + "\n" +
-                            "Temporary Password: " + tempPassword + "\n\n" +
-                            "Login here: " + loginLink + "\n\n" +
-                            "Please change your password after your first login.\n\n" +
-                            "Best regards,\n" +
-                            "The GreenSure Admin Team");
-
-            mailSender.send(message);
-            log.info("Welcome email sent to agent {}", toEmail);
-        } catch (Exception e) {
-            log.error("Failed to send welcome email to agent {}: {}", toEmail, e.getMessage());
-            // Don't throw — agent was created successfully, email is best-effort
+        private String wrapHtml(String body) {
+                return """
+                                <div style=\"margin:0;padding:0;background:#f4f7f4;font-family:Arial,sans-serif;color:#1f2937;\">
+                                    <table role=\"presentation\" width=\"100%%\" cellspacing=\"0\" cellpadding=\"0\" style=\"padding:24px 0;\">
+                                        <tr>
+                                            <td align=\"center\">
+                                                <table role=\"presentation\" width=\"620\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:620px;background:#ffffff;border:1px solid #dbe5dc;border-radius:10px;overflow:hidden;\">
+                                                    <tr>
+                                                        <td style=\"background:#1f5c3a;color:#ffffff;padding:16px 24px;font-size:20px;font-weight:700;\">GreenSure</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style=\"padding:24px 24px 16px 24px;line-height:1.6;font-size:15px;\">%s</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style=\"padding:14px 24px 20px 24px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;\">GreenSure Platform</td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                """.formatted(body);
         }
-    }
 }
