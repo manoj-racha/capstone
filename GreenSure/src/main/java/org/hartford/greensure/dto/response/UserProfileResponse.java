@@ -1,34 +1,34 @@
 package org.hartford.greensure.dto.response;
 
-import org.hartford.greensure.entity.HouseholdProfile.DwellingType;
-import org.hartford.greensure.entity.MsmeProfile.BusinessType;
-import org.hartford.greensure.entity.User.*;
 import lombok.*;
+import org.hartford.greensure.enums.Role;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class UserProfileResponse {
 
     private Long userId;
-    private UserType userType;
+    private Role role;
     private String fullName;
     private String email;
-    private String mobile;
+    private String phone;
+    private LocalDate dateOfBirth;
     private String address;
     private String pinCode;
     private String city;
     private String state;
-    private UserStatus status;
+    private boolean emailVerified;
+    private boolean phoneVerified;
+    private int strikes;
+    private LocalDateTime suspendedAt;
     private LocalDateTime createdAt;
-
+    
+    // Household specific
     private Integer numberOfMembers;
-    private DwellingType dwellingType;
-
-    private String businessName;
-    private String gstNumber;
-    private BusinessType businessType;
-    private Integer numEmployees;
 }

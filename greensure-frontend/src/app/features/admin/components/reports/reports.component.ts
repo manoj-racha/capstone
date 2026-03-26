@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService } from '../../../../features/admin/services/admin.service';
-import { AgentPerformanceResponse } from '../../../../core/models/agent';
+
 
 @Component({
     selector: 'app-reports',
@@ -13,7 +13,7 @@ export class ReportsComponent implements OnInit {
     private adminService = inject(AdminService);
 
     // Agent Performance State
-    agentPerformance = signal<AgentPerformanceResponse[]>([]);
+    agentPerformance = signal<any[]>([]);
 
     performanceError = signal<string>('');
 
@@ -28,11 +28,9 @@ export class ReportsComponent implements OnInit {
         this.adminService.getAgentPerformanceReport().subscribe({
             next: (res) => {
                 if (res.success && res.data) {
-                    // Add default fallback for name/id if they don't exist since it's a list summary
-                    // and might be missing base agent profile details depending on backend structure.
-                    this.agentPerformance.set([res.data]);
+                    this.agentPerformance.set(res.data);
                 } else {
-                    this.performanceError.set(res.error || 'Failed to load performance data.');
+                    this.performanceError.set(res.message || 'Failed to load performance metrics.');
                 }
             },
             error: (err) => {

@@ -12,16 +12,6 @@
     <!-- Filters -->
     <div class="bg-gs-surface border border-gs-border p-4 rounded-lg mb-6 flex flex-wrap gap-6 items-center">
         <div class="flex items-center gap-3">
-            <span class="text-sm text-gs-muted">Type:</span>
-            <select #typeSelect (change)="onFilterChange('type', typeSelect.value)"
-                class="bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-1 text-sm focus:outline-none focus:border-gs-dark">
-                <option value="ALL">All Types</option>
-                <option value="HOUSEHOLD">Household</option>
-                <option value="MSME">MSME</option>
-            </select>
-        </div>
-
-        <div class="flex items-center gap-3">
             <span class="text-sm text-gs-muted">Status:</span>
             <select #statusSelect (change)="onFilterChange('status', statusSelect.value)"
                 class="bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-1 text-sm focus:outline-none focus:border-gs-dark">
@@ -70,13 +60,12 @@
                     <td class="px-6 py-4">
                         <p class="text-gs-text mb-1"><span
                                 class="px-2 py-0.5 border border-gs-dark/20 bg-green-900/20 text-gs-dark rounded text-xs">{{
-                                user.userType }}</span></p>
-                        <p class="text-xs text-gs-muted">{{ user.city }}, PIN: {{ user.pinCode }}</p>
+                                user.role }}</span></p>
+                        <p class="text-xs text-gs-muted">{{ user.city }}, PIN: {{ user.pincode }}</p>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="px-2 py-0.5 rounded text-xs font-medium border"
-                            [ngClass]="user.status === 'ACTIVE' ? 'bg-gs-dark/10 text-gs-dark border-gs-dark/20' : 'bg-red-500/10 text-red-400 border-red-500/30'">
-                            {{ user.status }}
+                        <span class="px-2 py-0.5 rounded text-xs font-medium border bg-gs-dark/10 text-gs-dark border-gs-dark/20">
+                            ACTIVE
                         </span>
                     </td>
                     <td class="px-6 py-4 text-gs-muted">

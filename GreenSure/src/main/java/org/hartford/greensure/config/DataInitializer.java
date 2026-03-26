@@ -1,10 +1,8 @@
 package org.hartford.greensure.config;
 
-import org.hartford.greensure.entity.Agent;
-import org.hartford.greensure.entity.Policy;
-import org.hartford.greensure.entity.PolicyPlan;
-import org.hartford.greensure.repository.AgentRepository;
-import org.hartford.greensure.repository.PolicyRepository;
+import org.hartford.greensure.entity.*;
+import org.hartford.greensure.enums.Role;
+import org.hartford.greensure.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,35 +10,34 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
+/**
+ * Seeds default data on application startup.
+ * Agent entity removed — Admin is now a User with role=ADMIN.
+ * Agents are Users with role=AGENT, created via POST /admin/agents/create.
+ */
 @Component
 public class DataInitializer implements CommandLineRunner {
 
-    @Autowired
-    private AgentRepository agentRepository;
-
-    @Autowired
-    private PolicyRepository policyRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    @Autowired private UserRepository userRepository;
+    @Autowired private PolicyRepository policyRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
 
-        // Only seed if no admin exists
-        if (agentRepository.findByEmail("admin@greensure.com").isEmpty()) {
-
-            Agent admin = Agent.builder()
-                    .agentType(Agent.AgentType.ADMIN)
+        // Seed default ADMIN user if none exists
+        if (userRepository.findByEmail("admin@greensure.com").isEmpty()) {
+            User admin = User.builder()
+                    .role(Role.ADMIN)
                     .fullName("System Admin")
                     .email("admin@greensure.com")
-                    .mobile("9999999999")
+                    .phone("9999999999")
                     .passwordHash(passwordEncoder.encode("admin123"))
-                    .employeeId("EMP-ADMIN-001")
-                    .assignedZones("ALL")
+                    .emailVerified(true)
+                    .isActive(true)
                     .build();
 
-            agentRepository.save(admin);
+            userRepository.save(admin);
 
             System.out.println("══════════════════════════════════════");
             System.out.println("  DEFAULT ADMIN CREATED");
@@ -49,20 +46,36 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("══════════════════════════════════════");
         }
 
+        // Seed default field agent for development
+        if (userRepository.findByEmail("agent@greensure.com").isEmpty()) {
+            User agent = User.builder()
+                    .role(Role.AGENT)
+                    .fullName("Test Field Agent")
+                    .email("agent@greensure.com")
+                    .phone("8888888888")
+                    .pinCode("400001")
+                    .passwordHash(passwordEncoder.encode("agent123"))
+                    .emailVerified(true)
+                    .isActive(true)
+                    .build();
+
+            userRepository.save(agent);
+            System.out.println("  DEFAULT AGENT CREATED: agent@greensure.com / agent123");
+        }
+
         if (policyRepository.count() == 0) {
             seedPolicies();
         }
     }
 
     private void seedPolicies() {
-        // HOME_SHIELD
         Policy homeShield = Policy.builder()
                 .policyType("HOME_SHIELD")
                 .name("Home Shield")
                 .icon("🏠")
-                .description("Complete protection for your home or business premises")
+                .description("Complete protection for your home premises")
                 .build();
-        
+
         homeShield.setPlans(Arrays.asList(
                 PolicyPlan.builder().planName("Basic").coverageAmount(500000.0).basePremiumYearly(4999.0)
                         .features(Arrays.asList("Fire and natural disaster coverage", "Burglary protection", "24x7 claim support"))
@@ -75,14 +88,13 @@ public class DataInitializer implements CommandLineRunner {
                         .policy(homeShield).build()
         ));
 
-        // VEHICLE_GUARD
         Policy vehicleGuard = Policy.builder()
                 .policyType("VEHICLE_GUARD")
                 .name("Vehicle Guard")
                 .icon("🚗")
                 .description("Comprehensive coverage for all your declared vehicles")
                 .build();
-        
+
         vehicleGuard.setPlans(Arrays.asList(
                 PolicyPlan.builder().planName("Basic").coverageAmount(500000.0).basePremiumYearly(2999.0)
                         .features(Arrays.asList("Third party liability", "Theft protection", "Basic own damage"))
@@ -95,28 +107,7 @@ public class DataInitializer implements CommandLineRunner {
                         .policy(vehicleGuard).build()
         ));
 
-        // BUSINESS_PROTECT
-        Policy businessProtect = Policy.builder()
-                .policyType("BUSINESS_PROTECT")
-                .name("Business Protect")
-                .icon("🏭")
-                .description("Protect your MSME operations against unexpected losses")
-                .eligibility("MSME")
-                .build();
-        
-        businessProtect.setPlans(Arrays.asList(
-                PolicyPlan.builder().planName("Basic").coverageAmount(1000000.0).basePremiumYearly(9999.0)
-                        .features(Arrays.asList("Equipment breakdown cover", "Fire and theft protection", "Basic liability coverage"))
-                        .policy(businessProtect).build(),
-                PolicyPlan.builder().planName("Standard").coverageAmount(5000000.0).basePremiumYearly(19999.0)
-                        .features(Arrays.asList("Everything in Basic", "Business interruption cover", "Employee liability", "Inventory protection"))
-                        .policy(businessProtect).build(),
-                PolicyPlan.builder().planName("Premium").coverageAmount(10000000.0).basePremiumYearly(34999.0)
-                        .features(Arrays.asList("Everything in Standard", "Directors liability", "Cyber risk cover", "Export credit insurance"))
-                        .policy(businessProtect).build()
-        ));
-
-        policyRepository.saveAll(Arrays.asList(homeShield, vehicleGuard, businessProtect));
+        policyRepository.saveAll(Arrays.asList(homeShield, vehicleGuard));
         System.out.println("Policies seeded successfully!");
     }
 }

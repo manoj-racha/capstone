@@ -1,18 +1,19 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { AdminService } from '../../../../features/admin/services/admin.service';
+import { AgentProfile } from '../../../../core/models/agent';
 
 @Component({
     selector: 'app-agents',
     standalone: true,
-    imports: [CommonModule, RouterLink, DatePipe],
+    imports: [CommonModule, RouterLink],
     templateUrl: './agents.component.html'
 })
 export class AgentsComponent implements OnInit {
     private adminService = inject(AdminService);
 
-    agents = signal<any[]>([]);
+    agents = signal<AgentProfile[]>([]);
     error = signal<string>('');
 
     // Pagination state
@@ -29,11 +30,11 @@ export class AgentsComponent implements OnInit {
         this.adminService.getAgents(this.currentPage(), this.pageSize()).subscribe({
             next: (res) => {
                 if (res.success && res.data) {
-                    this.agents.set(res.data.content);
+                    this.agents.set(res.data.content || []);
                     this.totalElements.set(res.data.totalElements);
                     this.totalPages.set(res.data.totalPages);
                 } else {
-                    this.error.set(res.error || 'Failed to load agents.');
+                    this.error.set(res.message || 'Failed to load agents.');
                 }
             },
             error: (err) => {

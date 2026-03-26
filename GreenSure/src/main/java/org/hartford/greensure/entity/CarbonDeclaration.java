@@ -2,17 +2,35 @@ package org.hartford.greensure.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hartford.greensure.enums.DeclarationStatus;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents one annual carbon footprint declaration submitted by a household user.
+ * The declaration is a shell / header record. All actual data lives in
+ * six child module entities linked via OneToOne / OneToMany:
+ * <ul>
+ *   <li>Module 2 — HouseholdProfile (shared with the user account)</li>
+ *   <li>Module 3 — DeclarationVehicleData</li>
+ *   <li>Module 4 — ElectricityData + ElectricityBill (list)</li>
+ *   <li>Module 5 — SolarData</li>
+ *   <li>Module 6 — CookingData</li>
+ *   <li>Module 7 — LifestyleData</li>
+ * </ul>
+ *
+ * Fraud advisory fields are populated at submission time and
+ * are visible only to field agents — never exposed to the user.
+ */
 @Entity
 @Table(
-        name = "carbon_declarations",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_user_year",
-                columnNames = {"user_id", "declaration_year"}
-        )
+    name = "carbon_declarations",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_user_year",
+        columnNames = {"user_id", "declaration_year"}
+    )
 )
 @Getter @Setter
 @NoArgsConstructor
@@ -33,6 +51,7 @@ public class CarbonDeclaration {
     @Builder.Default
     private DeclarationStatus status = DeclarationStatus.DRAFT;
 
+    /** How many times the user has resubmitted after rejection. Max 3. */
     @Column(name = "resubmission_count")
     @Builder.Default
     private Integer resubmissionCount = 0;
@@ -40,173 +59,78 @@ public class CarbonDeclaration {
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
 
-    @Column(name = "rejection_reason", length = 1000)
-    private String rejectionReason;
-
-    // ── ENERGY FIELDS — Both Household and MSME ────────────────
-
-    @Column(name = "electricity_units")
-    private Double electricityUnits;
-
-    @Column(name = "has_solar")
-    @Builder.Default
-    private Boolean hasSolar = false;
-
-    @Column(name = "solar_units")
-    private Double solarUnits;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "cooking_fuel_type")
-    private CookingFuelType cookingFuelType;
-
-    @Column(name = "lpg_cylinders")
-    private Double lpgCylinders;
-
-    @Column(name = "png_units")
-    private Double pngUnits;
-
-    @Column(name = "biomass_kg_per_day")
-    private Double biomassKgPerDay;
-
-    @Column(name = "num_ac_units")
-    private Integer numAcUnits;
-
-    @Column(name = "ac_hours_per_day")
-    private Double acHoursPerDay;
-
-    @Column(name = "has_generator")
-    @Builder.Default
-    private Boolean hasGenerator = false;
-
-    @Column(name = "generator_hours_per_month")
-    private Double generatorHoursPerMonth;
-
-    // ── TRANSPORT FIELDS — Both Household and MSME ─────────────
-
-    @Column(name = "uses_public_transport")
-    @Builder.Default
-    private Boolean usesPublicTransport = false;
-
-    @Column(name = "public_transport_km")
-    private Double publicTransportKm;
-
-    // ── LIFESTYLE FIELDS — Household Only ──────────────────────
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "dietary_pattern")
-    private DietaryPattern dietaryPattern;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "shopping_orders_per_month")
-    private ShoppingOrders shoppingOrdersPerMonth;
-
-    // ── OPERATIONS FIELDS — MSME Only ──────────────────────────
-
-    @Column(name = "has_commercial_vehicles")
-    @Builder.Default
-    private Boolean hasCommercialVehicles = false;
-
-    @Column(name = "commercial_vehicle_km")
-    private Double commercialVehicleKm;
-
-    @Column(name = "third_party_shipments")
-    private Integer thirdPartyShipments;
-
-    @Column(name = "employees_private_vehicle")
-    private Integer employeesPrivateVehicle;
-
-    @Column(name = "employees_public_transport")
-    private Integer employeesPublicTransport;
-
-    @Column(name = "generator_liters_per_month")
-    private Double generatorLitersPerMonth;
-
-    @Column(name = "has_boiler")
-    @Builder.Default
-    private Boolean hasBoiler = false;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "boiler_fuel_type")
-    private BoilerFuelType boilerFuelType;
-
-    @Column(name = "boiler_coal_kg")
-    private Double boilerCoalKg;
-
-    @Column(name = "boiler_gas_scm")
-    private Double boilerGasScm;
-
-    @Column(name = "paper_reams_per_month")
-    private Integer paperReamsPerMonth;
-
-    @Column(name = "uses_recycled_paper")
-    @Builder.Default
-    private Boolean usesRecycledPaper = false;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "raw_material_type")
-    private RawMaterialType rawMaterialType;
-
-    @Column(name = "raw_material_kg")
-    private Double rawMaterialKg;
-
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // ── MAPPINGS ───────────────────────────────────────────────
+    // ── FRAUD ADVISORY — agent-visible only ───────────────────
 
-    // Many declarations belong to one user
+    /**
+     * Integer score computed by FraudAdvisoryService at submission time.
+     * 0–1 = LOW, 2–3 = MEDIUM, 4+ = HIGH.
+     * NEVER exposed to the user via API.
+     */
+    @Column(name = "fraud_advisory_score")
+    private Integer fraudAdvisoryScore;
+
+    /**
+     * Comma-separated list of fraud rule names that fired.
+     * Example: "MANUAL_VEHICLE_NO_DOCUMENT,SOLAR_CLAIMED_NO_CERTIFICATE"
+     */
+    @Column(name = "fraud_advisory_flags", columnDefinition = "TEXT")
+    private String fraudAdvisoryFlags;
+
+    /**
+     * One of "LOW", "MEDIUM", "HIGH".
+     * Shown to the agent in the verification workspace.
+     */
+    @Column(name = "fraud_risk_level", length = 10)
+    private String fraudRiskLevel;
+
+    // ── USER RELATION ──────────────────────────────────────────
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // One declaration has many vehicles
-    @OneToMany(mappedBy = "declaration", cascade = CascadeType.ALL,
-            orphanRemoval = true, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<DeclarationVehicle> vehicles = new ArrayList<>();
+    // ── MODULE RELATIONS ───────────────────────────────────────
 
-    // One declaration has many agent assignments
-    // (multiple if reassigned)
-    @OneToMany(mappedBy = "declaration", cascade = CascadeType.ALL,
-            fetch = FetchType.LAZY)
+    /** Module 3 — vehicle data (multiple vehicles per declaration). */
+    @OneToMany(mappedBy = "declaration", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @Builder.Default
+    private List<DeclarationVehicleData> vehicles = new ArrayList<>();
+
+    /** Module 4a — electricity summary. */
+    @OneToOne(mappedBy = "declaration", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private ElectricityData electricityData;
+
+    /** Module 4b — individual monthly bill OCR records. */
+    @OneToMany(mappedBy = "declaration", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<ElectricityBill> electricityBills = new ArrayList<>();
+
+    /** Module 5 — solar installation (optional). */
+    @OneToOne(mappedBy = "declaration", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private SolarData solarData;
+
+    /** Module 6 — cooking fuel. */
+    @OneToOne(mappedBy = "declaration", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private CookingData cookingData;
+
+    /** Module 7 — lifestyle self-declaration (optional). */
+    @OneToOne(mappedBy = "declaration", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private LifestyleData lifestyleData;
+
+    // ── OTHER RELATIONS ────────────────────────────────────────
+
+    @OneToMany(mappedBy = "declaration", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<AgentAssignment> agentAssignments = new ArrayList<>();
 
-    // One declaration has one verification
-    @OneToOne(mappedBy = "declaration", cascade = CascadeType.ALL,
-            fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "declaration", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Verification verification;
 
-    // One declaration produces one carbon score
-    @OneToOne(mappedBy = "declaration", cascade = CascadeType.ALL,
-            fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "declaration", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private CarbonScore carbonScore;
-
-    // ── ENUMS ──────────────────────────────────────────────────
-
-    public enum DeclarationStatus {
-        DRAFT, SUBMITTED, UNDER_VERIFICATION, VERIFIED, REJECTED
-    }
-
-    public enum CookingFuelType {
-        LPG, PNG, ELECTRIC, BIOMASS, KEROSENE, NONE
-    }
-
-    public enum DietaryPattern {
-        VEGAN, VEGETARIAN, EGGETARIAN, NON_VEGETARIAN, HEAVY_NON_VEGETARIAN
-    }
-
-    public enum ShoppingOrders {
-        ZERO_TO_FIVE, SIX_TO_FIFTEEN, ABOVE_FIFTEEN
-    }
-
-    public enum BoilerFuelType {
-        COAL, NATURAL_GAS, NONE
-    }
-
-    public enum RawMaterialType {
-        VIRGIN, RECYCLED, MIXED
-    }
 
     // ── LIFECYCLE ──────────────────────────────────────────────
 

@@ -11,17 +11,11 @@
                 class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors">
                 All
             </button>
-            <button (click)="loadTasks('ASSIGNED')" [class.bg-gs-dark]="currentFilter() === 'ASSIGNED'"
-                [class.text-white]="currentFilter() === 'ASSIGNED'"
-                [class.text-gs-muted]="currentFilter() !== 'ASSIGNED'"
+            <button (click)="loadTasks('ACTIVE')" [class.bg-gs-dark]="currentFilter() === 'ACTIVE'"
+                [class.text-white]="currentFilter() === 'ACTIVE'"
+                [class.text-gs-muted]="currentFilter() !== 'ACTIVE'"
                 class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors">
-                Assigned
-            </button>
-            <button (click)="loadTasks('IN_PROGRESS')" [class.bg-gs-dark]="currentFilter() === 'IN_PROGRESS'"
-                [class.text-white]="currentFilter() === 'IN_PROGRESS'"
-                [class.text-gs-muted]="currentFilter() !== 'IN_PROGRESS'"
-                class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors">
-                In Progress
+                Active
             </button>
             <button (click)="loadTasks('COMPLETED')" [class.bg-gs-dark]="currentFilter() === 'COMPLETED'"
                 [class.text-white]="currentFilter() === 'COMPLETED'"
@@ -64,7 +58,7 @@
 
                 <h3 class="text-lg font-bold text-gs-text mb-1 truncate" [title]="task.userName">{{ task.userName }}
                 </h3>
-                <p class="text-sm text-gs-muted mb-4">{{ task.userType }} &bull; Year {{ task.declarationYear }}</p>
+                <p class="text-sm text-gs-muted mb-4">USER &bull; Year {{ task.declarationYear }}</p>
 
                 <div class="space-y-2 text-sm">
                     <div class="flex items-start gap-2">
@@ -76,8 +70,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
-                        <span class="text-gs-text truncate" [title]="task.userCity + ' - ' + task.userPinCode">{{
-                            task.userCity }} - {{ task.userPinCode }}</span>
+                        <span class="text-gs-text truncate" [title]="task.userAddress">{{
+                            task.userAddress }}</span>
                     </div>
                     <div class="flex items-start gap-2">
                         <svg class="w-4 h-4 text-gs-dark mt-0.5 shrink-0" fill="none" stroke="currentColor"
@@ -98,7 +92,7 @@
 
             <div class="mt-6 pt-4 border-t border-gs-border">
                 <button routerLink="/agent/task/{{task.assignmentId}}"
-                    class="w-full py-2 text-sm font-semibold rounded transition-colors {{ task.status === 'ASSIGNED' || task.status === 'IN_PROGRESS' ? 'bg-gs-dark text-white hover:bg-gs-mid' : 'border border-gs-muted text-gs-text hover:border-gs-dark hover:text-gs-dark' }}">
+                    class="w-full py-2 text-sm font-semibold rounded transition-colors {{ task.status === 'ACTIVE' ? 'bg-gs-dark text-white hover:bg-gs-mid' : 'border border-gs-muted text-gs-text hover:border-gs-dark hover:text-gs-dark' }}">
                     {{ task.status === 'COMPLETED' ? 'View Details' : 'Open Task' }}
                 </button>
             </div>

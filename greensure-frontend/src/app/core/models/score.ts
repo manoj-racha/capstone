@@ -1,42 +1,37 @@
+export type Zone = 'GREEN_CHAMPION' | 'IMPROVER' | 'DEFAULTER';
 
-export interface CarbonScoreResponse {
-  scoreId: number;
-  userId: number;
-  scoreYear: number;
+export const ZONE_LABELS: Record<Zone, string> = {
+  GREEN_CHAMPION: 'Green Champion',
+  IMPROVER: 'Improver',
+  DEFAULTER: 'Defaulter'
+};
 
-  // CO2 values in kg
-  energyCo2: number;
-  transportCo2: number;
-  lifestyleCo2?: number;    // Household only
-  operationsCo2?: number;   // MSME only
+export const ZONE_COLORS: Record<Zone, string> = {
+  GREEN_CHAMPION: 'green',
+  IMPROVER: 'amber',
+  DEFAULTER: 'red'
+};
+
+export interface CarbonScoreDetail {
   totalCo2: number;
+  vehicleCo2: number;
+  electricityCo2: number;
+  cookingCo2: number;
+  solarOffset: number;
+  lifestyleBonus: number;
   perCapitaCo2: number;
-
-  // Zone classification
-  zone: string;             // "GREEN_CHAMPION" | "GREEN_IMPROVER" | "GREEN_DEFAULTER"
-
-  // Percentage breakdown — used for charts
-  energyPercentage: number;
-  transportPercentage: number;
-  lifestylePercentage?: number;
-  operationsPercentage?: number;
-
-  // Comparison data
-  cityAverage?: number;
-  nationalAverage?: number;
-  previousYearCo2?: number;
-  improvementPercentage?: number;
-
+  zone: Zone;
+  discountPercent: number;
+  improvementBonusPercent: number;
+  durationDiscountPercent: number;
+  zoneDiscountPercent: number;
+  discountBreakdown: string;
   generatedAt: string;
-
-  // Recommendations attached to score
-  recommendations?: RecommendationResponse[];
+  recommendations: Recommendation[];
 }
 
-export interface RecommendationResponse {
-  recommendationId: number;
-  category: string;    // "ENERGY" | "TRANSPORT" | "LIFESTYLE" | "OPERATIONS"
-  priority: string;    // "HIGH" | "MEDIUM" | "LOW"
-  recommendationText: string;
-  generatedAt: string;
+export interface Recommendation {
+  category: string;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  description: string;
 }

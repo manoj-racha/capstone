@@ -3,7 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AdminService } from '../../../../features/admin/services/admin.service';
 import { DeclarationService } from '../../../../features/declaration/services/declaration.service';
-import { DeclarationResponse } from '../../../../core/models/declaration';
+import { DeclarationDetail } from '../../../../core/models/declaration';
 
 @Component({
     selector: 'app-declaration-detail',
@@ -17,7 +17,7 @@ export class DeclarationDetailComponent implements OnInit {
     private route = inject(ActivatedRoute);
 
     declarationId = signal<number>(0);
-    declaration = signal<DeclarationResponse | null>(null);
+    declaration = signal<DeclarationDetail | null>(null);
 
 
     error = signal<string>('');
@@ -39,7 +39,7 @@ export class DeclarationDetailComponent implements OnInit {
                 if (res.success && res.data) {
                     this.declaration.set(res.data);
                 } else {
-                    this.error.set(res.error || 'Failed to load declaration details.');
+                    this.error.set(res.message || 'Failed to load declaration details.');
                 }
             },
             error: (err) => {
@@ -60,7 +60,7 @@ export class DeclarationDetailComponent implements OnInit {
                         this.declaration.update(d => d ? { ...d, status: 'DRAFT' } : null); // Assumes it returns to draft state
                         alert('Declaration unlocked successfully.');
                     } else {
-                        alert('Failed to unlock declaration: ' + res.error);
+                        alert('Failed to unlock declaration: ' + res.message);
                     }
                 },
                 error: (err) => {

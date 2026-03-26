@@ -1,0 +1,187 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------------< org.hartford:GreenSure >-----------------------
+[INFO] Building GreenSure 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ GreenSure ---
+[INFO] Deleting C:\Hartford\capstone\GreenSure\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ GreenSure ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ GreenSure ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 145 source files with javac [debug parameters release 21] to target\classes
+[INFO] -------------------------------------------------------------
+[WARNING] COMPILATION WARNING : 
+[INFO] -------------------------------------------------------------
+[WARNING] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/LifestyleDataRequest.java:[11,34] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/LifestyleDataRequest.java:[14,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[INFO] 2 warnings 
+[INFO] -------------------------------------------------------------
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[23,13] cannot find symbol
+  symbol:   class CookingFuelType
+  location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[52,13] cannot find symbol
+  symbol:   class DietaryPattern
+  location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[54,13] cannot find symbol
+  symbol:   class ShoppingOrders
+  location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[75,13] cannot find symbol
+  symbol:   class BoilerFuelType
+  location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[88,13] cannot find symbol
+  symbol:   class RawMaterialType
+  location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[23,29] cannot find symbol
+  symbol:   class CookingFuelType
+  location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[52,28] cannot find symbol
+  symbol:   class DietaryPattern
+  location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[54,28] cannot find symbol
+  symbol:   class ShoppingOrders
+  location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[75,28] cannot find symbol
+  symbol:   class BoilerFuelType
+  location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[88,29] cannot find symbol
+  symbol:   class RawMaterialType
+  location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[8,9] cannot find symbol
+  symbol:   class CookingFuelType
+  location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[10,1] cannot find symbol
+  symbol:   class CookingFuelType
+  location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[11,1] cannot find symbol
+  symbol:   class CookingFuelType
+  location: class org.hartford.greensure.dto.request.DeclarationRequest.DeclarationRequestBuilder
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[3,53] cannot find symbol
+  symbol:   class AssignmentStatus
+  location: class org.hartford.greensure.entity.AgentAssignment
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[5,42] cannot find symbol
+  symbol:   class UserType
+  location: class org.hartford.greensure.entity.User
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[16,13] cannot find symbol
+  symbol:   class AssignmentStatus
+  location: class org.hartford.greensure.dto.response.AgentTaskResponse
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[17,28] cannot find symbol
+  symbol:   class AssignmentLifecycleStatus
+  location: class org.hartford.greensure.entity.AgentAssignment
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[31,13] cannot find symbol
+  symbol:   class UserType
+  location: class org.hartford.greensure.dto.response.AgentTaskResponse
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[16,30] cannot find symbol
+  symbol:   class AssignmentStatus
+  location: class org.hartford.greensure.dto.response.AgentTaskResponse
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[17,55] cannot find symbol
+  symbol:   class AssignmentLifecycleStatus
+  location: class org.hartford.greensure.entity.AgentAssignment
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[31,22] cannot find symbol
+  symbol:   class UserType
+  location: class org.hartford.greensure.dto.response.AgentTaskResponse
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[9,9] cannot find symbol
+  symbol:   class AssignmentStatus
+  location: class org.hartford.greensure.dto.response.AgentTaskResponse
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[11,1] cannot find symbol
+  symbol:   class AssignmentStatus
+  location: class org.hartford.greensure.dto.response.AgentTaskResponse
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[12,1] cannot find symbol
+  symbol:   class AssignmentStatus
+  location: class org.hartford.greensure.dto.response.AgentTaskResponse.AgentTaskResponseBuilder
+[INFO] 24 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  14.114 s
+[INFO] Finished at: 2026-03-23T23:59:06+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.1:compile (default-compile) on project GreenSure: Compilation failure: Compilation failure: 
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[23,13] cannot find symbol
+[ERROR]   symbol:   class CookingFuelType
+[ERROR]   location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[52,13] cannot find symbol
+[ERROR]   symbol:   class DietaryPattern
+[ERROR]   location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[54,13] cannot find symbol
+[ERROR]   symbol:   class ShoppingOrders
+[ERROR]   location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[75,13] cannot find symbol
+[ERROR]   symbol:   class BoilerFuelType
+[ERROR]   location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[88,13] cannot find symbol
+[ERROR]   symbol:   class RawMaterialType
+[ERROR]   location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[23,29] cannot find symbol
+[ERROR]   symbol:   class CookingFuelType
+[ERROR]   location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[52,28] cannot find symbol
+[ERROR]   symbol:   class DietaryPattern
+[ERROR]   location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[54,28] cannot find symbol
+[ERROR]   symbol:   class ShoppingOrders
+[ERROR]   location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[75,28] cannot find symbol
+[ERROR]   symbol:   class BoilerFuelType
+[ERROR]   location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[88,29] cannot find symbol
+[ERROR]   symbol:   class RawMaterialType
+[ERROR]   location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[8,9] cannot find symbol
+[ERROR]   symbol:   class CookingFuelType
+[ERROR]   location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[10,1] cannot find symbol
+[ERROR]   symbol:   class CookingFuelType
+[ERROR]   location: class org.hartford.greensure.dto.request.DeclarationRequest
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/request/DeclarationRequest.java:[11,1] cannot find symbol
+[ERROR]   symbol:   class CookingFuelType
+[ERROR]   location: class org.hartford.greensure.dto.request.DeclarationRequest.DeclarationRequestBuilder
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[3,53] cannot find symbol
+[ERROR]   symbol:   class AssignmentStatus
+[ERROR]   location: class org.hartford.greensure.entity.AgentAssignment
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[5,42] cannot find symbol
+[ERROR]   symbol:   class UserType
+[ERROR]   location: class org.hartford.greensure.entity.User
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[16,13] cannot find symbol
+[ERROR]   symbol:   class AssignmentStatus
+[ERROR]   location: class org.hartford.greensure.dto.response.AgentTaskResponse
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[17,28] cannot find symbol
+[ERROR]   symbol:   class AssignmentLifecycleStatus
+[ERROR]   location: class org.hartford.greensure.entity.AgentAssignment
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[31,13] cannot find symbol
+[ERROR]   symbol:   class UserType
+[ERROR]   location: class org.hartford.greensure.dto.response.AgentTaskResponse
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[16,30] cannot find symbol
+[ERROR]   symbol:   class AssignmentStatus
+[ERROR]   location: class org.hartford.greensure.dto.response.AgentTaskResponse
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[17,55] cannot find symbol
+[ERROR]   symbol:   class AssignmentLifecycleStatus
+[ERROR]   location: class org.hartford.greensure.entity.AgentAssignment
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[31,22] cannot find symbol
+[ERROR]   symbol:   class UserType
+[ERROR]   location: class org.hartford.greensure.dto.response.AgentTaskResponse
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[9,9] cannot find symbol
+[ERROR]   symbol:   class AssignmentStatus
+[ERROR]   location: class org.hartford.greensure.dto.response.AgentTaskResponse
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[11,1] cannot find symbol
+[ERROR]   symbol:   class AssignmentStatus
+[ERROR]   location: class org.hartford.greensure.dto.response.AgentTaskResponse
+[ERROR] /C:/Hartford/capstone/GreenSure/src/main/java/org/hartford/greensure/dto/response/AgentTaskResponse.java:[12,1] cannot find symbol
+[ERROR]   symbol:   class AssignmentStatus
+[ERROR]   location: class org.hartford.greensure.dto.response.AgentTaskResponse.AgentTaskResponseBuilder
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

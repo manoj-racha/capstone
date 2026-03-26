@@ -1,21 +1,18 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { AuthService } from '../../features/auth/services/auth.service';
+import { AuthService } from '../services/auth.service';
 
 /**
- * authGuard — Checks if user is logged in (JWT token exists AND is not expired).
+ * authGuard — Checks if user is logged in (JWT token exists and is not expired).
  * If NOT logged in → redirects to /login.
- * Apply this to all protected routes.
  */
-export const authGuard: CanActivateFn = (route, state) => {
-    const router = inject(Router);
-    const authService = inject(AuthService);
+export const authGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
 
-    if (authService.isLoggedIn()) {
-        return true;
-    }
+  if (auth.isLoggedIn()) {
+    return true;
+  }
 
-    // Not logged in or token expired → go to login page
-    router.navigate(['/login']);
-    return false;
+  return router.createUrlTree(['/login']);
 };

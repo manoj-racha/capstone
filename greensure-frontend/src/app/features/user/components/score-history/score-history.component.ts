@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ScoreService } from '../../../../core/services/score.service';
-import { CarbonScoreResponse } from '../../../../core/models/score';
+import { CarbonScoreDetail } from '../../../../core/models/score';
 
 @Component({
     selector: 'app-score-history',
@@ -12,7 +12,7 @@ import { CarbonScoreResponse } from '../../../../core/models/score';
 export class ScoreHistoryComponent implements OnInit {
     private scoreService = inject(ScoreService);
 
-    history = signal<CarbonScoreResponse[]>([]);
+    history = signal<CarbonScoreDetail[]>([]);
 
     error = signal('');
 
@@ -22,11 +22,11 @@ export class ScoreHistoryComponent implements OnInit {
                 if (res.success && res.data) {
                     this.history.set(res.data);
                 } else {
-                    this.error.set(res.error || 'Failed to load score history');
+                    this.error.set(res.message || 'Failed to load score history');
                 }
             },
             error: (err) => {
-                this.error.set(err.error?.error || 'Failed to load score history');
+                this.error.set(err.error?.message || 'Failed to load score history');
             }
         });
     }

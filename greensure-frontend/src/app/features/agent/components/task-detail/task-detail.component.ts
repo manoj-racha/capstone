@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AgentService } from '../../../../features/agent/services/agent.service';
-import { AgentTaskResponse } from '../../../../core/models/agent';
+import { AgentTaskSummary } from '../../../../core/models/agent';
 
 @Component({
     selector: 'app-task-detail',
@@ -16,13 +16,13 @@ export class TaskDetailComponent implements OnInit {
     private router = inject(Router);
 
     assignmentId = signal<number>(0);
-    task = signal<AgentTaskResponse | null>(null);
+    task = signal<AgentTaskSummary | null>(null);
 
     starting = signal<boolean>(false);
     error = signal<string>('');
 
     ngOnInit(): void {
-        const idParam = this.route.snapshot.paramMap.get('id');
+        const idParam = this.route.snapshot.paramMap.get('assignmentId');
         if (idParam) {
             this.assignmentId.set(Number(idParam));
             this.loadTask();
@@ -37,39 +37,21 @@ export class TaskDetailComponent implements OnInit {
                 if (res.success && res.data) {
                     this.task.set(res.data);
                 } else {
-                    this.error.set(res.error || 'Failed to load task details.');
+                    this.error.set(res.message || 'Failed to load task details');
                 }
             },
             error: (err) => {
-                this.error.set(err.error?.error || 'Failed to load task details.');
+                this.error.set(err.error?.message || 'Failed to load task details');
             }
         });
     }
 
     onStartVerification(): void {
-        if (!this.task() || this.task()?.status !== 'ASSIGNED') {
-            // If already started, just jump to verify page
-            this.router.navigate(['/agent/verify', this.assignmentId()]);
+        if (!this.task() || this.task()?.status !== 'ACTIVE') {
+            // Only active tasks can be verified
             return;
         }
-
-        this.starting.set(true);
-        this.error.set('');
-
-        this.agentService.startAssignment(this.assignmentId()).subscribe({
-            next: (res) => {
-                this.starting.set(false);
-                if (res.success) {
-                    this.router.navigate(['/agent/verify', this.assignmentId()]);
-                } else {
-                    this.error.set(res.error || 'Failed to start verification.');
-                }
-            },
-            error: (err) => {
-                this.starting.set(false);
-                this.error.set(err.error?.error || 'Failed to start verification.');
-            }
-        });
+        this.router.navigate(['/agent/workspace', this.assignmentId()]);
     }
 
     getStatusBadgeClass(status?: string, isOverdue?: boolean): string {
@@ -79,8 +61,7 @@ export class TaskDetailComponent implements OnInit {
         }
 
         switch (status) {
-            case 'ASSIGNED': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            case 'IN_PROGRESS': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+            case 'ACTIVE': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
             case 'COMPLETED': return 'bg-gs-dark/10 text-gs-dark border-gs-dark/20';
             case 'REASSIGNED': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
             default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';

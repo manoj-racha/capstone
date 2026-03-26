@@ -22,11 +22,11 @@ export class DashboardComponent implements OnInit {
                 if (res.success) {
                     this.dashboard.set(res.data);
                 } else {
-                    this.error.set(res.error || 'Failed to load dashboard data');
+                    this.error.set(res.message || 'Failed to load dashboard data');
                 }
             },
             error: (err) => {
-                this.error.set(err.error?.error || 'Failed to load dashboard data');
+                this.error.set(err.error?.message || 'Failed to load dashboard data');
             }
         });
     }

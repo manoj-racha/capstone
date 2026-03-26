@@ -1,65 +1,67 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { DeclarationService } from '../../../../features/declaration/services/declaration.service';
-import { DeclarationResponse } from '../../../../core/models/declaration';
+import { DeclarationService } from '../../../../core/services/declaration.service';
+import { ToastService } from '../../../../core/services/toast.service';
+import { DeclarationProgressComponent } from '../../../../shared/components/declaration-progress/declaration-progress.component';
+import { DeclarationDetail, MILEAGE_BAND_LABELS, MileageBand } from '../../../../core/models/declaration';
+import { ZONE_LABELS, Zone } from '../../../../core/models/score';
 
 @Component({
-    selector: 'app-declaration-review',
-    standalone: true,
-    imports: [CommonModule, RouterLink],
-    templateUrl: './declaration-review.component.html'
+  selector: 'app-declaration-review',
+  imports: [RouterLink, DeclarationProgressComponent],
+  templateUrl: './declaration-review.component.html'
 })
 export class DeclarationReviewComponent implements OnInit {
-    private declarationService = inject(DeclarationService);
-    private route = inject(ActivatedRoute);
-    private router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly declarationService = inject(DeclarationService);
+  private readonly toast = inject(ToastService);
 
-    declarationId = signal<number>(0);
-    declaration = signal<DeclarationResponse | null>(null);
+  loading = signal(true);
+  submitting = signal(false);
+  declaration = signal<DeclarationDetail | null>(null);
+  declarationId = 0;
 
-    error = signal<string>('');
+  readonly zoneLabels = ZONE_LABELS;
+  readonly mileageBandLabels = MILEAGE_BAND_LABELS;
 
-    ngOnInit(): void {
-        const idParam = this.route.snapshot.paramMap.get('id');
-        if (idParam) {
-            this.declarationId.set(Number(idParam));
-            this.loadDeclaration();
-        } else {
-            this.error.set('Invalid declaration ID.');
+  ngOnInit(): void {
+    this.declarationId = Number(this.route.snapshot.paramMap.get('id'));
+    this.loadDeclaration();
+  }
+
+  loadDeclaration(): void {
+    this.loading.set(true);
+    this.declarationService.getDeclarationById(this.declarationId).subscribe({
+      next: (res) => {
+        this.loading.set(false);
+        if (res.success && res.data) {
+          this.declaration.set(res.data);
         }
-    }
+      },
+      error: () => { this.loading.set(false); }
+    });
+  }
 
-    loadDeclaration(): void {
-        this.declarationService.getDeclaration(this.declarationId()).subscribe({
-            next: (res) => {
-                if (res.success && res.data) {
-                    this.declaration.set(res.data);
-                } else {
-                    this.error.set(res.error || 'Failed to load declaration details.');
-                }
-            },
-            error: (err) => {
-                this.error.set(err.error?.error || 'Failed to load declaration details.');
-            }
-        });
-    }
+  getMileageLabel(band: MileageBand | undefined): string {
+    return band ? this.mileageBandLabels[band] : 'N/A';
+  }
 
-    onSubmit(): void {
-        this.error.set('');
+  getZoneLabel(zone: Zone | undefined): string {
+    return zone ? this.zoneLabels[zone] : 'N/A';
+  }
 
-        this.declarationService.submitDeclaration(this.declarationId()).subscribe({
-            next: (res) => {
-                if (res.success) {
-                    // Success! Navigate to user dashboard or declaration history
-                    this.router.navigate(['/user/dashboard']);
-                } else {
-                    this.error.set(res.error || 'Failed to submit declaration.');
-                }
-            },
-            error: (err) => {
-                this.error.set(err.error?.error || 'An error occurred during submission.');
-            }
-        });
-    }
+  onSubmit(): void {
+    this.submitting.set(true);
+    this.declarationService.submitDeclaration(this.declarationId).subscribe({
+      next: (res) => {
+        this.submitting.set(false);
+        if (res.success) {
+          this.toast.success('Declaration submitted! An agent will visit within 72 hours.');
+          this.router.navigate(['/user/dashboard']);
+        }
+      },
+      error: () => { this.submitting.set(false); }
+    });
+  }
 }

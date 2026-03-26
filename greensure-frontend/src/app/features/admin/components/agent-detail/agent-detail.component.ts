@@ -36,7 +36,7 @@ export class AgentDetailComponent implements OnInit {
                 if (res.success && res.data) {
                     this.agent.set(res.data);
                 } else {
-                    this.error.set(res.error || 'Agent not found.');
+                    this.error.set(res.message || 'Agent not found.');
                 }
             },
             error: (err) => {
@@ -49,15 +49,17 @@ export class AgentDetailComponent implements OnInit {
         if (!this.agent()) return;
 
         this.actioning.set(true);
-        const newStatus = this.agent()?.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+        // Backend expects 'ACTIVE' or 'SUSPENDED'
+        const newStatus = this.agent()?.active ? 'SUSPENDED' : 'ACTIVE';
 
         this.adminService.updateAgentStatus(this.agentId(), newStatus).subscribe({
             next: (res) => {
                 this.actioning.set(false);
                 if (res.success) {
-                    this.agent.update(a => a ? { ...a, status: newStatus } : null);
+                    // Update frontend model boolean
+                    this.agent.update(a => a ? { ...a, active: newStatus === 'ACTIVE' } : null);
                 } else {
-                    alert('Failed to update status: ' + res.error);
+                    alert('Failed to update status: ' + res.message);
                 }
             },
             error: (err) => {
@@ -68,7 +70,7 @@ export class AgentDetailComponent implements OnInit {
     }
 
     clearStrikes(): void {
-        if (!this.agent() || this.agent()?.strikeCount === 0) return;
+        if (!this.agent() || this.agent()?.strikes === 0) return;
 
         if (confirm('Are you sure you want to clear all strikes for this agent?')) {
             this.actioning.set(true);
@@ -76,10 +78,10 @@ export class AgentDetailComponent implements OnInit {
                 next: (res) => {
                     this.actioning.set(false);
                     if (res.success) {
-                        this.agent.update(a => a ? { ...a, strikeCount: 0 } : null);
+                        this.agent.update(a => a ? { ...a, strikes: 0 } : null);
                         alert('Agent strikes cleared successfully.');
                     } else {
-                        alert('Failed to clear strikes: ' + res.error);
+                        alert('Failed to clear strikes: ' + res.message);
                     }
                 },
                 error: (err) => {

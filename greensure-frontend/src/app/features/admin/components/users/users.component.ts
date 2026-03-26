@@ -17,7 +17,6 @@ export class UsersComponent implements OnInit {
     error = signal<string>('');
 
     // Filter state
-    userTypeFilter = signal<string>('');
     statusFilter = signal<string>('');
 
     // Pagination state
@@ -34,17 +33,14 @@ export class UsersComponent implements OnInit {
 
         this.error.set('');
 
-        const uType = this.userTypeFilter() || undefined;
-        const stat = this.statusFilter() || undefined;
-
-        this.adminService.getUsers(uType, stat, this.currentPage(), this.pageSize()).subscribe({
+        this.adminService.getUsers(undefined, this.statusFilter(), this.currentPage(), this.pageSize()).subscribe({
             next: (res) => {
                 if (res.success && res.data) {
                     this.users.set(res.data.content);
                     this.totalElements.set(res.data.totalElements);
                     this.totalPages.set(res.data.totalPages);
                 } else {
-                    this.error.set(res.error || 'Failed to load users.');
+                    this.error.set(res.message || 'Failed to load users.');
                 }
             },
             error: (err) => {
@@ -54,11 +50,7 @@ export class UsersComponent implements OnInit {
     }
 
     onFilterChange(type: string, val: string): void {
-        if (type === 'type') {
-            this.userTypeFilter.set(val === 'ALL' ? '' : val);
-        } else {
-            this.statusFilter.set(val === 'ALL' ? '' : val);
-        }
+        this.statusFilter.set(val === 'ALL' ? '' : val);
         this.currentPage.set(0); // Reset to first page on filter change
         this.loadUsers();
     }

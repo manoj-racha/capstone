@@ -22,7 +22,7 @@
 
     @if (recommendations().length > 0) {
     <div class="grid grid-cols-1 gap-5">
-        @for (rec of recommendations(); track rec.recommendationId) {
+        @for (rec of recommendations(); track rec.description) {
         <div
             class="bg-gs-surface border border-gs-border rounded-xl p-6 hover:border-gs-dark/20 transition-colors shadow-sm relative overflow-hidden group">
 
@@ -56,16 +56,18 @@
 
                     <h3 class="font-bold text-gs-text mb-2 group-hover:text-gs-dark transition-colors">{{
                         rec.category }} Action</h3>
-                    <p class="text-sm text-gs-muted">{{ rec.recommendationText }}</p>
+                    <p class="text-sm text-gs-muted">{{ rec.description }}</p>
                 </div>
 
                 <div
                     class="shrink-0 text-left md:text-right bg-gs-bg p-4 rounded-xl border border-gs-border self-start group-hover:border-gs-dark/20 transition-colors">
-                    <p class="text-[10px] uppercase font-bold text-gs-muted mb-1 tracking-wider">Date Generated</p>
-                    <p class="text-lg font-bold text-gs-dark">{{ rec.generatedAt | date:'mediumDate' }}</p>
-                    <div class="text-right whitespace-nowrap">
-                        <span class="text-xs font-medium text-gs-dark uppercase">Priority: {{ rec.priority }}</span>
-                    </div>
+                    <p class="text-[10px] uppercase font-bold text-gs-muted mb-1 tracking-wider">Priority</p>
+                    <p class="text-lg font-bold text-gs-dark"
+                        [class.text-red-600]="rec.priority === 'HIGH'"
+                        [class.text-yellow-600]="rec.priority === 'MEDIUM'"
+                        [class.text-green-600]="rec.priority === 'LOW'">
+                        {{ rec.priority }}
+                    </p>
                 </div>
             </div>
 

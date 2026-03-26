@@ -6,7 +6,6 @@ import { noAuthGuard } from './core/guards/no-auth.guard';
 export const routes: Routes = [
 
   // ── DEFAULT REDIRECT ──────────────────────────────────────
-  // When someone visits http://localhost:4200 → go to landing
   {
     path: '',
     redirectTo: 'landing',
@@ -21,7 +20,7 @@ export const routes: Routes = [
         .then(m => m.LandingComponent)
   },
 
-  // ── AUTH PAGES (no-auth guard: logged-in users get redirected) ──
+  // ── AUTH PAGES (no-auth guard) ────────────────────────────
   {
     path: 'login',
     canActivate: [noAuthGuard],
@@ -37,6 +36,13 @@ export const routes: Routes = [
         .then(m => m.RegisterComponent)
   },
   {
+    path: 'verify-otp',
+    canActivate: [noAuthGuard],
+    loadComponent: () =>
+      import('./features/auth/components/verify-otp/verify-otp.component')
+        .then(m => m.VerifyOtpComponent)
+  },
+  {
     path: 'forgot-password',
     canActivate: [noAuthGuard],
     loadComponent: () =>
@@ -50,7 +56,7 @@ export const routes: Routes = [
         .then(m => m.ResetPasswordComponent)
   },
 
-  // ── USER PAGES (must be logged in + USER role) ─────────────
+  // ── USER PAGES (authGuard + roleGuard USER) ───────────────
   {
     path: 'user/welcome',
     canActivate: [authGuard, roleGuard],
@@ -116,7 +122,7 @@ export const routes: Routes = [
         .then(m => m.MyPoliciesComponent)
   },
 
-  // ── DECLARATION PAGES (must be logged in + USER role) ──────
+  // ── DECLARATION PAGES (authGuard + roleGuard USER) ────────
   {
     path: 'declaration/start',
     canActivate: [authGuard, roleGuard],
@@ -134,31 +140,64 @@ export const routes: Routes = [
         .then(m => m.DeclarationFillComponent)
   },
   {
-    path: 'declaration/vehicles/:id',
+    path: 'declaration/:id/household',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['USER'] },
     loadComponent: () =>
-      import('./features/declaration/components/declaration-vehicles/declaration-vehicles.component')
-        .then(m => m.DeclarationVehiclesComponent)
+      import('./features/declaration/components/declaration-household/declaration-household.component')
+        .then(m => m.DeclarationHouseholdComponent)
   },
   {
-    path: 'declaration/review/:id',
+    path: 'declaration/:id/vehicle',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['USER'] },
+    loadComponent: () =>
+      import('./features/declaration/components/declaration-vehicle/declaration-vehicle.component')
+        .then(m => m.DeclarationVehicleComponent)
+  },
+  {
+    path: 'declaration/:id/electricity',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['USER'] },
+    loadComponent: () =>
+      import('./features/declaration/components/declaration-electricity/declaration-electricity.component')
+        .then(m => m.DeclarationElectricityComponent)
+  },
+  {
+    path: 'declaration/:id/solar',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['USER'] },
+    loadComponent: () =>
+      import('./features/declaration/components/declaration-solar/declaration-solar.component')
+        .then(m => m.DeclarationSolarComponent)
+  },
+  {
+    path: 'declaration/:id/cooking',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['USER'] },
+    loadComponent: () =>
+      import('./features/declaration/components/declaration-cooking/declaration-cooking.component')
+        .then(m => m.DeclarationCookingComponent)
+  },
+  {
+    path: 'declaration/:id/lifestyle',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['USER'] },
+    loadComponent: () =>
+      import('./features/declaration/components/declaration-lifestyle/declaration-lifestyle.component')
+        .then(m => m.DeclarationLifestyleComponent)
+  },
+  {
+    path: 'declaration/:id/review',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['USER'] },
     loadComponent: () =>
       import('./features/declaration/components/declaration-review/declaration-review.component')
         .then(m => m.DeclarationReviewComponent)
   },
-  {
-    path: 'declaration/history',
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['USER'] },
-    loadComponent: () =>
-      import('./features/declaration/components/declaration-history/declaration-history.component')
-        .then(m => m.DeclarationHistoryComponent)
-  },
 
-  // ── AGENT PAGES (must be logged in + AGENT role) ───────────
+
+  // ── AGENT PAGES (authGuard + roleGuard AGENT) ─────────────
   {
     path: 'agent/dashboard',
     canActivate: [authGuard, roleGuard],
@@ -168,7 +207,7 @@ export const routes: Routes = [
         .then(m => m.AgentDashboardComponent)
   },
   {
-    path: 'agent/task/:id',
+    path: 'agent/task/:assignmentId',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['AGENT'] },
     loadComponent: () =>
@@ -176,12 +215,12 @@ export const routes: Routes = [
         .then(m => m.TaskDetailComponent)
   },
   {
-    path: 'agent/verify/:id',
+    path: 'agent/workspace/:assignmentId',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['AGENT'] },
     loadComponent: () =>
-      import('./features/agent/components/verify/verify.component')
-        .then(m => m.VerifyComponent)
+      import('./features/agent/components/workspace/agent-workspace.component')
+        .then(m => m.AgentWorkspaceComponent)
   },
   {
     path: 'agent/performance',
@@ -200,7 +239,7 @@ export const routes: Routes = [
         .then(m => m.AgentNotificationsComponent)
   },
 
-  // ── ADMIN PAGES (must be logged in + ADMIN role) ───────────
+  // ── ADMIN PAGES (authGuard + roleGuard ADMIN) ─────────────
   {
     path: 'admin/dashboard',
     canActivate: [authGuard, roleGuard],
@@ -274,6 +313,14 @@ export const routes: Routes = [
         .then(m => m.AssignmentsComponent)
   },
   {
+    path: 'admin/analytics',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMIN'] },
+    loadComponent: () =>
+      import('./features/admin/components/analytics/admin-analytics.component')
+        .then(m => m.AdminAnalyticsComponent)
+  },
+  {
     path: 'admin/reports',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['ADMIN'] },
@@ -283,7 +330,6 @@ export const routes: Routes = [
   },
 
   // ── FALLBACK ──────────────────────────────────────────────
-  // Any unknown URL → go to landing
   {
     path: '**',
     redirectTo: 'landing'

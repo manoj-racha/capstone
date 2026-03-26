@@ -1,41 +1,23 @@
 package org.hartford.greensure.dto.response;
 
-import org.hartford.greensure.entity.CarbonScore.CarbonZone;
 import lombok.*;
-import java.time.LocalDateTime;
-import java.util.List;
 
-@Getter @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+/** Carbon score breakdown used inside DeclarationDetailResponse and standalone endpoints. */
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class CarbonScoreResponse {
 
-    private Long scoreId;
-    private Long userId;
+    private Long   scoreId;
     private Integer scoreYear;
 
-    private Double energyCo2;
-    private Double transportCo2;
-    private Double lifestyleCo2;
-    private Double operationsCo2;
-
+    private Double vehicleCo2;
+    private Double electricityCo2;
+    private Double cookingCo2;
+    private Double solarOffset;
+    private Double lifestyleBonus;
     private Double totalCo2;
     private Double perCapitaCo2;
 
-    private CarbonZone zone;
-    private LocalDateTime generatedAt;
-
-    private Double energyPercentage;
-    private Double transportPercentage;
-    private Double lifestylePercentage;
-    private Double operationsPercentage;
-
-    private Double cityAverage;
-    private Double nationalAverage;
-
-    private List<RecommendationResponse> recommendations;
-
-    private Double previousYearCo2;
-    private Double improvementPercentage;
+    private String zone;
+    private Double discountPercent;
+    private String discountBreakdown;
 }

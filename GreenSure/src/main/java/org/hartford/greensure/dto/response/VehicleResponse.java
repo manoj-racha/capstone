@@ -1,17 +1,15 @@
 package org.hartford.greensure.dto.response;
 
-import org.hartford.greensure.entity.DeclarationVehicle.*;
 import lombok.*;
 
-@Getter @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+/**
+ * @deprecated Superseded by DeclarationDetailResponse + AgentWorkspaceResponse.
+ * Kept as a deprecated stub to satisfy any remaining import references.
+ */
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Deprecated
 public class VehicleResponse {
-
     private Long vehicleId;
-    private VehicleType vehicleType;
-    private FuelType fuelType;
-    private Double kmPerMonth;
-    private Integer quantity;
+    private String fuelType;
+    private String mileageBand;
 }

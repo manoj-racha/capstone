@@ -33,9 +33,13 @@
                     <p class="text-2xl font-bold font-mono text-gs-text">#{{ declaration()?.declarationId }}</p>
                 </div>
                 <div class="md:text-right">
-                    <p class="text-sm text-gs-muted mb-1">User ID</p>
-                    <p class="text-lg font-medium text-gs-text"><a routerLink="/admin/users/{{declaration()?.userId}}"
-                            class="text-gs-dark hover:underline">User #{{ declaration()?.userId }}</a></p>
+                    <p class="text-sm text-gs-muted mb-1">Declarant</p>
+                    <p class="text-lg font-medium text-gs-text">
+                        {{ declaration()?.fullName }}
+                        <a [routerLink]="['/admin/users', declaration()?.userId]" class="text-sm text-gs-dark hover:underline ml-1 font-mono">
+                            (#{{ declaration()?.userId }})
+                        </a>
+                    </p>
                 </div>
                 <div class="md:text-right">
                     <p class="text-sm text-gs-muted mb-1">Target Year</p>
@@ -51,77 +55,63 @@
             <!-- Core Metrics Grid -->
             <h3 class="text-lg font-semibold text-gs-text mb-4">Declared Footprint Metrics</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Electricity -->
                 <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
                     <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Electricity</p>
-                    <p class="text-xl font-bold text-gs-text">{{ declaration()?.electricityUnits || 0 }} <span
-                            class="text-sm font-normal text-gs-muted">units</span></p>
+                    <p class="text-xl font-bold text-gs-text">{{ declaration()?.electricityData?.userDeclaredMonthlyKwh || 0 }} <span class="text-sm font-normal text-gs-muted">kWh/mo</span></p>
+                    <p class="text-xs text-gs-muted mt-1">{{ declaration()?.electricityData?.provider || 'N/A' }}</p>
                 </div>
 
+                <!-- Solar -->
                 <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
                     <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Solar Adopted</p>
-                    <p class="text-xl font-bold text-gs-text">{{ declaration()?.hasSolar ? 'Yes' : 'No' }}</p>
-                    @if (declaration()?.hasSolar) {
-                    <p class="text-xs text-gs-dark mt-1">{{ declaration()?.solarUnits || 0 }} units/mo</p>
+                    <p class="text-xl font-bold text-gs-text">{{ declaration()?.solarData?.hasSolar ? 'Yes' : 'No' }}</p>
+                    @if (declaration()?.solarData?.hasSolar) {
+                    <p class="text-xs text-gs-dark mt-1">{{ declaration()?.solarData?.capacityKw || 0 }} kW Capacity</p>
                     }
                 </div>
 
+                <!-- Cooking -->
                 <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
-                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Generator Use</p>
-                    <p class="text-xl font-bold text-gs-text">{{ declaration()?.hasGenerator ? 'Yes' : 'No' }}</p>
-                    @if (declaration()?.hasGenerator) {
-                    <p class="text-xs text-red-400 mt-1">{{ declaration()?.generatorHoursPerMonth || 0 }} hrs/mo</p>
+                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Cooking Fuel</p>
+                    <p class="text-xl font-bold text-gs-text">{{ declaration()?.cookingData?.fuelType || 'NONE' }}</p>
+                    @if (declaration()?.cookingData?.userDeclaredCylinders) {
+                    <p class="text-xs text-gs-dark mt-1">{{ declaration()?.cookingData?.userDeclaredCylinders }} cyl/yr</p>
                     }
                 </div>
 
-                <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
-                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Cooling Load</p>
-                    <p class="text-xl font-bold text-gs-text">{{ declaration()?.numAcUnits || 0 }} <span
-                            class="text-sm font-normal text-gs-muted">AC units</span></p>
-                </div>
-
+                <!-- Lifestyle -->
                 <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
                     <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Public Transit</p>
-                    <p class="text-xl font-bold text-gs-text">{{ declaration()?.usesPublicTransport ? 'Yes' : 'No' }}
-                    </p>
-                    @if (declaration()?.usesPublicTransport) {
-                    <p class="text-xs text-gs-dark mt-1">{{ declaration()?.publicTransportKm || 0 }} km/mo</p>
-                    }
-                </div>
-
-                <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
-                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Lifestyle Volume</p>
-                    <p class="text-lg font-bold text-gs-text pt-1">{{
-                        declaration()?.shoppingOrdersPerMonth?.replace('_', ' ') }}</p>
+                    <p class="text-lg font-bold text-gs-text pt-1">{{ declaration()?.lifestyleData?.publicTransportUsage || 'N/A' }}</p>
                 </div>
             </div>
 
             <!-- Vehicles Section -->
-            @if (declaration()?.vehicles && declaration()?.vehicles?.length) {
+            @if (declaration()?.vehicles && declaration()!.vehicles.length > 0) {
             <div class="mt-8">
                 <h3 class="text-lg font-semibold text-gs-text mb-4">Registered Vehicles</h3>
                 <div class="overflow-x-auto bg-gs-bg border border-gs-border rounded-lg">
                     <table class="w-full text-left text-sm">
                         <thead class="bg-black/20 text-gs-muted text-xs uppercase">
                             <tr>
-                                <th class="px-4 py-3">Vehicle ID</th>
-                                <th class="px-4 py-3">Type</th>
+                                <th class="px-4 py-3">Registration</th>
+                                <th class="px-4 py-3">Make / Model</th>
                                 <th class="px-4 py-3">Fuel Type</th>
-                                <th class="px-4 py-3">Monthly KM</th>
+                                <th class="px-4 py-3">Mileage Band</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-green-900/10">
-                            @for (vehicle of declaration()?.vehicles; track vehicle.vehicleId) {
+                            @for(v of declaration()!.vehicles; track v.vehicleId) {
                             <tr>
-                                <td class="px-4 py-3 font-mono text-gs-text">ID: {{ vehicle.vehicleId }} (Qty: {{
-                                    vehicle.quantity }})</td>
-                                <td class="px-4 py-3 text-gs-muted">{{ vehicle.vehicleType }}</td>
+                                <td class="px-4 py-3 font-mono text-gs-text">{{ v.registrationNumber }}</td>
+                                <td class="px-4 py-3 text-gs-muted">{{ v.make }} {{ v.model }} ({{ v.year }})</td>
                                 <td class="px-4 py-3">
-                                    <span class="px-2 py-0.5 rounded text-xs border border-gs-border"
-                                        [ngClass]="vehicle.fuelType === 'EV' ? 'text-gs-dark bg-gs-dark/10' : 'text-yellow-500 bg-yellow-500/10'">
-                                        {{ vehicle.fuelType }}
+                                    <span class="px-2 py-0.5 rounded text-xs border border-gs-border bg-gs-dark/10 text-gs-dark">
+                                        {{ v.fuelType }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-gs-text font-medium">{{ vehicle.kmPerMonth }}</td>
+                                <td class="px-4 py-3 text-gs-text font-medium">{{ v.mileageBand.replace('_', ' ') }}</td>
                             </tr>
                             }
                         </tbody>

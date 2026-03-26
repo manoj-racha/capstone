@@ -1,101 +1,50 @@
 package org.hartford.greensure.repository;
 
 import org.hartford.greensure.entity.CarbonDeclaration;
-import org.hartford.greensure.entity.User;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.hartford.greensure.enums.DeclarationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public interface CarbonDeclarationRepository
-                extends JpaRepository<CarbonDeclaration, Long> {
+public interface CarbonDeclarationRepository extends JpaRepository<CarbonDeclaration, Long> {
 
-        // Used during DECLARATION SUBMISSION — check if user already
-        // has a declaration for the current year
-        // Enforces the one declaration per user per year rule
-        boolean existsByUserUserIdAndDeclarationYear(
-                        Long userId, Integer year);
+    List<CarbonDeclaration> findByStatus(DeclarationStatus status);
 
-        // Used during FIRST LOGIN CHECK — does this user have
-        // any declaration at all?
-        // If false → show welcome screen, force declaration
-        boolean existsByUserUserId(Long userId);
+    List<CarbonDeclaration> findByUserUserId(Long userId);
 
-        // Used during DECLARATION FLOW — get user's current year
-        // declaration to show status timeline on dashboard
-        Optional<CarbonDeclaration> findByUserUserIdAndDeclarationYear(
-                        Long userId, Integer year);
+    List<CarbonDeclaration> findByUserUserIdOrderByDeclarationYearDesc(Long userId);
 
-        // Used during DECLARATION HISTORY — show all past declarations
-        // for a user sorted by latest year first
-        List<CarbonDeclaration> findByUserUserIdOrderByDeclarationYearDesc(
-                        Long userId);
+    Optional<CarbonDeclaration> findByUserUserIdAndDeclarationYear(Long userId, Integer year);
 
-        // Used by AGENT ASSIGNMENT ENGINE — find all declarations
-        // that are submitted but not yet assigned to an agent
-        List<CarbonDeclaration> findByStatus(CarbonDeclaration.DeclarationStatus status);
+    boolean existsByUserUserId(Long userId);
 
-        // Used by ADMIN — filter all declarations by status
-        Page<CarbonDeclaration> findByStatusOrderBySubmittedAtDesc(
-                        CarbonDeclaration.DeclarationStatus status, Pageable pageable);
+    boolean existsByUserUserIdAndDeclarationYear(Long userId, Integer year);
 
-        // Used by ADMIN — return all declarations sorted by submission date descending
-        Page<CarbonDeclaration> findAllByOrderBySubmittedAtDesc(Pageable pageable);
+    List<CarbonDeclaration> findByStatusAndFraudRiskLevel(
+            DeclarationStatus status, String fraudRiskLevel);
 
-        // Used by ADMIN — filter declarations by user type
-        // e.g. show only MSME declarations
-        @Query("SELECT d FROM CarbonDeclaration d " +
-                        "JOIN d.user u " +
-                        "WHERE u.userType = :userType " +
-                        "ORDER BY d.submittedAt DESC")
-        Page<CarbonDeclaration> findByUserType(
-                        @Param("userType") User.UserType userType, Pageable pageable);
+    /** Find SUBMITTED declarations that have no active AgentAssignment. */
+    @Query("""
+        SELECT d FROM CarbonDeclaration d
+        WHERE d.status = 'SUBMITTED'
+          AND NOT EXISTS (
+            SELECT a FROM AgentAssignment a
+            WHERE a.declaration = d
+              AND a.status = 'ACTIVE'
+          )
+    """)
+    List<CarbonDeclaration> findUnassignedSubmitted();
 
-        // Used by ADMIN — filter declarations by status AND user type
-        @Query("SELECT d FROM CarbonDeclaration d " +
-                        "JOIN d.user u " +
-                        "WHERE d.status = :status " +
-                        "AND u.userType = :userType " +
-                        "ORDER BY d.submittedAt DESC")
-        Page<CarbonDeclaration> findByStatusAndUserType(
-                        @Param("status") CarbonDeclaration.DeclarationStatus status,
-                        @Param("userType") User.UserType userType, Pageable pageable);
+    List<CarbonDeclaration> findByStatusIn(List<DeclarationStatus> statuses);
 
-        // Used by ADMIN DECLARATION UNLOCK — find SUBMITTED declarations
-        // that were submitted within the last 24 hours
-        // Only these can be unlocked for editing
-        @Query("SELECT d FROM CarbonDeclaration d " +
-                        "WHERE d.status = 'SUBMITTED' " +
-                        "AND d.submittedAt >= :cutoffTime")
-        List<CarbonDeclaration> findUnlockableDeclarations(
-                        @Param("cutoffTime") LocalDateTime cutoffTime);
-
-        // Used by RENEWAL ENGINE — find all VERIFIED declarations
-        // from 11 months ago that need renewal reminders
-        @Query("SELECT d FROM CarbonDeclaration d " +
-                        "WHERE d.status = 'VERIFIED' " +
-                        "AND d.declarationYear = :year")
-        List<CarbonDeclaration> findVerifiedDeclarationsByYear(
-                        @Param("year") Integer year);
-
-        // Used by ADMIN REPORTS — count declarations by status
-        long countByStatus(CarbonDeclaration.DeclarationStatus status);
-
-        // Used by ADMIN REPORTS — count total declarations for a year
-        long countByDeclarationYear(Integer year);
-
-        // Used by REJECTION FLOW — find declarations with high
-        // resubmission count that need admin attention
-        @Query("SELECT d FROM CarbonDeclaration d " +
-                        "WHERE d.resubmissionCount >= :count " +
-                        "AND d.status = 'REJECTED'")
-        List<CarbonDeclaration> findByResubmissionCountGreaterThanEqual(
-                        @Param("count") Integer count);
+    /** Latest declaration year for renewal reminder check. */
+    @Query("""
+        SELECT d FROM CarbonDeclaration d
+        WHERE d.user.userId = :userId
+        ORDER BY d.declarationYear DESC
+    """)
+    List<CarbonDeclaration> findByUserIdOrderedByYear(@Param("userId") Long userId);
 }

@@ -1,12 +1,23 @@
 package org.hartford.greensure.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import org.hartford.greensure.enums.VerificationOutcome;
 
+import java.time.LocalDateTime;
+
+/**
+ * Records the outcome of a field agent's physical visit to verify a declaration.
+ *
+ * Linked to an AgentAssignment (one assignment → one verification).
+ * Agent-corrected field values are stored on the respective module entities
+ * (DeclarationVehicleData, ElectricityData, CookingData, SolarData) so that
+ * getEffective*() methods automatically use corrected values in the carbon
+ * score calculation.
+ *
+ * This entity stores: the overall outcome, GPS location at action time,
+ * agent notes, and uploaded proof document URLs.
+ */
 @Entity
 @Table(name = "verifications")
 @Getter @Setter
@@ -20,119 +31,64 @@ public class Verification {
     @Column(name = "verification_id")
     private Long verificationId;
 
-    // ── CORRECTED ENERGY VALUES ────────────────────────────────
-    // null = agent confirmed the user declared value
-    // non-null = agent corrected it to this value
-
-    @Column(name = "corrected_electricity_units")
-    private Double correctedElectricityUnits;
-
-    @Column(name = "corrected_solar_units")
-    private Double correctedSolarUnits;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "corrected_cooking_fuel_type")
-    private CarbonDeclaration.CookingFuelType correctedCookingFuelType;
-
-    @Column(name = "corrected_lpg_cylinders")
-    private Double correctedLpgCylinders;
-
-    @Column(name = "corrected_png_units")
-    private Double correctedPngUnits;
-
-    @Column(name = "corrected_biomass_kg")
-    private Double correctedBiomassKg;
-
-    @Column(name = "corrected_generator_hours")
-    private Double correctedGeneratorHours;
-
-    // ── CORRECTED TRANSPORT VALUES ─────────────────────────────
-
-    @Column(name = "corrected_public_transport_km")
-    private Double correctedPublicTransportKm;
-
-    // ── CORRECTED LIFESTYLE VALUES — Household Only ────────────
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "corrected_dietary_pattern")
-    private CarbonDeclaration.DietaryPattern correctedDietaryPattern;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "corrected_shopping_orders")
-    private CarbonDeclaration.ShoppingOrders correctedShoppingOrders;
-
-    // ── CORRECTED OPERATIONS VALUES — MSME Only ────────────────
-
-    @Column(name = "corrected_commercial_vehicle_km")
-    private Double correctedCommercialVehicleKm;
-
-    @Column(name = "corrected_third_party_shipments")
-    private Integer correctedThirdPartyShipments;
-
-    @Column(name = "corrected_generator_liters")
-    private Double correctedGeneratorLiters;
-
-    @Column(name = "corrected_boiler_coal_kg")
-    private Double correctedBoilerCoalKg;
-
-    @Column(name = "corrected_boiler_gas_scm")
-    private Double correctedBoilerGasScm;
-
-    @Column(name = "corrected_paper_reams")
-    private Integer correctedPaperReams;
-
-    @Column(name = "corrected_raw_material_kg")
-    private Double correctedRawMaterialKg;
-
     // ── AGENT DECISION ─────────────────────────────────────────
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "overall_action", nullable = false)
-    private VerificationAction overallAction;
+    @Column(name = "outcome", nullable = false)
+    private VerificationOutcome outcome;
 
-    // Required when overallAction is MODIFIED or REJECTED
-    @Column(name = "agent_remarks", columnDefinition = "TEXT")
-    private String agentRemarks;
+    /**
+     * Mandatory written reason when outcome = REJECTED.
+     * Optional general notes for CONFIRMED / MODIFIED.
+     */
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
 
-    // GPS location of agent at time of submission
-    @Column(name = "agent_gps_lat")
-    private Double agentGpsLat;
+    /** General agent notes written during the physical visit. */
+    @Column(name = "agent_notes", columnDefinition = "TEXT")
+    private String agentNotes;
 
-    @Column(name = "agent_gps_lng")
-    private Double agentGpsLng;
+    // ── GPS ────────────────────────────────────────────────────
 
-    @Column(name = "submitted_at")
-    private LocalDateTime submittedAt;
+    /** Agent GPS latitude at the time they submitted the verification action. */
+    @Column(name = "gps_lat")
+    private Double gpsLat;
 
-    // ── MAPPINGS ───────────────────────────────────────────────
+    /** Agent GPS longitude at the time they submitted the verification action. */
+    @Column(name = "gps_lng")
+    private Double gpsLng;
 
-    // One verification belongs to one declaration
-    // declaration is the owner of this relationship
+    /**
+     * JSON array of uploaded proof photo / document URLs.
+     * Stored as TEXT to avoid a join table in this capstone project.
+     * Example: ["https://cdn.example.com/proof1.jpg", "..."]
+     */
+    @Column(name = "document_urls", columnDefinition = "TEXT")
+    private String documentUrls;
+
+    @Column(name = "verified_at")
+    private LocalDateTime verifiedAt;
+
+    // ── RELATIONS ──────────────────────────────────────────────
+
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "declaration_id", nullable = false, unique = true)
-    private CarbonDeclaration declaration;
+    @JoinColumn(name = "assignment_id", nullable = false, unique = true)
+    private AgentAssignment assignment;
 
-    // Many verifications can be submitted by one agent
+    /** The field agent who performed the verification. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "agent_id", nullable = false)
-    private Agent agent;
+    private User agent;
 
-    // One verification has many corrected vehicle entries
-    @OneToMany(mappedBy = "verification", cascade = CascadeType.ALL,
-            orphanRemoval = true, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<VerifiedVehicle> verifiedVehicles = new ArrayList<>();
-
-    // ── ENUM ───────────────────────────────────────────────────
-
-    public enum VerificationAction {
-        CONFIRMED, MODIFIED, REJECTED
-    }
+    /** The declaration that was verified. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "declaration_id", nullable = false)
+    private CarbonDeclaration declaration;
 
     // ── LIFECYCLE ──────────────────────────────────────────────
 
     @PrePersist
     protected void onCreate() {
-        this.submittedAt = LocalDateTime.now();
+        this.verifiedAt = LocalDateTime.now();
     }
 }

@@ -36,7 +36,7 @@ export class UserDetailComponent implements OnInit {
                 if (res.success && res.data) {
                     this.user.set(res.data);
                 } else {
-                    this.error.set(res.error || 'Failed to load user profile.');
+                    this.error.set(res.message || 'Failed to load user profile.');
                 }
             },
             error: (err) => {
@@ -46,26 +46,8 @@ export class UserDetailComponent implements OnInit {
     }
 
     toggleStatus(): void {
-        if (!this.user()) return;
-
-        this.actioning.set(true);
-        const newStatus = this.user()?.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-
-        this.adminService.updateUserStatus(this.userId(), newStatus).subscribe({
-            next: (res) => {
-                this.actioning.set(false);
-                if (res.success) {
-                    // Update local status
-                    this.user.update(u => u ? { ...u, status: newStatus } : null);
-                } else {
-                    alert('Failed to update status: ' + res.error);
-                }
-            },
-            error: (err) => {
-                this.actioning.set(false);
-                alert('Failed to update status.');
-            }
-        });
+        /*
+        */
     }
 
     unlockResubmission(): void {
@@ -79,7 +61,7 @@ export class UserDetailComponent implements OnInit {
                     if (res.success) {
                         alert('User resubmission unlocked successfully.');
                     } else {
-                        alert('Failed to unlock resubmission: ' + res.error);
+                        alert('Failed to unlock resubmission: ' + res.message);
                     }
                 },
                 error: (err) => {

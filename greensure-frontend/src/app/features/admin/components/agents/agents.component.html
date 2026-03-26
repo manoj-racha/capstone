@@ -27,9 +27,9 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @for (agent of agents(); track agent.agentId) {
         <div class="bg-gs-surface border rounded-lg p-5 flex flex-col justify-between transition-colors hover:shadow-md shadow-gs-dark/5 relative"
-            [ngClass]="{'border-red-500/50': agent.strikeCount >= 3, 'border-gs-border': agent.strikeCount < 3}">
+            [ngClass]="{'border-red-500/50': agent.strikes >= 3, 'border-gs-border': agent.strikes < 3}">
 
-            @if (agent.strikeCount >= 3) {
+            @if (agent.strikes >= 3) {
             <span
                 class="absolute -top-3 -right-3 px-2 py-1 text-xs font-bold bg-red-500 text-white rounded-md shadow-lg border border-red-600">
                 ⚠️ Flagged
@@ -46,30 +46,23 @@
                         <div>
                             <h3 class="text-gs-text font-bold text-lg mb-0.5" [title]="agent.fullName">{{ agent.fullName
                                 }}</h3>
-                            <p class="text-gs-muted text-xs font-mono w-24 truncate" [title]="agent.employeeId">{{
-                                agent.employeeId }}</p>
+                            <p class="text-gs-muted text-xs font-mono w-24 truncate">{{ agent.email }}</p>
                         </div>
                     </div>
                     <span class="px-2 py-0.5 rounded text-xs font-medium border"
-                        [ngClass]="agent.status === 'ACTIVE' ? 'bg-gs-dark/10 text-gs-dark border-gs-dark/20' : 'bg-red-500/10 text-red-400 border-red-500/30'">
-                        {{ agent.status }}
+                        [ngClass]="agent.active ? 'bg-gs-dark/10 text-gs-dark border-gs-dark/20' : 'bg-red-500/10 text-red-400 border-red-500/30'">
+                        {{ agent.active ? 'ACTIVE' : 'INACTIVE' }}
                     </span>
                 </div>
 
                 <div class="space-y-2 mt-4 text-sm text-gs-text">
                     <p class="flex justify-between">
-                        <span class="text-gs-muted">Strike Count:</span>
-                        <span class="font-bold" [class.text-red-400]="agent.strikeCount >= 3">{{ agent.strikeCount }} /
-                            3</span>
+                        <span class="text-gs-muted">Active Assignments:</span>
+                        <span class="font-medium">{{ agent.activeAssignments }}</span>
                     </p>
-                    <p class="flex justify-between items-start gap-4">
-                        <span class="text-gs-muted shrink-0">Assigned Zones:</span>
-                        <span class="font-mono text-xs text-right truncate" [title]="agent.assignedZones">{{
-                            agent.assignedZones }}</span>
-                    </p>
-                    <p class="flex justify-between">
-                        <span class="text-gs-muted">Joined:</span>
-                        <span>{{ agent.createdAt | date:'shortDate' }}</span>
+                    <p class="flex justify-between mt-2 text-xs text-gs-muted italic">
+                        <span>Strikes:</span>
+                        <span>{{ agent.strikes }}</span>
                     </p>
                 </div>
             </div>

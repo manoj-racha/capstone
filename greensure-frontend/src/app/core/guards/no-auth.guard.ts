@@ -1,32 +1,25 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
+import { AuthService } from '../services/auth.service';
 
 /**
- * noAuthGuard — Prevents logged-in users from visiting auth pages
- * (login, register, forgot-password, reset-password).
- *
+ * noAuthGuard — Prevents logged-in users from visiting auth pages.
  * If already logged in → redirects to role-based dashboard.
- * If NOT logged in → allows access to the auth page.
  */
-export const noAuthGuard: CanActivateFn = (route, state) => {
-    const router = inject(Router);
-    const token = localStorage.getItem('token');
+export const noAuthGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
 
-    if (!token) {
-        // Not logged in → let them access login/register pages
-        return true;
-    }
+  if (!auth.isLoggedIn()) {
+    return true;
+  }
 
-    // Already logged in → redirect to their dashboard
-    const role = localStorage.getItem('role');
-
-    if (role === 'ADMIN') {
-        router.navigate(['/admin/dashboard']);
-    } else if (role === 'AGENT') {
-        router.navigate(['/agent/dashboard']);
-    } else {
-        router.navigate(['/user/dashboard']);
-    }
-
-    return false;
+  const role = auth.getRole();
+  if (role === 'ADMIN') {
+    return router.createUrlTree(['/admin/dashboard']);
+  }
+  if (role === 'AGENT') {
+    return router.createUrlTree(['/agent/dashboard']);
+  }
+  return router.createUrlTree(['/user/dashboard']);
 };

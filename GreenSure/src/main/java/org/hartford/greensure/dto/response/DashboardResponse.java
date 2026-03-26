@@ -1,10 +1,13 @@
 package org.hartford.greensure.dto.response;
 
-import org.hartford.greensure.entity.CarbonDeclaration.DeclarationStatus;
-import org.hartford.greensure.entity.CarbonScore.CarbonZone;
-import org.hartford.greensure.entity.User.UserType;
+import org.hartford.greensure.enums.DeclarationStatus;
+import org.hartford.greensure.enums.Zone;
 import lombok.*;
 
+/**
+ * Dashboard response for USER role.
+ * MSME UserType references removed.
+ */
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,7 +16,6 @@ public class DashboardResponse {
 
     private Long userId;
     private String fullName;
-    private UserType userType;
     private boolean hasDeclaration;
 
     private Long currentDeclarationId;
@@ -21,10 +23,7 @@ public class DashboardResponse {
     private Integer declarationYear;
 
     private CarbonScoreResponse latestScore;
-
-    private CarbonZone zone;
-
-    private boolean renewalDue;
+    private Zone zone;
 
     private long unreadNotifications;
 }

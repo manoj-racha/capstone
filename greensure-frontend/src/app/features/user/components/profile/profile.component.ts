@@ -2,10 +2,11 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../../../../features/user/services/user.service';
+import { RouterModule } from '@angular/router';
 
 @Component({
     selector: 'app-profile',
-    imports: [ReactiveFormsModule, CommonModule],
+    imports: [ReactiveFormsModule, CommonModule, RouterModule],
     templateUrl: './profile.component.html'
 })
 export class ProfileComponent implements OnInit {
@@ -17,10 +18,8 @@ export class ProfileComponent implements OnInit {
     saving = signal(false);
     successMessage = signal('');
     errorMessage = signal('');
-    userType = signal('');
 
     ngOnInit(): void {
-        // Initial empty form, wait for profile load
         this.initForm();
         this.loadProfile();
     }
@@ -28,18 +27,13 @@ export class ProfileComponent implements OnInit {
     private initForm(): void {
         this.profileForm = this.fb.group({
             fullName: ['', Validators.required],
-            mobile: ['', Validators.required],
-            address: ['', Validators.required],
-            city: ['', Validators.required],
-            pinCode: ['', [Validators.required, Validators.pattern('^[0-9]{5,6}$')]],
-            // Household
-            numberOfMembers: [''],
-            dwellingType: [''],
-            // MSME
-            businessName: [''],
-            industrySector: [''],
-            employeeCount: [''],
-            facilityAreaSqFt: ['']
+            phone: ['', Validators.required],
+            dateOfBirth: [''],
+            address: [''],
+            state: [''],
+            city: [''],
+            pincode: ['', [Validators.pattern('^[0-9]{5,6}$')]],
+            householdSize: ['', [Validators.min(1)]]
         });
     }
 
@@ -47,24 +41,13 @@ export class ProfileComponent implements OnInit {
         this.userService.getProfile().subscribe({
             next: (res) => {
                 if (res.success && res.data) {
-                    this.userType.set(res.data.userType);
                     this.profileForm.patchValue(res.data);
-
-                    // Add mandatory validators dynamically based on user type
-                    if (res.data.userType === 'HOUSEHOLD') {
-                        this.profileForm.get('numberOfMembers')?.setValidators([Validators.required, Validators.min(1)]);
-                    } else if (res.data.userType === 'MSME') {
-                        this.profileForm.get('businessName')?.setValidators(Validators.required);
-                        this.profileForm.get('industrySector')?.setValidators(Validators.required);
-                        this.profileForm.get('employeeCount')?.setValidators([Validators.required, Validators.min(1)]);
-                    }
-                    this.profileForm.updateValueAndValidity();
                 } else {
-                    this.errorMessage.set(res.error || 'Failed to load profile');
+                    this.errorMessage.set(res.message || 'Failed to load profile');
                 }
             },
             error: (err) => {
-                this.errorMessage.set(err.error?.error || 'Failed to load profile');
+                this.errorMessage.set(err.error?.message || 'Failed to load profile');
             }
         });
     }
@@ -86,17 +69,16 @@ export class ProfileComponent implements OnInit {
                     this.successMessage.set('Profile updated successfully!');
                     this.profileForm.patchValue(res.data);
 
-                    // Update fullname in localstorage if it changed
                     if (res.data.fullName) {
                         localStorage.setItem('fullName', res.data.fullName);
                     }
                 } else {
-                    this.errorMessage.set(res.error || 'Failed to update profile');
+                    this.errorMessage.set(res.message || 'Failed to update profile');
                 }
             },
             error: (err) => {
                 this.saving.set(false);
-                this.errorMessage.set(err.error?.error || 'Failed to update profile');
+                this.errorMessage.set(err.error?.message || 'Failed to update profile');
             }
         });
     }

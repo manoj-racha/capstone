@@ -1,19 +1,10 @@
 package org.hartford.greensure.dto.request;
 
-import org.hartford.greensure.entity.DeclarationVehicle.FuelType;
-import jakarta.validation.constraints.NotNull;
-import lombok.*;
-
-@Getter @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+/**
+ * @deprecated Superseded by AgentModifyRequest.
+ * Kept as an empty stub to satisfy any remaining import references.
+ */
+@Deprecated
 public class VerifiedVehicleRequest {
-
-    @NotNull(message = "Vehicle ID is required")
-    private Long vehicleId;
-
-    private FuelType correctedFuelType;
-
-    private Double correctedKm;
+    // Replaced by AgentModifyRequest.correctedFuelType / correctedMileageBand
 }

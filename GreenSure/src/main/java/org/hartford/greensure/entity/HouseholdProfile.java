@@ -1,9 +1,18 @@
 package org.hartford.greensure.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
+/**
+ * Household profile for a USER-role account.
+ * Contains census-level information about the household.
+ * This entity is created at the time the user saves Module 2
+ * (Household Data) in their first declaration.
+ * It is shared across declarations (the same household profile
+ * is reused for subsequent years — only numberOfMembers may change).
+ */
 @Entity
 @Table(name = "household_profiles")
 @Getter @Setter
@@ -17,24 +26,27 @@ public class HouseholdProfile {
     @Column(name = "profile_id")
     private Long profileId;
 
-    @Column(name = "number_of_members", nullable = false)
-    private Integer numberOfMembers;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "dwelling_type", nullable = false)
-    private DwellingType dwellingType;
-
-    // ── MAPPINGS ───────────────────────────────────────────────
-
-    // One-to-one with User — owner side
-    // household_profiles table holds the user_id foreign key
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    // ── ENUM ───────────────────────────────────────────────────
+    /** Number of people living in the household (1–20). */
+    @Column(name = "number_of_members", nullable = false)
+    private Integer numberOfMembers;
 
-    public enum DwellingType {
-        APARTMENT, INDEPENDENT_HOUSE
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }

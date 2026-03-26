@@ -1,7 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { AgentService } from '../../../../features/agent/services/agent.service';
-import { AgentPerformanceResponse } from '../../../../core/models/agent';
+import { AgentPerformance } from '../../../../core/models/agent';
+
 
 @Component({
     selector: 'app-performance',
@@ -12,8 +13,7 @@ import { AgentPerformanceResponse } from '../../../../core/models/agent';
 export class PerformanceComponent implements OnInit {
     private agentService = inject(AgentService);
 
-    performance = signal<AgentPerformanceResponse | null>(null);
-
+    performance = signal<AgentPerformance | null>(null);
     error = signal<string>('');
 
     ngOnInit(): void {
@@ -22,7 +22,7 @@ export class PerformanceComponent implements OnInit {
                 if (res.success && res.data) {
                     this.performance.set(res.data);
                 } else {
-                    this.error.set(res.error || 'Failed to load performance metrics.');
+                    this.error.set(res.message || 'Failed to load performance data.');
                 }
             },
             error: (err) => {
@@ -31,8 +31,9 @@ export class PerformanceComponent implements OnInit {
         });
     }
 
-    // Helper to safely format percentages
-    formatPct(val?: number): string {
-        return val !== undefined ? val.toFixed(1) + '%' : '0%';
+    get completionRate(): number {
+        const p = this.performance();
+        if (!p || p.totalAssignments === 0) return 0;
+        return Math.round((p.completedAssignments / p.totalAssignments) * 100);
     }
 }

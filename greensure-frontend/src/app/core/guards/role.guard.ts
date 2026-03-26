@@ -1,38 +1,37 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
+import { AuthService } from '../services/auth.service';
 
 /**
  * roleGuard — Checks if the logged-in user's role matches the allowed roles
  * defined in the route's data.roles array.
  *
- * Usage in routes:
- *   { path: 'admin/dashboard', canActivate: [authGuard, roleGuard], data: { roles: ['ADMIN'] } }
- *
- * If role doesn't match → redirects to the user's correct dashboard.
+ * Usage: { path: 'admin/dashboard', canActivate: [authGuard, roleGuard], data: { roles: ['ADMIN'] } }
  */
-export const roleGuard: CanActivateFn = (route, state) => {
-    const router = inject(Router);
-    const userRole = localStorage.getItem('role');
-    const allowedRoles: string[] = route.data?.['roles'] || [];
+export const roleGuard: CanActivateFn = (route) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const allowedRoles: string[] = route.data?.['roles'] || [];
 
-    // If no roles specified on the route, allow access
-    if (allowedRoles.length === 0) {
-        return true;
-    }
+  if (allowedRoles.length === 0) {
+    return true;
+  }
 
-    // Check if user's role is in the allowed list
-    if (userRole && allowedRoles.includes(userRole)) {
-        return true;
-    }
+  if (!auth.isLoggedIn()) {
+    return router.createUrlTree(['/login']);
+  }
 
-    // Role mismatch → redirect to the user's own dashboard
-    if (userRole === 'ADMIN') {
-        router.navigate(['/admin/dashboard']);
-    } else if (userRole === 'AGENT') {
-        router.navigate(['/agent/dashboard']);
-    } else {
-        router.navigate(['/user/dashboard']);
-    }
+  const userRole = auth.getRole();
+  if (userRole && allowedRoles.includes(userRole)) {
+    return true;
+  }
 
-    return false;
+  // Role mismatch → redirect to correct dashboard
+  if (userRole === 'ADMIN') {
+    return router.createUrlTree(['/admin/dashboard']);
+  }
+  if (userRole === 'AGENT') {
+    return router.createUrlTree(['/agent/dashboard']);
+  }
+  return router.createUrlTree(['/user/dashboard']);
 };

@@ -1,0 +1,135 @@
+@if (loading()) {
+  <div class="min-h-screen bg-gs-bg flex items-center justify-center">
+    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
+  </div>
+}
+
+@if (analytics(); as a) {
+<div class="min-h-screen bg-gs-bg py-8 px-4">
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
+        <p class="text-gray-500 text-sm">Platform-wide metrics and performance data</p>
+      </div>
+      <a routerLink="/admin/dashboard" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm">
+        ← Back to Dashboard
+      </a>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <p class="text-sm text-gray-500 font-medium">Total Users</p>
+        <p class="text-3xl font-bold text-gray-900 mt-1">{{ a.totalUsers }}</p>
+      </div>
+      <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <p class="text-sm text-gray-500 font-medium">Total Declarations</p>
+        <p class="text-3xl font-bold text-gray-900 mt-1">{{ a.totalDeclarations }}</p>
+      </div>
+      <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <p class="text-sm text-gray-500 font-medium">Avg CO₂ / Year</p>
+        <p class="text-3xl font-bold text-green-600 mt-1">{{ a.averageCo2 | number:'1.0-0' }} kg</p>
+      </div>
+      <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <p class="text-sm text-gray-500 font-medium">Active Agents</p>
+        <p class="text-3xl font-bold text-blue-600 mt-1">{{ a.agentPerformance.length }}</p>
+      </div>
+    </div>
+
+    <!-- Distribution Charts -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+      <!-- Declarations by Status -->
+      <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 class="font-semibold text-gray-800 mb-4">📊 Declarations by Status</h3>
+        <div class="space-y-3">
+          @for (entry of getStatusEntries(); track entry.key) {
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div [class]="getStatusColor(entry.key) + ' w-3 h-3 rounded-full'"></div>
+                <span class="text-sm text-gray-600">{{ entry.key }}</span>
+              </div>
+              <span class="text-sm font-bold text-gray-900">{{ entry.value }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Zone Distribution -->
+      <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 class="font-semibold text-gray-800 mb-4">🌍 Zone Distribution</h3>
+        <div class="space-y-3">
+          @for (entry of getZoneEntries(); track entry.key) {
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div [class]="getZoneColor(entry.key) + ' w-3 h-3 rounded-full'"></div>
+                <span class="text-sm text-gray-600">{{ entry.key }}</span>
+              </div>
+              <span class="text-sm font-bold text-gray-900">{{ entry.value }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Fraud Risk -->
+      <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 class="font-semibold text-gray-800 mb-4">🔍 Fraud Risk Breakdown</h3>
+        <div class="space-y-3">
+          @for (entry of getFraudEntries(); track entry.key) {
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div [class]="(entry.key === 'HIGH' ? 'bg-red-500' : entry.key === 'MEDIUM' ? 'bg-amber-500' : 'bg-green-500') + ' w-3 h-3 rounded-full'"></div>
+                <span class="text-sm text-gray-600">{{ entry.key }}</span>
+              </div>
+              <span class="text-sm font-bold text-gray-900">{{ entry.value }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Agent Performance -->
+    <div class="bg-white rounded-xl border border-gray-200 p-6">
+      <h3 class="font-semibold text-gray-800 mb-4">👥 Agent Performance</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100">
+              <th class="text-left py-3 text-gray-500 font-medium">Agent</th>
+              <th class="text-left py-3 text-gray-500 font-medium">Active</th>
+              <th class="text-left py-3 text-gray-500 font-medium">Completed</th>
+              <th class="text-left py-3 text-gray-500 font-medium">Strikes</th>
+              <th class="text-left py-3 text-gray-500 font-medium">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (agent of a.agentPerformance; track agent.agentId) {
+              <tr class="border-b border-gray-50">
+                <td class="py-3 font-medium text-gray-800">{{ agent.agentName }}</td>
+                <td class="py-3 text-gray-600">{{ agent.activeAssignments }}</td>
+                <td class="py-3 text-gray-600">{{ agent.completedAssignments }}</td>
+                <td class="py-3">
+                  <span [class]="agent.strikes >= 3 ? 'text-red-500 font-bold' : 'text-gs-text'">{{ agent.strikes }}</span>
+                </td>
+                <td class="px-6 py-4 text-sm font-medium">
+                  @if (agent.active) {
+                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs uppercase">Active</span>
+                  } @else {
+                    <span class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs uppercase">Suspended</span>
+                  }
+                </td>
+                <td class="px-6 py-4 text-right"></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+}

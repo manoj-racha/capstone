@@ -16,13 +16,13 @@ export class CreateAgentComponent implements OnInit {
     private router = inject(Router);
 
     createForm: FormGroup = this.fb.group({
-        agentType: ['FIELD_AGENT', Validators.required],
         fullName: ['', [Validators.required, Validators.minLength(3)]],
+        employeeId: ['', [Validators.required]],
+        agentType: ['FIELD_AGENT', [Validators.required]],
         email: ['', [Validators.required, Validators.email]],
-        mobile: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-        password: ['', [Validators.required, Validators.minLength(6)]],
-        employeeId: ['', Validators.required],
-        assignedZones: ['', Validators.required]
+        mobile: ['', [Validators.required, Validators.pattern('^[6-9][0-9]{9}$')]],
+        password: ['', [Validators.required, Validators.minLength(8)]],
+        assignedZones: ['', [Validators.required, Validators.pattern('^[1-9][0-9]{5}(,[1-9][0-9]{5})*$')]]
     });
 
     submitting = signal<boolean>(false);
@@ -39,13 +39,22 @@ export class CreateAgentComponent implements OnInit {
         this.submitting.set(true);
         this.error.set('');
 
-        this.adminService.createAgent(this.createForm.value).subscribe({
+        const formValue = this.createForm.value;
+        const payload = {
+            fullName: formValue.fullName,
+            email: formValue.email,
+            phone: formValue.mobile,
+            pinCode: formValue.assignedZones.split(',')[0].trim(),
+            password: formValue.password
+        };
+
+        this.adminService.createAgent(payload).subscribe({
             next: (res) => {
                 this.submitting.set(false);
                 if (res.success) {
                     this.router.navigate(['/admin/agents']);
                 } else {
-                    this.error.set(res.error || 'Failed to create agent.');
+                    this.error.set(res.message || 'Failed to create agent.');
                 }
             },
             error: (err) => {

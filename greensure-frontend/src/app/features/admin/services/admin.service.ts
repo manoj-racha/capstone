@@ -3,245 +3,169 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, Page } from '../../../core/models/api-response';
-import { AdminOverview, AvailableAgent, CreateAgentRequest, UnassignedDeclaration } from '../../../core/models/admin';
+import { CreateAgentRequest, AdminAnalytics, ManualAssignRequest, ReassignRequest } from '../../../core/models/admin';
 import { UserProfile } from '../../../core/models/user';
-import { AgentPerformanceResponse, AgentTaskResponse } from '../../../core/models/agent';
-import { DeclarationResponse } from '../../../core/models/declaration';
+import { AgentProfile, AgentTaskSummary } from '../../../core/models/agent';
+import { DeclarationSummary, DeclarationDetail } from '../../../core/models/declaration';
 
-@Injectable({
-    providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AdminService {
 
-    private httpClient: HttpClient = inject(HttpClient);
-    private apiUrl: string = environment.apiUrl;
+  private readonly http = inject(HttpClient);
+  private readonly base = `${environment.apiUrl}/admin`;
 
-    // ═══════════════════════════════════════════════════════════
-    // USER MANAGEMENT
-    // ═══════════════════════════════════════════════════════════
+  // ── User Management ─────────────────────────────────────
 
-    // GET /admin/users?userType=X&status=Y&page=0&size=10
-    // Fetches all users, optionally filtered by userType and status, paginated.
-    getUsers(userType?: string, status?: string, page: number = 0, size: number = 10): Observable<ApiResponse<Page<UserProfile>>> {
-        let url = `${this.apiUrl}/admin/users`;
-        const params: string[] = [];
-        if (userType) params.push(`userType=${userType}`);
-        if (status) params.push(`status=${status}`);
-        params.push(`page=${page}`);
-        params.push(`size=${size}`);
+  getUsers(userType?: string, status?: string, page = 0, size = 10): Observable<ApiResponse<Page<UserProfile>>> {
+    let url = `${this.base}/users`;
+    const params: string[] = [];
+    if (userType) params.push(`userType=${userType}`);
+    if (status) params.push(`status=${status}`);
+    params.push(`page=${page}`, `size=${size}`);
+    if (params.length) url += '?' + params.join('&');
+    return this.http.get<ApiResponse<Page<UserProfile>>>(url);
+  }
 
-        if (params.length > 0) url += '?' + params.join('&');
+  getUserById(id: number): Observable<ApiResponse<UserProfile>> {
+    return this.http.get<ApiResponse<UserProfile>>(`${this.base}/users/${id}`);
+  }
 
-        return this.httpClient.get<ApiResponse<Page<UserProfile>>>(url);
-    }
+  updateUserStatus(id: number, status: string): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(`${this.base}/users/${id}/status?status=${status}`, {});
+  }
 
-    // GET /admin/users/{id}
-    // Fetches a single user by ID — full profile for detail page.
-    getUserById(id: number): Observable<ApiResponse<UserProfile>> {
-        return this.httpClient.get<ApiResponse<UserProfile>>(
-            `${this.apiUrl}/admin/users/${id}`
-        );
-    }
+  unlockResubmission(id: number): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(`${this.base}/users/${id}/unlock-resubmission`, {});
+  }
 
-    // PUT /admin/users/{id}/status?status=SUSPENDED
-    // Changes user status: ACTIVE ↔ SUSPENDED.
-    updateUserStatus(id: number, status: string): Observable<ApiResponse<void>> {
-        return this.httpClient.put<ApiResponse<void>>(
-            `${this.apiUrl}/admin/users/${id}/status?status=${status}`,
-            {}
-        );
-    }
+  // ── Agent Management ────────────────────────────────────
 
-    // PUT /admin/users/{id}/unlock-resubmission
-    // Resets resubmission count so user can submit again after 3 rejections.
-    unlockResubmission(id: number): Observable<ApiResponse<void>> {
-        return this.httpClient.put<ApiResponse<void>>(
-            `${this.apiUrl}/admin/users/${id}/unlock-resubmission`,
-            {}
-        );
-    }
+  createAgent(data: CreateAgentRequest): Observable<ApiResponse<AgentProfile>> {
+    return this.http.post<ApiResponse<AgentProfile>>(`${this.base}/agents/create`, data);
+  }
 
-    // ═══════════════════════════════════════════════════════════
-    // AGENT MANAGEMENT
-    // ═══════════════════════════════════════════════════════════
+  getAgents(page = 0, size = 10): Observable<ApiResponse<Page<AgentProfile>>> {
+    return this.http.get<ApiResponse<Page<AgentProfile>>>(`${this.base}/agents?page=${page}&size=${size}`);
+  }
 
-    // POST /admin/agents/create
-    // Creates a new agent account with employeeId and assigned zones.
-    createAgent(data: CreateAgentRequest): Observable<ApiResponse<any>> {
-        return this.httpClient.post<ApiResponse<any>>(
-            `${this.apiUrl}/admin/agents/create`,
-            data
-        );
-    }
+  getAllAgents(): Observable<ApiResponse<AgentProfile[]>> {
+    return this.http.get<ApiResponse<AgentProfile[]>>(`${this.base}/agents`);
+  }
 
-    // GET /admin/agents?page=0&size=10
-    // Fetches all agents — used by agents management table, paginated.
-    getAgents(page: number = 0, size: number = 10): Observable<ApiResponse<Page<any>>> {
-        return this.httpClient.get<ApiResponse<Page<any>>>(
-            `${this.apiUrl}/admin/agents?page=${page}&size=${size}`
-        );
-    }
+  getAgentById(id: number): Observable<ApiResponse<AgentProfile>> {
+    return this.http.get<ApiResponse<AgentProfile>>(`${this.base}/agents/${id}`);
+  }
 
-    // GET /admin/agents/{id}
-    // Fetches full agent details.
-    getAgentById(id: number): Observable<ApiResponse<any>> {
-        return this.httpClient.get<ApiResponse<any>>(
-            `${this.apiUrl}/admin/agents/${id}`
-        );
-    }
+  updateAgentStatus(id: number, status: string): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(`${this.base}/agents/${id}/status?status=${status}`, {});
+  }
 
-    // PUT /admin/agents/{id}/status?status=ACTIVE
-    // Changes agent status: ACTIVE ↔ SUSPENDED.
-    updateAgentStatus(id: number, status: string): Observable<ApiResponse<void>> {
-        return this.httpClient.put<ApiResponse<void>>(
-            `${this.apiUrl}/admin/agents/${id}/status?status=${status}`,
-            {}
-        );
-    }
+  suspendAgent(id: number): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(`${this.base}/agents/${id}/suspend`, null);
+  }
 
-    // PUT /admin/agents/{id}/clear-strikes
-    // Resets agent's strike count to 0.
-    clearStrikes(id: number): Observable<ApiResponse<void>> {
-        return this.httpClient.put<ApiResponse<void>>(
-            `${this.apiUrl}/admin/agents/${id}/clear-strikes`,
-            {}
-        );
-    }
+  activateAgent(id: number): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(`${this.base}/agents/${id}/activate`, null);
+  }
 
-    // ═══════════════════════════════════════════════════════════
-    // DECLARATION MANAGEMENT
-    // ═══════════════════════════════════════════════════════════
+  clearStrikes(id: number): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(`${this.base}/agents/${id}/clear-strikes`, {});
+  }
 
-    // GET /admin/declarations?status=SUBMITTED&page=0&size=10
-    // Fetches all declarations, optionally filtered by status, paginated.
-    getDeclarations(status?: string, page: number = 0, size: number = 10): Observable<ApiResponse<Page<DeclarationResponse>>> {
-        let url = `${this.apiUrl}/admin/declarations`;
-        const params: string[] = [];
-        if (status) params.push(`status=${status}`);
-        params.push(`page=${page}`);
-        params.push(`size=${size}`);
+  getAvailableAgents(): Observable<ApiResponse<AgentProfile[]>> {
+    return this.http.get<ApiResponse<AgentProfile[]>>(`${this.base}/agents/available`);
+  }
 
-        url += '?' + params.join('&');
+  // ── Declaration Management ──────────────────────────────
 
-        return this.httpClient.get<ApiResponse<Page<DeclarationResponse>>>(url);
-    }
+  getDeclarations(status?: string, page = 0, size = 10): Observable<ApiResponse<any>> {
+    let url = status ? `${this.base}/declarations/status/${status}` : `${this.base}/declarations`;
+    const params: string[] = [];
+    params.push(`page=${page}`, `size=${size}`);
+    url += '?' + params.join('&');
+    return this.http.get<ApiResponse<any>>(url);
+  }
 
-    // GET /admin/declarations/{id}
-    // Fetches a specific declaration by ID for the admin detailed view.
-    getDeclarationById(id: number): Observable<ApiResponse<DeclarationResponse>> {
-        return this.httpClient.get<ApiResponse<DeclarationResponse>>(
-            `${this.apiUrl}/admin/declarations/${id}`
-        );
-    }
+  getAllDeclarations(): Observable<ApiResponse<DeclarationSummary[]>> {
+    return this.http.get<ApiResponse<DeclarationSummary[]>>(`${this.base}/declarations`);
+  }
 
-    // PUT /admin/declarations/{id}/unlock
-    // Unlocks a rejected declaration so user can edit and resubmit.
-    unlockDeclaration(id: number): Observable<ApiResponse<void>> {
-        return this.httpClient.put<ApiResponse<void>>(
-            `${this.apiUrl}/admin/declarations/${id}/unlock`,
-            {}
-        );
-    }
+  getDeclarationById(id: number): Observable<ApiResponse<DeclarationDetail>> {
+    return this.http.get<ApiResponse<DeclarationDetail>>(`${environment.apiUrl}/declaration/${id}`);
+  }
 
-    // ═══════════════════════════════════════════════════════════
-    // ASSIGNMENT MANAGEMENT
-    // ═══════════════════════════════════════════════════════════
+  getUnassignedDeclarations(): Observable<ApiResponse<DeclarationSummary[]>> {
+    return this.http.get<ApiResponse<DeclarationSummary[]>>(`${this.base}/declarations/unassigned`);
+  }
 
-    // GET /admin/assignments?status=ASSIGNED&page=0&size=10
-    // Fetches all agent assignments, optionally filtered by status, paginated.
-    getAssignments(status?: string, page: number = 0, size: number = 10): Observable<ApiResponse<Page<AgentTaskResponse>>> {
-        let url = `${this.apiUrl}/admin/assignments`;
-        const params: string[] = [];
-        if (status) params.push(`status=${status}`);
-        params.push(`page=${page}`);
-        params.push(`size=${size}`);
+  unlockDeclaration(id: number): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(`${this.base}/declarations/${id}/unlock`, {});
+  }
 
-        url += '?' + params.join('&');
+  // ── Assignment Management ───────────────────────────────
 
-        return this.httpClient.get<ApiResponse<Page<AgentTaskResponse>>>(url);
-    }
+  getAssignments(status?: string, page = 0, size = 10): Observable<ApiResponse<Page<AgentTaskSummary>>> {
+    let url = `${this.base}/assignments`;
+    const params: string[] = [];
+    if (status) params.push(`status=${status}`);
+    params.push(`page=${page}`, `size=${size}`);
+    url += '?' + params.join('&');
+    return this.http.get<ApiResponse<Page<AgentTaskSummary>>>(url);
+  }
 
-    // POST /admin/assignments/reassign/{id}?newAgentId=X
-    // Reassigns an assignment to a different agent.
-    // Used when original agent is unavailable or flagged.
-    reassignTask(id: number, newAgentId: number): Observable<ApiResponse<void>> {
-        return this.httpClient.post<ApiResponse<void>>(
-            `${this.apiUrl}/admin/assignments/reassign/${id}?newAgentId=${newAgentId}`,
-            {}
-        );
-    }
+  getAssignedDeclarations(): Observable<ApiResponse<AgentTaskSummary[]>> {
+    return this.http.get<ApiResponse<AgentTaskSummary[]>>(`${this.base}/declarations/assigned`);
+  }
 
-    getUnassignedDeclarations(): Observable<ApiResponse<UnassignedDeclaration[]>> {
-        return this.httpClient.get<ApiResponse<UnassignedDeclaration[]>>(
-            `${this.apiUrl}/admin/declarations/unassigned`
-        );
-    }
+  assignAgent(declarationId: number, agentId: number): Observable<ApiResponse<AgentTaskSummary>> {
+    return this.http.post<ApiResponse<AgentTaskSummary>>(`${this.base}/assignment/assign`, { declarationId, agentId });
+  }
 
-    getAssignedDeclarations(): Observable<ApiResponse<AgentTaskResponse[]>> {
-        return this.httpClient.get<ApiResponse<AgentTaskResponse[]>>(
-            `${this.apiUrl}/admin/declarations/assigned`
-        );
-    }
+  reassignDeclaration(declarationId: number, newAgentId: number, reason: string): Observable<ApiResponse<AgentTaskSummary>> {
+    return this.http.put<ApiResponse<AgentTaskSummary>>(`${this.base}/assignment/reassign`, { declarationId, newAgentId, reason });
+  }
 
-    getAvailableAgents(): Observable<ApiResponse<AvailableAgent[]>> {
-        return this.httpClient.get<ApiResponse<AvailableAgent[]>>(
-            `${this.apiUrl}/admin/agents/available`
-        );
-    }
+  changeAssignmentAgent(assignmentId: number, newAgentId: number, reason: string): Observable<ApiResponse<AgentTaskSummary>> {
+    return this.http.put<ApiResponse<AgentTaskSummary>>(`${this.base}/assignment/change-agent`, { assignmentId, newAgentId, reason });
+  }
 
-    assignAgent(declarationId: number, agentId: number): Observable<ApiResponse<AgentTaskResponse>> {
-        return this.httpClient.post<ApiResponse<AgentTaskResponse>>(
-            `${this.apiUrl}/admin/assignment/assign`,
-            { declarationId, agentId }
-        );
-    }
+  cancelAssignment(declarationId: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.base}/assignment/cancel/${declarationId}`);
+  }
 
-    reassignDeclaration(declarationId: number, newAgentId: number, reason: string): Observable<ApiResponse<AgentTaskResponse>> {
-        return this.httpClient.put<ApiResponse<AgentTaskResponse>>(
-            `${this.apiUrl}/admin/assignment/reassign`,
-            { declarationId, newAgentId, reason }
-        );
-    }
+  reassignTask(id: number, newAgentId: number): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.base}/assignments/reassign/${id}?newAgentId=${newAgentId}`, {});
+  }
 
-    changeAssignmentAgent(assignmentId: number, newAgentId: number, reason: string): Observable<ApiResponse<AgentTaskResponse>> {
-        return this.httpClient.put<ApiResponse<AgentTaskResponse>>(
-            `${this.apiUrl}/admin/assignment/change-agent`,
-            { assignmentId, newAgentId, reason }
-        );
-    }
+  // ── Reports / Analytics ─────────────────────────────────
 
-    cancelAssignment(declarationId: number): Observable<ApiResponse<void>> {
-        return this.httpClient.delete<ApiResponse<void>>(
-            `${this.apiUrl}/admin/assignment/cancel/${declarationId}`
-        );
-    }
+  getAnalytics(): Observable<ApiResponse<AdminAnalytics>> {
+    return this.http.get<ApiResponse<AdminAnalytics>>(`${this.base}/analytics`);
+  }
 
-    // ═══════════════════════════════════════════════════════════
-    // REPORTS
-    // ═══════════════════════════════════════════════════════════
+  getOverview(): Observable<ApiResponse<AdminAnalytics>> {
+    return this.http.get<ApiResponse<AdminAnalytics>>(`${this.base}/reports/overview`);
+  }
 
-    // GET /admin/reports/overview
-    // Returns AdminOverview: totalUsers, totalAgents, totalDeclarations,
-    //   pendingVerifications, totalScoresGenerated, flaggedAgents.
-    getOverview(): Observable<ApiResponse<AdminOverview>> {
-        return this.httpClient.get<ApiResponse<AdminOverview>>(
-            `${this.apiUrl}/admin/reports/overview`
-        );
-    }
+  getAgentPerformanceReport(): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.base}/reports/performance`);
+  }
 
-    // GET /admin/reports/performance
-    // Returns AgentPerformanceResponse for all active agents.
-    getAgentPerformanceReport(): Observable<ApiResponse<AgentPerformanceResponse>> {
-        return this.httpClient.get<ApiResponse<AgentPerformanceResponse>>(
-            `${this.apiUrl}/admin/reports/performance`
-        );
-    }
+  getCarbonHeatmap(): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(`${this.base}/reports/carbon-heatmap`);
+  }
 
-    // GET /admin/reports/carbon-heatmap
-    // Returns carbon score data aggregated by zone for heatmap display.
-    getCarbonHeatmap(): Observable<ApiResponse<any[]>> {
-        return this.httpClient.get<ApiResponse<any[]>>(
-            `${this.apiUrl}/admin/reports/carbon-heatmap`
-        );
-    }
+  // ── Policies ────────────────────────────────────────────
+
+  createPolicy(data: Record<string, unknown>): Observable<ApiResponse<Record<string, unknown>>> {
+    return this.http.post<ApiResponse<Record<string, unknown>>>(`${this.base}/policies`, data);
+  }
+
+  getPolicies(): Observable<ApiResponse<Record<string, unknown>[]>> {
+    return this.http.get<ApiResponse<Record<string, unknown>[]>>(`${this.base}/policies`);
+  }
+
+  updatePolicy(id: number, data: Record<string, unknown>): Observable<ApiResponse<Record<string, unknown>>> {
+    return this.http.put<ApiResponse<Record<string, unknown>>>(`${this.base}/policies/${id}`, data);
+  }
 }

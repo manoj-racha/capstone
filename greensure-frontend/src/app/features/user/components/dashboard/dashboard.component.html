@@ -11,13 +11,8 @@
     <div class="flex items-center justify-between pb-4 border-b border-gs-border">
         <div>
             <h1 class="text-2xl font-bold text-gs-text">My GreenSure Dashboard</h1>
-            <p class="text-gs-muted">Welcome back, {{ dashboard()?.fullName }}</p>
+            <p class="text-gs-muted">Welcome back!</p>
         </div>
-        <span class="px-3 py-1 rounded-full text-xs font-bold leading-tight"
-            [class.bg-blue-500]="dashboard()?.userType === 'MSME'"
-            [class.bg-purple-500]="dashboard()?.userType === 'HOUSEHOLD'" [class.text-white]="true">
-            {{ dashboard()?.userType }}
-        </span>
     </div>
 
     <!-- Renewal Alert -->
@@ -126,8 +121,8 @@
                     </div>
                     <span class="inline-block px-3 py-1 text-sm font-bold rounded-full text-white"
                         [class.bg-gs-dark]="dashboard()?.zone === 'GREEN_CHAMPION'"
-                        [class.bg-yellow-500]="dashboard()?.zone === 'GREEN_IMPROVER'"
-                        [class.bg-red-500]="dashboard()?.zone === 'GREEN_DEFAULTER'">
+                        [class.bg-yellow-500]="dashboard()?.latestScore?.zone === 'IMPROVER'"
+                        [class.bg-red-500]="dashboard()?.latestScore?.zone === 'DEFAULTER'">
                         {{ dashboard()?.zone?.replace('_', ' ') }}
                     </span>
                 </div>
@@ -174,7 +169,7 @@
             <h3 class="text-lg font-bold text-gs-text flex items-center gap-2 mb-1">
                 <span class="text-gs-dark">🌱</span> Tailored Recommendations
             </h3>
-            <p class="text-sm text-gs-muted">We've generated {{ s.recommendations?.length || 0 }} actionable steps to
+            <p class="text-sm text-gs-muted">We've generated {{ s.recommendations.length || 0 }} actionable steps to
                 improve your carbon footprint and lower your premiums.</p>
         </div>
         <a routerLink="/user/recommendations"

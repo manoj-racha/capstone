@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../../core/models/api-response';
-import { RecommendationResponse } from '../../../../core/models/score';
+import { Recommendation } from '../../../../core/models/score';
 
 @Component({
     selector: 'app-recommendations',
@@ -13,7 +13,7 @@ import { RecommendationResponse } from '../../../../core/models/score';
 export class RecommendationsComponent implements OnInit {
     private http = inject(HttpClient);
 
-    recommendations = signal<RecommendationResponse[]>([]);
+    recommendations = signal<Recommendation[]>([]);
 
     error = signal('');
 
@@ -22,7 +22,7 @@ export class RecommendationsComponent implements OnInit {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
         });
 
-        this.http.get<ApiResponse<RecommendationResponse[]>>(
+        this.http.get<ApiResponse<Recommendation[]>>(
             `${environment.apiUrl}/recommendations/my`,
             { headers }
         ).subscribe({
@@ -30,11 +30,11 @@ export class RecommendationsComponent implements OnInit {
                 if (res.success && res.data) {
                     this.recommendations.set(res.data);
                 } else {
-                    this.error.set(res.error || 'Failed to load recommendations');
+                    this.error.set(res.message || 'Failed to load recommendations');
                 }
             },
             error: (err) => {
-                this.error.set(err.error?.error || 'Failed to load recommendations');
+                this.error.set(err.error?.message || 'Failed to load recommendations');
             }
         });
     }

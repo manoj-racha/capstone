@@ -1,19 +1,17 @@
 package org.hartford.greensure.dto.response;
 
-import org.hartford.greensure.entity.User.UserType;
 import lombok.*;
+import org.hartford.greensure.enums.Role;
 
-@Getter @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+/** Returned on successful login or registration (after OTP verified). */
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class AuthResponse {
 
     private String token;
-    private String role;
-    private UserType userType;
-    private Long id;
+    private Role   role;
+    private Long   id;
     private String fullName;
     private String email;
     private boolean isFirstLogin;
+    private boolean emailVerified;
 }

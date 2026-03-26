@@ -61,19 +61,10 @@ export class NavbarComponent implements OnInit {
 
     onLogout(): void {
         if (this.isLoggedIn()) {
-            this.authService.logout().subscribe({
-                next: () => {
-                    this.authService.clearSession();
-                    this.router.navigate(['/login']);
-                    this.updateNavState();
-                },
-                error: () => {
-                    // Fallback if backend throws error due to expired token
-                    this.authService.clearSession();
-                    this.router.navigate(['/login']);
-                    this.updateNavState();
-                }
-            });
+            this.authService.logout();
+            this.authService.clearSession();
+            this.router.navigate(['/login']);
+            this.updateNavState();
         }
     }
 }

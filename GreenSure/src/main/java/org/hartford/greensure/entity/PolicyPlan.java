@@ -2,6 +2,7 @@ package org.hartford.greensure.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.util.List;
 
 @Entity
@@ -14,16 +15,21 @@ public class PolicyPlan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long planId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "policy_type", nullable = false)
+    private Policy policy;
+
+    @Column(nullable = false)
     private String planName;
+
+    @Column(nullable = false)
     private Double coverageAmount;
+
+    @Column(nullable = false)
     private Double basePremiumYearly;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "policy_plan_features", joinColumns = @JoinColumn(name = "plan_id"))
     @Column(name = "feature")
     private List<String> features;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "policy_type", nullable = false)
-    private Policy policy;
 }

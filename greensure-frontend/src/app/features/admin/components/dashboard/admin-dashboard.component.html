@@ -45,7 +45,7 @@
                             d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
                         </path>
                     </svg>
-                    @if (overview()!.flaggedAgents > 0) {
+                    @if (flaggedAgents > 0) {
                     <span class="absolute -top-1 -right-1 flex h-3 w-3">
                         <span
                             class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -60,10 +60,10 @@
                     </svg></span>
             </div>
             <div>
-                <h3 class="text-3xl font-bold text-gs-text mb-1">{{ overview()?.totalAgents }}</h3>
+                <h3 class="text-3xl font-bold text-gs-text mb-1">{{ totalAgents }}</h3>
                 <p class="text-sm font-medium text-gs-muted">Total Field Agents</p>
-                @if (overview()!.flaggedAgents > 0) {
-                <p class="text-xs text-red-400 mt-2">{{ overview()?.flaggedAgents }} flagged (3+ strikes)</p>
+                @if (flaggedAgents > 0) {
+                <p class="text-xs text-red-400 mt-2">{{ flaggedAgents }} flagged (3+ strikes)</p>
                 }
             </div>
         </div>
@@ -108,7 +108,7 @@
                     </svg></span>
             </div>
             <div>
-                <h3 class="text-3xl font-bold text-orange-400 mb-1">{{ overview()?.pendingVerifications }}</h3>
+                <h3 class="text-3xl font-bold text-orange-400 mb-1">{{ pendingVerifications }}</h3>
                 <p class="text-sm font-medium text-gs-muted">Pending Verifications</p>
             </div>
         </div>
@@ -130,7 +130,7 @@
                     </svg></span>
             </div>
             <div>
-                <h3 class="text-3xl font-bold text-gs-dark mb-1">{{ overview()?.totalScoresGenerated }}</h3>
+                <h3 class="text-3xl font-bold text-gs-dark mb-1">{{ totalScoresGenerated }}</h3>
                 <p class="text-sm font-medium text-gs-muted">Carbon Scores Issued</p>
             </div>
         </div>

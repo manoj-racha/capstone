@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AgentService } from '../../../../features/agent/services/agent.service';
-import { AgentTaskResponse } from '../../../../core/models/agent';
+import { AgentTaskSummary } from '../../../../core/models/agent';
 
 @Component({
     selector: 'app-agent-dashboard',
@@ -13,7 +13,7 @@ import { AgentTaskResponse } from '../../../../core/models/agent';
 export class AgentDashboardComponent implements OnInit {
     private agentService = inject(AgentService);
 
-    tasks = signal<AgentTaskResponse[]>([]);
+    tasks = signal<AgentTaskSummary[]>([]);
 
     error = signal<string>('');
 
@@ -34,7 +34,7 @@ export class AgentDashboardComponent implements OnInit {
                 if (res.success && res.data) {
                     this.tasks.set(res.data);
                 } else {
-                    this.error.set(res.error || 'Failed to load assignments.');
+                    this.error.set(res.message || 'Failed to load dashboard data');
                 }
             },
             error: (err) => {
@@ -49,8 +49,7 @@ export class AgentDashboardComponent implements OnInit {
         }
 
         switch (status) {
-            case 'ASSIGNED': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            case 'IN_PROGRESS': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+            case 'ACTIVE': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
             case 'COMPLETED': return 'bg-gs-dark/10 text-gs-dark border-gs-dark/20';
             case 'REASSIGNED': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
             default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';

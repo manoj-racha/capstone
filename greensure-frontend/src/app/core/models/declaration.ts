@@ -1,107 +1,194 @@
+import { CarbonScoreDetail } from './score';
 
-export interface VehicleResponse {
-  vehicleId: number;
-  vehicleType: string;    // "TWO_WHEELER" | "FOUR_WHEELER" | "COMMERCIAL"
-  fuelType: string;       // "PETROL" | "DIESEL" | "CNG" | "ELECTRIC"
-  kmPerMonth: number;
-  quantity: number;
+// ── Enums (match Spring enum names exactly) ────────────────────
+
+export type DeclarationStatus =
+  'DRAFT' | 'SUBMITTED' | 'UNDER_VERIFICATION' | 'VERIFIED' | 'REJECTED';
+
+export type FuelType = 'EV' | 'PETROL' | 'DIESEL' | 'CNG';
+
+export type MileageBand =
+  'BAND_1' | 'BAND_2' | 'BAND_3' | 'BAND_4' | 'BAND_5';
+
+export const MILEAGE_BAND_LABELS: Record<MileageBand, string> = {
+  BAND_1: 'Under 5,000 km',
+  BAND_2: '5,000–10,000 km',
+  BAND_3: '10,000–15,000 km',
+  BAND_4: '15,000–20,000 km',
+  BAND_5: 'Above 20,000 km'
+};
+
+export type CookingFuel = 'LPG' | 'PNG' | 'ELECTRIC' | 'BIOGAS';
+
+export type DataSource = 'VAHAN' | 'DIGILOCKER' | 'MANUAL';
+
+export type PublicTransportUsage =
+  'NEVER' | 'RARELY' | 'SOMETIMES' | 'OFTEN' | 'ALWAYS';
+
+export type VehicleCategory =
+  'TWO_WHEELER' | 'THREE_WHEELER' |
+  'FOUR_WHEELER' | 'OTHER';
+
+export const VEHICLE_CATEGORY_LABELS: Record<VehicleCategory, string> = {
+  TWO_WHEELER:   '2 Wheeler — Bike / Scooter',
+  THREE_WHEELER: '3 Wheeler — Auto / E-Rickshaw',
+  FOUR_WHEELER:  '4 Wheeler — Car / SUV / Van',
+  OTHER:         'Other — Tractor / Truck / Special'
+};
+
+export type VehicleDocumentType =
+  'RC_BOOK' | 'INSURANCE' |
+  'POLLUTION_CERTIFICATE' | 'OTHER';
+
+export const VEHICLE_DOCUMENT_LABELS: Record<VehicleDocumentType, string> = {
+  RC_BOOK:               'Registration Certificate (RC)',
+  INSURANCE:             'Vehicle Insurance',
+  POLLUTION_CERTIFICATE: 'Pollution Under Control (PUC)',
+  OTHER:                 'Other Document'
+};
+
+// ── Data shapes (from backend responses) ───────────────────────
+
+export interface VehicleDocument {
+  documentId: number;
+  documentType: VehicleDocumentType;
+  documentUrl: string;
+  originalFileName: string;
+  mimeType: string;
+  fileSizeBytes: number;
+  verified: boolean;
+  agentNote: string | null;
+  uploadedAt: string;
 }
 
-export interface DeclarationResponse {
+export interface VehicleData {
+  vehicleId: number;
+  vehicleCategory: VehicleCategory;
+  vehicleNickname: string | null;
+  registrationNumber: string;
+  make: string;
+  model: string;
+  year: number;
+  fuelType: FuelType;
+  mileageBand: MileageBand;
+  dataSource: DataSource;
+  documents: VehicleDocument[];
+}
+
+export interface ElectricityData {
+  provider: string;
+  consumerNumber: string;
+  userDeclaredMonthlyKwh: number;
+  ocrComputedMonthlyKwh: number | null;
+  billsUploaded: number;
+  agentCorrectedMonthlyKwh: number | null;
+}
+
+export interface ElectricityBill {
+  billingMonth: string;
+  unitsKwh: number;
+  amount: number;
+  billUrl: string;
+  ocrConfidenceScore: number;
+}
+
+export interface CookingData {
+  fuelType: CookingFuel;
+  pngConsumerNumber: string | null;
+  userDeclaredCylinders: number | null;
+  ocrComputedCylinders: number | null;
+  agentCorrectedFuelType: CookingFuel | null;
+  agentCorrectedCylinders: number | null;
+}
+
+export interface SolarData {
+  hasSolar: boolean;
+  capacityKw: number | null;
+  certificateUrl: string | null;
+  mnreVerified: boolean;
+  agentCorrectedCapacityKw: number | null;
+  agentVerifiedSolar: boolean;
+}
+
+export interface LifestyleData {
+  publicTransportUsage: PublicTransportUsage;
+  wastesRecycling: boolean;
+}
+
+// ── Summary & Detail responses ─────────────────────────────────
+
+export interface DeclarationSummary {
   declarationId: number;
   userId: number;
+  fullName: string;
   declarationYear: number;
-  status: string;         // "DRAFT" | "SUBMITTED" | "UNDER_VERIFICATION" | "VERIFIED" | "REJECTED"
-  resubmissionCount: number;
-  submittedAt?: string;
-  createdAt: string;
+  status: DeclarationStatus;
+  submittedAt: string | null;
+  assignedAgentName: string | null;
+  deadline: string | null;
+  fraudRiskLevel: string | null;
+}
+
+export interface DeclarationDetail extends DeclarationSummary {
+  householdSize: number;
+  vehicles: VehicleData[];
+  electricityData: ElectricityData | null;
+  cookingData: CookingData | null;
+  solarData: SolarData | null;
+  lifestyleData: LifestyleData | null;
+  carbonScore: CarbonScoreDetail | null;
+  resubmissionCount?: number;
   rejectionReason?: string;
-
-  // Energy fields
-  electricityUnits?: number;
-  hasSolar?: boolean;
-  solarUnits?: number;
-  cookingFuelType?: string;   // "LPG" | "PNG" | "BIOMASS" | "ELECTRIC" | "NONE"
-  lpgCylinders?: number;
-  pngUnits?: number;
-  biomassKgPerDay?: number;
-  numAcUnits?: number;
-  acHoursPerDay?: number;
-  hasGenerator?: boolean;
-  generatorHoursPerMonth?: number;
-
-  // Transport fields
-  usesPublicTransport?: boolean;
-  publicTransportKm?: number;
-  vehicles?: VehicleResponse[];
-
-  // Lifestyle fields — Household only
-  dietaryPattern?: string;          // "VEGAN" | "VEGETARIAN" | "EGGETARIAN" | "NON_VEGETARIAN" | "HEAVY_NON_VEGETARIAN"
-  shoppingOrdersPerMonth?: string;  // "ZERO_TO_FIVE" | "SIX_TO_FIFTEEN" | "ABOVE_FIFTEEN"
-
-  // Operations fields — MSME only
-  hasCommercialVehicles?: boolean;
-  commercialVehicleKm?: number;
-  thirdPartyShipments?: number;
-  employeesPrivateVehicle?: number;
-  employeesPublicTransport?: number;
-  generatorLitersPerMonth?: number;
-  hasBoiler?: boolean;
-  boilerFuelType?: string;          // "COAL" | "NATURAL_GAS" | "NONE"
-  boilerCoalKg?: number;
-  boilerGasScm?: number;
-  paperReamsPerMonth?: number;
-  usesRecycledPaper?: boolean;
-  rawMaterialType?: string;         // "VIRGIN" | "RECYCLED" | "MIXED"
-  rawMaterialKg?: number;
-
-  assignedAgentId?: number;
-  assignedAgentName?: string;
 }
 
-export interface VehicleRequest {
-  vehicleType: string;
-  fuelType: string;
-  kmPerMonth: number;
-  quantity: number;
+// ── Request types (sent to backend PUT endpoints) ──────────────
+
+export interface HouseholdDataRequest {
+  numberOfMembers: number;
 }
 
-export interface DeclarationRequest {
-  // Energy
-  electricityUnits?: number;
-  hasSolar?: boolean;
-  solarUnits?: number;
-  cookingFuelType?: string;
-  lpgCylinders?: number;
-  pngUnits?: number;
-  biomassKgPerDay?: number;
-  numAcUnits?: number;
-  acHoursPerDay?: number;
-  hasGenerator?: boolean;
-  generatorHoursPerMonth?: number;
+export interface AddVehicleRequest {
+  vehicleCategory: VehicleCategory;
+  vehicleNickname?: string;
+  vin?: string;
+  registrationNumber: string;
+  make: string;
+  model: string;
+  year: number;
+  fuelType: FuelType;
+  mileageBand: MileageBand;
+  dataSource: DataSource;
+}
 
-  // Transport
-  usesPublicTransport?: boolean;
-  publicTransportKm?: number;
-  vehicles?: VehicleRequest[];
+export interface UploadVehicleDocumentRequest {
+  vehicleId: number;
+  documentType: VehicleDocumentType;
+  documentUrl: string;
+  originalFileName: string;
+  mimeType: string;
+  fileSizeBytes: number;
+}
 
-  // Lifestyle — Household
-  dietaryPattern?: string;
-  shoppingOrdersPerMonth?: string;
+export interface ElectricityDataRequest {
+  provider: string;
+  consumerNumber: string;
+  userDeclaredMonthlyKwh: number;
+}
 
-  // Operations — MSME
-  hasCommercialVehicles?: boolean;
-  commercialVehicleKm?: number;
-  thirdPartyShipments?: number;
-  employeesPrivateVehicle?: number;
-  employeesPublicTransport?: number;
-  generatorLitersPerMonth?: number;
-  hasBoiler?: boolean;
-  boilerFuelType?: string;
-  boilerCoalKg?: number;
-  boilerGasScm?: number;
-  paperReamsPerMonth?: number;
-  usesRecycledPaper?: boolean;
-  rawMaterialType?: string;
-  rawMaterialKg?: number;
+export interface CookingDataRequest {
+  fuelType: CookingFuel;
+  pngConsumerNumber?: string;
+  userDeclaredCylinders?: number;
+  billUrls?: string;
+}
+
+export interface SolarDataRequest {
+  hasSolar: boolean;
+  capacityKw?: number;
+  certificateUrl?: string;
+}
+
+export interface LifestyleDataRequest {
+  publicTransportUsage: PublicTransportUsage;
+  wastesRecycling: boolean;
 }

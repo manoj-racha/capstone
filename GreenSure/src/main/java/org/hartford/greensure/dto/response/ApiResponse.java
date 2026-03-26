@@ -34,4 +34,12 @@ public class ApiResponse<T> {
                 .error(error)
                 .build();
     }
+
+    public static <T> ApiResponse<T> error(String error, T data) {
+        return ApiResponse.<T>builder()
+                .success(false)
+                .error(error)
+                .data(data)
+                .build();
+    }
 }

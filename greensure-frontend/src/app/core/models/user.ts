@@ -1,41 +1,30 @@
+import { CarbonScoreDetail } from './score';
+
 export interface UserProfile {
   userId: number;
-  userType: string;        // "HOUSEHOLD" | "MSME"
   fullName: string;
   email: string;
-  mobile: string;
-  address: string;
-  pinCode: string;
-  city: string;
-  state: string;
-  status: string;          // "ACTIVE" | "SUSPENDED" | "INACTIVE"
-  createdAt: string;
-
-  // Household profile fields
-  numberOfMembers?: number;
-  dwellingType?: string;
-
-  // MSME profile fields
-  businessName?: string;
-  gstNumber?: string;
-  businessType?: string;
-  numEmployees?: number;
+  phone: string;
+  dateOfBirth?: string;
+  address?: string;
+  state?: string;
+  city?: string;
+  pincode?: string;
+  householdSize?: number;
+  role: 'USER' | 'AGENT' | 'ADMIN';
+  createdAt?: string;
 }
 
 export interface DashboardResponse {
-  userId: number;
-  fullName: string;
-  userType: string;
   hasDeclaration: boolean;
-  currentDeclarationId?: number;
-  declarationStatus?: string;
+  declarationStatus: 'DRAFT' | 'SUBMITTED' | 'UNDER_VERIFICATION' | 'VERIFIED' | 'REJECTED' | null;
   declarationYear?: number;
-  latestScore?: CarbonScoreResponse;  // defined in score model
-  zone?: string;
-  renewalDue?: boolean;
+  currentDeclarationId?: number;
+  latestScore: CarbonScoreDetail | null;
+  zone: string | null;
+  discountPercentage: number | null;
+  renewalDue: boolean;
+  renewalDate?: string;
   unreadNotifications: number;
+  policiesCount: number;
 }
-
-// Import needed — we reference CarbonScoreResponse here
-// Angular resolves this at compile time, no circular dependency issue
-import { CarbonScoreResponse } from './score';
