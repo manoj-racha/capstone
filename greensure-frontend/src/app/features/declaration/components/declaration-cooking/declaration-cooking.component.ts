@@ -180,6 +180,29 @@ export class DeclarationCookingComponent implements OnInit {
 
   ngOnInit(): void {
     this.declarationId = Number(this.route.snapshot.paramMap.get('id'));
+    this.loadExistingData();
+  }
+
+  private loadExistingData(): void {
+    this.declarationService.getDeclarationById(this.declarationId).subscribe({
+      next: (res) => {
+        const c = res?.data?.cookingData;
+        if (res.success && c) {
+          this.form.patchValue({
+            fuelType: c.fuelType ?? 'LPG',
+            pngConsumerNumber: c.pngConsumerNumber ?? '',
+            userDeclaredCylinders: c.userDeclaredCylinders ?? null
+          });
+          const existingDocs = (c.billUrls ?? []).map((url, index) => ({
+            fileUrl: url,
+            originalFileName: `existing-document-${index + 1}`,
+            mimeType: 'application/octet-stream',
+            fileSizeBytes: 0
+          }));
+          this.uploadedCookingDocs.set(existingDocs);
+        }
+      }
+    });
   }
 
   selectFuel(fuel: CookingFuel): void {

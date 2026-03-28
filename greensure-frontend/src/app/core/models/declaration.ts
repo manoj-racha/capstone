@@ -1,7 +1,5 @@
 import { CarbonScoreDetail } from './score';
 
-// ── Enums (match Spring enum names exactly) ────────────────────
-
 export type DeclarationStatus =
   'DRAFT' | 'SUBMITTED' | 'UNDER_VERIFICATION' | 'VERIFIED' | 'REJECTED';
 
@@ -47,8 +45,6 @@ export const VEHICLE_DOCUMENT_LABELS: Record<VehicleDocumentType, string> = {
   OTHER:                 'Other Document'
 };
 
-// ── Data shapes (from backend responses) ───────────────────────
-
 export interface VehicleDocument {
   documentId: number;
   documentType: VehicleDocumentType;
@@ -82,6 +78,7 @@ export interface ElectricityData {
   ocrComputedMonthlyKwh: number | null;
   billsUploaded: number;
   agentCorrectedMonthlyKwh: number | null;
+  billUrls?: string[];
 }
 
 export interface ElectricityBill {
@@ -92,6 +89,16 @@ export interface ElectricityBill {
   ocrConfidenceScore: number;
 }
 
+/** Per-bill row returned on declaration detail (review). */
+export interface ElectricityBillSummary {
+  billingMonth?: string;
+  unitsKwh?: number | null;
+  amount?: number | null;
+  billUrl?: string | null;
+  ocrConfidenceScore?: number | null;
+  aiAnomalyFlag?: boolean | null;
+}
+
 export interface CookingData {
   fuelType: CookingFuel;
   pngConsumerNumber: string | null;
@@ -99,6 +106,7 @@ export interface CookingData {
   ocrComputedCylinders: number | null;
   agentCorrectedFuelType: CookingFuel | null;
   agentCorrectedCylinders: number | null;
+  billUrls?: string[];
 }
 
 export interface SolarData {
@@ -115,8 +123,6 @@ export interface LifestyleData {
   wastesRecycling: boolean;
 }
 
-// ── Summary & Detail responses ─────────────────────────────────
-
 export interface DeclarationSummary {
   declarationId: number;
   userId: number;
@@ -129,10 +135,16 @@ export interface DeclarationSummary {
   fraudRiskLevel: string | null;
 }
 
+export interface DeclarationResponse extends DeclarationSummary {
+  assignedAgentId?: number;
+}
+
 export interface DeclarationDetail extends DeclarationSummary {
   householdSize: number;
   vehicles: VehicleData[];
   electricityData: ElectricityData | null;
+  /** Bill-level AI/OCR confidence (when returned by API). */
+  electricityBills?: ElectricityBillSummary[];
   cookingData: CookingData | null;
   solarData: SolarData | null;
   lifestyleData: LifestyleData | null;
@@ -140,8 +152,6 @@ export interface DeclarationDetail extends DeclarationSummary {
   resubmissionCount?: number;
   rejectionReason?: string;
 }
-
-// ── Request types (sent to backend PUT endpoints) ──────────────
 
 export interface HouseholdDataRequest {
   numberOfMembers: number;

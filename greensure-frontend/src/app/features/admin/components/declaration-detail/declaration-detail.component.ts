@@ -4,6 +4,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { AdminService } from '../../../../features/admin/services/admin.service';
 import { DeclarationService } from '../../../../features/declaration/services/declaration.service';
 import { DeclarationDetail } from '../../../../core/models/declaration';
+import { ApiResponse } from '../../../../core/models/api-response';
 
 @Component({
     selector: 'app-declaration-detail',
@@ -34,7 +35,7 @@ export class DeclarationDetailComponent implements OnInit {
     }
 
     loadDeclaration(): void {
-        this.adminService.getDeclarationById(this.declarationId()).subscribe({
+        this.declarationService.getDeclarationById(this.declarationId()).subscribe({
             next: (res) => {
                 if (res.success && res.data) {
                     this.declaration.set(res.data);
@@ -54,7 +55,7 @@ export class DeclarationDetailComponent implements OnInit {
         if (confirm('Are you sure you want to unlock this rejected declaration for user resubmission?')) {
             this.actioning.set(true);
             this.adminService.unlockDeclaration(this.declarationId()).subscribe({
-                next: (res) => {
+                next: (res: ApiResponse<void>) => {
                     this.actioning.set(false);
                     if (res.success) {
                         this.declaration.update(d => d ? { ...d, status: 'DRAFT' } : null); // Assumes it returns to draft state
@@ -63,7 +64,7 @@ export class DeclarationDetailComponent implements OnInit {
                         alert('Failed to unlock declaration: ' + res.message);
                     }
                 },
-                error: (err) => {
+                error: (_err: unknown) => {
                     this.actioning.set(false);
                     alert('Failed to unlock declaration.');
                 }

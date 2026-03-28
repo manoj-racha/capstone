@@ -33,7 +33,7 @@ export class ForgotPasswordComponent {
 
         const email = this.form.controls.email.value || '';
 
-        this.authService.forgotPassword(email).subscribe({
+        this.authService.forgotPassword({ email }).subscribe({
             next: () => this.emailSent.set(true),
             error: () => {
                 this.toast.error('Unable to send reset request right now. Please try again.');

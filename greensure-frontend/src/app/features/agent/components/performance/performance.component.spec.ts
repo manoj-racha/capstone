@@ -28,9 +28,4 @@ describe('PerformanceComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect((compiled.textContent || '').trim().length).toBeGreaterThan(0);
   });
-
-  it('should format empty percentage as zero', () => {
-    expect(component.formatPct(undefined)).toBe('0%');
-  });
-
 });

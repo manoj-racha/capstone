@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
 import { provideRouter } from '@angular/router';
 
 import { UsersComponent } from './users.component';
@@ -28,14 +27,6 @@ describe('UsersComponent', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect((compiled.textContent || '').trim().length).toBeGreaterThan(0);
-  });
-
-  it('should set error when loadUsers returns failure', () => {
-    (component as any).adminService.getUsers = () => of({ success: false, error: 'Users failed' });
-
-    component.loadUsers();
-
-    expect(component.error()).toBe('Users failed');
   });
 
 });

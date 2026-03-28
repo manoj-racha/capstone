@@ -101,6 +101,21 @@ export class DeclarationLifestyleComponent implements OnInit {
 
   ngOnInit(): void {
     this.declarationId = Number(this.route.snapshot.paramMap.get('id'));
+    this.loadExistingData();
+  }
+
+  private loadExistingData(): void {
+    this.declarationService.getDeclarationById(this.declarationId).subscribe({
+      next: (res) => {
+        const l = res?.data?.lifestyleData;
+        if (res.success && l) {
+          this.form.patchValue({
+            publicTransportUsage: l.publicTransportUsage,
+            wastesRecycling: !!l.wastesRecycling
+          });
+        }
+      }
+    });
   }
 
   onSave(): void {

@@ -161,6 +161,22 @@ export class DeclarationElectricityComponent implements OnInit {
 
   ngOnInit(): void {
     this.declarationId = Number(this.route.snapshot.paramMap.get('id'));
+    this.loadExistingData();
+  }
+
+  private loadExistingData(): void {
+    this.declarationService.getDeclarationById(this.declarationId).subscribe({
+      next: (res) => {
+        const e = res?.data?.electricityData;
+        if (res.success && e) {
+          this.form.patchValue({
+            provider: e.provider ?? '',
+            consumerNumber: e.consumerNumber ?? '',
+            userDeclaredMonthlyKwh: e.userDeclaredMonthlyKwh ?? null
+          });
+        }
+      }
+    });
   }
 
   onBillFilesSelected(event: Event): void {

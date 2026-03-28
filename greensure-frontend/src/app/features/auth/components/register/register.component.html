@@ -1,7 +1,5 @@
-<!-- ── REGISTER PAGE ──────────────────────────────────── -->
 <div class="min-h-screen flex items-center justify-center px-4 py-12 bg-gs-bg relative">
 
-    <!-- Back to landing -->
     <a routerLink="/landing" class="absolute top-6 left-6 flex items-center gap-2 text-gs-body font-medium hover:text-gs-dark transition-colors">
         <lucide-icon [img]="ArrowLeft" [size]="18"></lucide-icon>
         Back to Home
@@ -9,21 +7,30 @@
 
     <div class="w-full max-w-xl space-y-8">
 
-        <!-- Logo / Brand -->
         <div class="text-center">
             <a routerLink="/landing" class="inline-flex items-center gap-2 font-heading text-3xl font-bold text-gs-dark">
                 <lucide-icon [img]="Leaf" [size]="32" class="text-gs-accent"></lucide-icon>
                 GreenSure
             </a>
-            <p class="mt-3 text-gs-body text-sm font-medium">Create your household account to start your green journey</p>
+            <p class="mt-3 text-gs-body text-sm font-medium">Create your account to start your green journey</p>
         </div>
 
-        <!-- Register Card -->
         <div class="bg-gs-surface border border-gs-border rounded-xl p-8 shadow-[0_4px_24px_rgba(30,92,58,0.06)] space-y-6">
 
             <h1 class="font-heading text-2xl font-bold text-gs-text">Create Your Account</h1>
 
-            <!-- Error -->
+            <!-- User Type Toggle -->
+            <div class="flex rounded-lg border border-gs-border overflow-hidden">
+                <button type="button" (click)="setUserType('HOUSEHOLD')"
+                    [class]="isHousehold ? 'flex-1 py-2.5 text-sm font-semibold bg-gs-dark text-white' : 'flex-1 py-2.5 text-sm font-medium text-gs-body hover:bg-gs-bg'">
+                    Household
+                </button>
+                <button type="button" (click)="setUserType('MSME')"
+                    [class]="!isHousehold ? 'flex-1 py-2.5 text-sm font-semibold bg-gs-dark text-white' : 'flex-1 py-2.5 text-sm font-medium text-gs-body hover:bg-gs-bg'">
+                    MSME / Business
+                </button>
+            </div>
+
             @if (errorMessage()) {
             <div class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 flex items-start gap-3">
                 <lucide-icon [img]="AlertTriangle" [size]="18" class="text-red-500 shrink-0 mt-0.5"></lucide-icon>
@@ -31,7 +38,6 @@
             </div>
             }
 
-            <!-- Success -->
             @if (successMessage()) {
             <div class="bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3 flex items-start gap-3">
                 <lucide-icon [img]="CheckCircle" [size]="18" class="text-green-600 shrink-0 mt-0.5"></lucide-icon>
@@ -43,168 +49,181 @@
 
                 <!-- Full Name -->
                 <div>
-                    <label for="fullName" class="block text-sm font-semibold text-gs-text mb-1.5">Full Name <span class="text-red-500">*</span></label>
-                    <input id="fullName" type="text" placeholder="John Doe" formControlName="fullName"
-                        [class]="isInvalid('fullName') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:border-red-600 focus:outline-none text-sm' :
-                                 isValid('fullName') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-green-500 focus:border-green-600 focus:outline-none text-sm' :
-                                 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
+                    <label class="block text-sm font-semibold text-gs-text mb-1.5">Full Name <span class="text-red-500">*</span></label>
+                    <input type="text" placeholder="John Doe" formControlName="fullName"
+                        [class]="isInvalid('fullName') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
                     @if (isInvalid('fullName')) {
-                        <p class="text-red-500 text-xs mt-1 font-medium">Full name is required (min 2 characters)</p>
+                        <p class="text-red-500 text-xs mt-1">Full name is required</p>
                     }
                 </div>
 
-                <!-- Email & Phone -->
+                <!-- Email & Mobile -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                        <label for="email" class="block text-sm font-semibold text-gs-text mb-1.5">Email <span class="text-red-500">*</span></label>
-                        <input id="email" type="email" placeholder="you@example.com" formControlName="email"
-                            [class]="isInvalid('email') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:border-red-600 focus:outline-none text-sm' :
-                                     isValid('email') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-green-500 focus:border-green-600 focus:outline-none text-sm' :
-                                     'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
+                        <label class="block text-sm font-semibold text-gs-text mb-1.5">Email <span class="text-red-500">*</span></label>
+                        <input type="email" placeholder="you@example.com" formControlName="email"
+                            [class]="isInvalid('email') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
                         @if (isInvalid('email')) {
-                            @if (registerForm.controls.email.errors?.['required']) {
-                                <p class="text-red-500 text-xs mt-1 font-medium">Email is required</p>
-                            } @else if (registerForm.controls.email.errors?.['email']) {
-                                <p class="text-red-500 text-xs mt-1 font-medium">Invalid email format</p>
-                            }
+                            <p class="text-red-500 text-xs mt-1">Valid email is required</p>
                         }
                     </div>
                     <div>
-                        <label for="phone" class="block text-sm font-semibold text-gs-text mb-1.5">Mobile Number <span class="text-red-500">*</span></label>
-                        <input id="phone" type="tel" placeholder="9876543210" formControlName="phone"
-                            [class]="isInvalid('phone') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:border-red-600 focus:outline-none text-sm' :
-                                     isValid('phone') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-green-500 focus:border-green-600 focus:outline-none text-sm' :
-                                     'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
-                        @if (isInvalid('phone')) {
-                            @if (registerForm.controls.phone.errors?.['required']) {
-                                <p class="text-red-500 text-xs mt-1 font-medium">Mobile number is required</p>
-                            } @else if (registerForm.controls.phone.errors?.['pattern']) {
-                                <p class="text-red-500 text-xs mt-1 font-medium">Enter a valid 10-digit mobile number</p>
-                            }
+                        <label class="block text-sm font-semibold text-gs-text mb-1.5">Mobile <span class="text-red-500">*</span></label>
+                        <input type="tel" placeholder="9876543210" formControlName="mobile"
+                            [class]="isInvalid('mobile') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
+                        @if (isInvalid('mobile')) {
+                            <p class="text-red-500 text-xs mt-1">Valid 10-digit mobile required</p>
                         }
                     </div>
                 </div>
-
-                <!-- Date of Birth -->
-                <div>
-                    <label for="dateOfBirth" class="block text-sm font-semibold text-gs-text mb-1.5">Date of Birth <span class="text-red-500">*</span></label>
-                    <input id="dateOfBirth" type="date" formControlName="dateOfBirth"
-                        [class]="isInvalid('dateOfBirth') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:border-red-600 focus:outline-none text-sm' :
-                                 isValid('dateOfBirth') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-green-500 focus:border-green-600 focus:outline-none text-sm' :
-                                 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
-                    @if (isInvalid('dateOfBirth')) {
-                        <p class="text-red-500 text-xs mt-1 font-medium">Date of birth is required</p>
-                    }
-                </div>
-
-                <div class="border-t border-gs-border/60 pb-1 pt-1"></div>
 
                 <!-- Address -->
                 <div>
-                    <label for="address" class="block text-sm font-semibold text-gs-text mb-1.5">Address <span class="text-red-500">*</span></label>
-                    <input id="address" type="text" placeholder="123, Main Street" formControlName="address"
-                        [class]="isInvalid('address') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:border-red-600 focus:outline-none text-sm' :
-                                 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
+                    <label class="block text-sm font-semibold text-gs-text mb-1.5">Address <span class="text-red-500">*</span></label>
+                    <input type="text" placeholder="123, Main Street" formControlName="address"
+                        [class]="isInvalid('address') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
                     @if (isInvalid('address')) {
-                        <p class="text-red-500 text-xs mt-1 font-medium">Address is required</p>
+                        <p class="text-red-500 text-xs mt-1">Address is required</p>
                     }
                 </div>
 
-                <!-- State, City, Pincode -->
+                <!-- State, City, Pin Code -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                     <div>
-                        <label for="state" class="block text-sm font-semibold text-gs-text mb-1.5">State <span class="text-red-500">*</span></label>
-                        <select id="state" formControlName="state"
-                            [class]="isInvalid('state') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:border-red-600 focus:outline-none text-sm' :
-                                     'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'">
-                            <option value="">Select State</option>
-                            @for (s of STATES; track s) {
-                                <option [value]="s">{{ s }}</option>
-                            }
-                        </select>
+                        <label class="block text-sm font-semibold text-gs-text mb-1.5">State <span class="text-red-500">*</span></label>
+                        <input type="text" placeholder="Karnataka" formControlName="state"
+                            [class]="isInvalid('state') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
                         @if (isInvalid('state')) {
-                            <p class="text-red-500 text-xs mt-1 font-medium">State is required</p>
+                            <p class="text-red-500 text-xs mt-1">State is required</p>
                         }
                     </div>
                     <div>
-                        <label for="city" class="block text-sm font-semibold text-gs-text mb-1.5">City <span class="text-red-500">*</span></label>
-                        <input id="city" type="text" placeholder="Bangalore" formControlName="city"
-                            [class]="isInvalid('city') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:border-red-600 focus:outline-none text-sm' :
-                                     'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
+                        <label class="block text-sm font-semibold text-gs-text mb-1.5">City <span class="text-red-500">*</span></label>
+                        <input type="text" placeholder="Bangalore" formControlName="city"
+                            [class]="isInvalid('city') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
                         @if (isInvalid('city')) {
-                            <p class="text-red-500 text-xs mt-1 font-medium">City is required</p>
+                            <p class="text-red-500 text-xs mt-1">City is required</p>
                         }
                     </div>
                     <div>
-                        <label for="pincode" class="block text-sm font-semibold text-gs-text mb-1.5">Pin Code <span class="text-red-500">*</span></label>
-                        <input id="pincode" type="text" placeholder="560001" formControlName="pincode"
-                            [class]="isInvalid('pincode') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:border-red-600 focus:outline-none text-sm' :
-                                     'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
-                        @if (isInvalid('pincode')) {
-                        <p class="text-red-500 text-xs mt-1 font-medium">
-                            {{ registerForm.controls.pincode.errors?.['required'] ? 'Pin code is required' : 'Enter a valid 6-digit pin code' }}
-                        </p>
+                        <label class="block text-sm font-semibold text-gs-text mb-1.5">Pin Code <span class="text-red-500">*</span></label>
+                        <input type="text" placeholder="560001" formControlName="pinCode"
+                            [class]="isInvalid('pinCode') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
+                        @if (isInvalid('pinCode')) {
+                            <p class="text-red-500 text-xs mt-1">Valid 6-digit pin code required</p>
                         }
                     </div>
                 </div>
 
-                <div class="border-t border-gs-border/60 pb-1 pt-1"></div>
-
-                <!-- Password & Confirm -->
+                <!-- Household-specific fields -->
+                @if (isHousehold) {
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                        <label for="password" class="block text-sm font-semibold text-gs-text mb-1.5">Password <span class="text-red-500">*</span></label>
-                        <input id="password" type="password" placeholder="Min 8 characters" formControlName="password"
-                            [class]="isInvalid('password') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:border-red-600 focus:outline-none text-sm' :
-                                     'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
-                        @if (isInvalid('password')) {
-                            @if (registerForm.controls.password.errors?.['required']) {
-                                <p class="text-red-500 text-xs mt-1 font-medium">Password is required</p>
-                            } @else if (registerForm.controls.password.errors?.['minlength']) {
-                                <p class="text-red-500 text-xs mt-1 font-medium">Password must be at least 8 characters</p>
-                            } @else if (registerForm.controls.password.errors?.['pattern']) {
-                                <p class="text-red-500 text-xs mt-1 font-medium">Must contain uppercase, lowercase, and a digit</p>
-                            }
+                        <label class="block text-sm font-semibold text-gs-text mb-1.5">No. of Members <span class="text-red-500">*</span></label>
+                        <input type="number" placeholder="4" formControlName="numberOfMembers" min="1" max="20"
+                            [class]="isInvalid('numberOfMembers') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
+                        @if (isInvalid('numberOfMembers')) {
+                            <p class="text-red-500 text-xs mt-1">Number of members is required</p>
                         }
                     </div>
                     <div>
-                        <label for="confirmPassword" class="block text-sm font-semibold text-gs-text mb-1.5">
-                            Confirm Password <span class="text-red-500">*</span></label>
-                        <input id="confirmPassword" type="password" placeholder="••••••••" formControlName="confirmPassword"
-                            [class]="(isInvalid('confirmPassword') || registerForm.errors?.['passwordsMismatch']) ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:border-red-600 focus:outline-none text-sm' :
-                                     'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
-                        @if ((isInvalid('confirmPassword') || registerForm.errors?.['passwordsMismatch']) && (registerForm.controls.confirmPassword.dirty || registerForm.controls.confirmPassword.touched || submitted())) {
-                            @if (registerForm.controls.confirmPassword.errors?.['required']) {
-                                <p class="text-red-500 text-xs mt-1 font-medium">Please confirm your password</p>
-                            } @else if (registerForm.errors?.['passwordsMismatch']) {
-                                <p class="text-red-500 text-xs mt-1 font-medium">Passwords do not match</p>
+                        <label class="block text-sm font-semibold text-gs-text mb-1.5">Dwelling Type <span class="text-red-500">*</span></label>
+                        <select formControlName="dwellingType"
+                            [class]="isInvalid('dwellingType') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'">
+                            <option value="">Select type</option>
+                            <option value="APARTMENT">Apartment</option>
+                            <option value="INDEPENDENT_HOUSE">Independent House</option>
+                            <option value="VILLA">Villa</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                        @if (isInvalid('dwellingType')) {
+                            <p class="text-red-500 text-xs mt-1">Dwelling type is required</p>
+                        }
+                    </div>
+                </div>
+                }
+
+                <!-- MSME-specific fields -->
+                @if (!isHousehold) {
+                <div class="space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gs-text mb-1.5">Business Name <span class="text-red-500">*</span></label>
+                            <input type="text" placeholder="Acme Pvt Ltd" formControlName="businessName"
+                                [class]="isInvalid('businessName') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
+                            @if (isInvalid('businessName')) {
+                                <p class="text-red-500 text-xs mt-1">Business name is required</p>
                             }
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gs-text mb-1.5">GST Number <span class="text-red-500">*</span></label>
+                            <input type="text" placeholder="22AAAAA0000A1Z5" formControlName="gstNumber"
+                                [class]="isInvalid('gstNumber') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
+                            @if (isInvalid('gstNumber')) {
+                                <p class="text-red-500 text-xs mt-1">Valid GST number is required</p>
+                            }
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gs-text mb-1.5">Business Type <span class="text-red-500">*</span></label>
+                            <select formControlName="businessType"
+                                [class]="isInvalid('businessType') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'">
+                                <option value="">Select type</option>
+                                <option value="MANUFACTURING">Manufacturing</option>
+                                <option value="RETAIL">Retail</option>
+                                <option value="SERVICES">Services</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                            @if (isInvalid('businessType')) {
+                                <p class="text-red-500 text-xs mt-1">Business type is required</p>
+                            }
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gs-text mb-1.5">No. of Employees <span class="text-red-500">*</span></label>
+                            <input type="number" placeholder="10" formControlName="numEmployees" min="1"
+                                [class]="isInvalid('numEmployees') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
+                            @if (isInvalid('numEmployees')) {
+                                <p class="text-red-500 text-xs mt-1">Number of employees is required</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+                }
+
+                <div class="border-t border-gs-border/60 pt-1"></div>
+
+                <!-- Password -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-gs-text mb-1.5">Password <span class="text-red-500">*</span></label>
+                        <input type="password" placeholder="Min 8 characters" formControlName="password"
+                            [class]="isInvalid('password') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
+                        @if (isInvalid('password')) {
+                            <p class="text-red-500 text-xs mt-1">Password must be at least 8 characters</p>
+                        }
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gs-text mb-1.5">Confirm Password <span class="text-red-500">*</span></label>
+                        <input type="password" placeholder="••••••••" formControlName="confirmPassword"
+                            [class]="(isInvalid('confirmPassword') || registerForm.errors?.['passwordsMismatch']) ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
+                        @if (registerForm.errors?.['passwordsMismatch'] && registerForm.controls.confirmPassword.touched) {
+                            <p class="text-red-500 text-xs mt-1">Passwords do not match</p>
                         }
                     </div>
                 </div>
 
-                <!-- Submit Button -->
-                <button type="submit" [disabled]="loading()"
-                    class="w-full bg-gs-dark text-white font-semibold py-3.5 rounded-lg hover:bg-gs-mid transition-colors mt-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed">
-                    @if (loading()) {
-                        <span class="inline-flex items-center gap-2">
-                            <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                            Creating Account...
-                        </span>
-                    } @else {
-                        Create Account
-                    }
+                <button type="submit"
+                    class="w-full bg-gs-dark text-white font-semibold py-3.5 rounded-lg hover:bg-gs-mid transition-colors mt-4 text-lg">
+                    Create Account
                 </button>
 
             </form>
 
-            <!-- Login Link -->
             <div class="pt-4 border-t border-gs-border text-center">
                 <p class="text-sm text-gs-body">
                     Already have an account?
-                    <a routerLink="/login" class="text-gs-dark hover:text-gs-accent font-semibold transition-colors">
-                        Sign in
-                    </a>
+                    <a routerLink="/login" class="text-gs-dark hover:text-gs-accent font-semibold transition-colors">Sign in</a>
                 </p>
             </div>
 

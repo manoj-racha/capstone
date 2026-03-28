@@ -12,6 +12,12 @@ export const ZONE_COLORS: Record<Zone, string> = {
   DEFAULTER: 'red'
 };
 
+export interface Recommendation {
+  category: string;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  description: string;
+}
+
 export interface CarbonScoreDetail {
   totalCo2: number;
   vehicleCo2: number;
@@ -28,10 +34,10 @@ export interface CarbonScoreDetail {
   discountBreakdown: string;
   generatedAt: string;
   recommendations: Recommendation[];
+  /** Gemini plain-language summary; optional */
+  aiExplanation?: string | null;
 }
 
-export interface Recommendation {
-  category: string;
-  priority: 'HIGH' | 'MEDIUM' | 'LOW';
-  description: string;
+export interface CarbonScoreResponse extends CarbonScoreDetail {
+  improvementPercentage?: number;
 }

@@ -106,16 +106,22 @@ export class VerifyOtpComponent implements OnInit, OnDestroy {
     if (this.resendCooldown() > 0) return;
     this.errorMessage.set('');
 
-    this.authService.register({
-      fullName: '', email: this.email(), phone: '', dateOfBirth: '',
-      address: '', state: '', city: '', pinCode: '', password: ''
-    }).subscribe({
-      next: () => {
-        this.toast.success('OTP resent to ' + this.email());
+    this.authService.resendOtp(this.email()).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toast.success('OTP resent to ' + this.email());
+        } else {
+          this.toast.info(res.message || 'If this email is registered, a new OTP has been sent.');
+        }
         this.startCooldown();
       },
-      error: () => {
-        this.toast.info('If this email is registered, a new OTP has been sent.');
+      error: (err) => {
+        const message = err.error?.message || err.error?.error;
+        if (message) {
+          this.toast.info(message);
+        } else {
+          this.toast.info('If this email is registered, a new OTP has been sent.');
+        }
         this.startCooldown();
       }
     });

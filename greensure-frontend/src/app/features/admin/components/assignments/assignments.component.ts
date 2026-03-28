@@ -38,7 +38,6 @@ export class AssignmentsComponent implements OnInit {
 
     ngOnInit(): void {
         this.loadPage();
-        this.loadAvailableAgents();
     }
 
     setTab(tab: 'UNASSIGNED' | 'ACTIVE'): void {
@@ -55,14 +54,16 @@ export class AssignmentsComponent implements OnInit {
                 next: (res) => {
                     this.loading.set(false);
                     if (res.success && res.data) {
-                        this.unassignedDeclarations.set(res.data);
+                        this.unassignedDeclarations.set(Array.isArray(res.data) ? res.data : []);
                     } else {
                         this.error.set(res.error || 'Failed to load unassigned declarations.');
+                        this.unassignedDeclarations.set([]);
                     }
                 },
                 error: (err) => {
                     this.loading.set(false);
                     this.error.set(err.error?.error || 'Failed to load unassigned declarations.');
+                    this.unassignedDeclarations.set([]);
                 }
             });
             return;
@@ -72,24 +73,31 @@ export class AssignmentsComponent implements OnInit {
             next: (res) => {
                 this.loading.set(false);
                 if (res.success && res.data) {
-                    this.activeAssignments.set(res.data);
+                    this.activeAssignments.set(Array.isArray(res.data) ? res.data : []);
                 } else {
                     this.error.set(res.error || 'Failed to load active assignments.');
+                    this.activeAssignments.set([]);
                 }
             },
             error: (err) => {
                 this.loading.set(false);
                 this.error.set(err.error?.error || 'Failed to load active assignments.');
+                this.activeAssignments.set([]);
             }
         });
     }
 
-    loadAvailableAgents(): void {
-        this.adminService.getAvailableAgents().subscribe({
+    loadAvailableAgents(pinCode?: string): void {
+        this.adminService.getAvailableAgents(pinCode).subscribe({
             next: (res) => {
                 if (res.success && res.data) {
                     this.availableAgents.set(res.data);
+                    return;
                 }
+                this.availableAgents.set([]);
+            },
+            error: () => {
+                this.availableAgents.set([]);
             }
         });
     }
@@ -97,6 +105,7 @@ export class AssignmentsComponent implements OnInit {
     openAssignModal(declaration: UnassignedDeclaration): void {
         this.selectedDeclaration.set(declaration);
         this.selectedAgentId.set(null);
+        this.loadAvailableAgents(declaration.pinCode);
         this.assignModalOpen.set(true);
     }
 
@@ -126,7 +135,6 @@ export class AssignmentsComponent implements OnInit {
                 if (res.success) {
                     this.toast.success('Agent assigned successfully');
                     this.closeAssignModal();
-                    this.loadAvailableAgents();
                     this.loadPage();
                     return;
                 }
@@ -143,6 +151,7 @@ export class AssignmentsComponent implements OnInit {
         this.selectedAssignment.set(assignment);
         this.reassignAgentId.set(null);
         this.reassignReason.set('');
+        this.loadAvailableAgents(assignment.userPinCode);
         this.reassignModalOpen.set(true);
     }
 
@@ -180,7 +189,6 @@ export class AssignmentsComponent implements OnInit {
                 if (res.success) {
                     this.toast.success('Assignment reassigned successfully');
                     this.closeReassignModal();
-                    this.loadAvailableAgents();
                     this.loadPage();
                     return;
                 }
@@ -216,7 +224,6 @@ export class AssignmentsComponent implements OnInit {
                 if (res.success) {
                     this.toast.success('Assignment cancelled successfully');
                     this.closeCancelConfirm();
-                    this.loadAvailableAgents();
                     this.loadPage();
                     return;
                 }

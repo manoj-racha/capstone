@@ -28,13 +28,23 @@ export class ReportsComponent implements OnInit {
         this.adminService.getAgentPerformanceReport().subscribe({
             next: (res) => {
                 if (res.success && res.data) {
-                    this.agentPerformance.set(res.data);
+                    const raw = res.data as any;
+                    const rows = Array.isArray(raw)
+                        ? raw
+                        : Array.isArray(raw?.content)
+                            ? raw.content
+                            : Array.isArray(raw?.items)
+                                ? raw.items
+                                : [];
+                    this.agentPerformance.set(rows);
                 } else {
                     this.performanceError.set(res.message || 'Failed to load performance metrics.');
+                    this.agentPerformance.set([]);
                 }
             },
             error: (err) => {
                 this.performanceError.set(err.error?.error || 'Failed to load performance data.');
+                this.agentPerformance.set([]);
             }
         });
     }

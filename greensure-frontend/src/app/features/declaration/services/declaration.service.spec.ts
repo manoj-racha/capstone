@@ -32,12 +32,10 @@ describe('DeclarationService', () => {
     req.flush({ success: true, data: {} });
   });
 
-  it('should save declaration draft', () => {
-    const payload = { declarationYear: 2026 } as any;
-
-    service.saveDraft(1, payload).subscribe();
-
-    const req = httpMock.expectOne(`${baseUrl}/declaration/1/save`);
+  it('should save household data', () => {
+    const payload = { numberOfMembers: 3 };
+    service.saveHousehold(1, payload).subscribe();
+    const req = httpMock.expectOne(`${baseUrl}/declaration/1/household`);
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toEqual(payload);
     req.flush({ success: true, data: {} });
@@ -47,17 +45,17 @@ describe('DeclarationService', () => {
     service.submitDeclaration(1).subscribe();
 
     const req = httpMock.expectOne(`${baseUrl}/declaration/1/submit`);
-    expect(req.request.method).toBe('PUT');
+    expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({});
     req.flush({ success: true, data: {} });
   });
 
   it('should add vehicle', () => {
-    const vehicle = { vehicleType: 'CAR', fuelType: 'PETROL', kmPerMonth: 500, quantity: 1 } as any;
+    const vehicle = { vehicleCategory: 'FOUR_WHEELER', registrationNumber: 'MH01AA1234', make: 'Tata', model: 'Nexon', year: 2023, fuelType: 'PETROL', mileageBand: 'BAND_2', dataSource: 'MANUAL' } as any;
 
     service.addVehicle(3, vehicle).subscribe();
 
-    const req = httpMock.expectOne(`${baseUrl}/declaration/3/vehicle`);
+    const req = httpMock.expectOne(`${baseUrl}/declaration/3/vehicles`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(vehicle);
     req.flush({ success: true, data: {} });
@@ -66,13 +64,13 @@ describe('DeclarationService', () => {
   it('should remove vehicle', () => {
     service.removeVehicle(3, 9).subscribe();
 
-    const req = httpMock.expectOne(`${baseUrl}/declaration/3/vehicle/9`);
+    const req = httpMock.expectOne(`${baseUrl}/declaration/3/vehicles/9`);
     expect(req.request.method).toBe('DELETE');
     req.flush({ success: true });
   });
 
   it('should get declaration by id', () => {
-    service.getDeclaration(11).subscribe();
+    service.getDeclarationById(11).subscribe();
 
     const req = httpMock.expectOne(`${baseUrl}/declaration/11`);
     expect(req.request.method).toBe('GET');

@@ -86,7 +86,7 @@
                 <label class="block text-sm font-medium text-gs-muted mb-2">Temporary Password <span class="text-red-500">*</span></label>
                 <input type="password" formControlName="password" autocomplete="new-password"
                     class="w-full bg-gs-bg border border-gs-border text-gs-text rounded-lg px-4 py-3 focus:outline-none focus:border-gs-dark focus:ring-1 focus:ring-gs-green transition-colors" [class.border-red-500]="createForm.get('password')?.invalid && (createForm.get('password')?.dirty || createForm.get('password')?.touched || submitting())" [class.focus:border-red-600]="createForm.get('password')?.invalid && (createForm.get('password')?.dirty || createForm.get('password')?.touched || submitting())"
-                    placeholder="Min. 6 characters">
+                    placeholder="Min. 8 characters">
                 @if (createForm.get('password')?.touched && createForm.get('password')?.invalid) {
                 <div class="text-red-400 text-xs mt-1">Password is required (min. 6 chars).</div>
                 }

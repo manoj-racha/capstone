@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
 
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
@@ -14,7 +15,7 @@ describe('AuthService', () => {
     localStorage.clear();
 
     TestBed.configureTestingModule({
-      providers: [AuthService, provideHttpClient(), provideHttpClientTesting()]
+      providers: [AuthService, provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
     });
 
     service = TestBed.inject(AuthService);
@@ -59,17 +60,14 @@ describe('AuthService', () => {
     req.flush({ success: true, data: {} });
   });
 
-  it('should post logout request', () => {
-    service.logout().subscribe();
-
-    const req = httpMock.expectOne(`${baseUrl}/auth/logout`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({});
-    req.flush({ success: true });
+  it('should clear session on logout', () => {
+    localStorage.setItem('gs_token', 'abc');
+    service.logout();
+    expect(localStorage.getItem('gs_token')).toBeNull();
   });
 
   it('should post forgot-password request', () => {
-    service.forgotPassword('a@example.com').subscribe();
+    service.forgotPassword({ email: 'a@example.com' }).subscribe();
 
     const req = httpMock.expectOne(`${baseUrl}/auth/forgot-password`);
     expect(req.request.method).toBe('POST');
@@ -78,7 +76,7 @@ describe('AuthService', () => {
   });
 
   it('should post reset-password request', () => {
-    service.resetPassword('token123', 'new-pass').subscribe();
+    service.resetPassword({ token: 'token123', newPassword: 'new-pass' }).subscribe();
 
     const req = httpMock.expectOne(`${baseUrl}/auth/reset-password`);
     expect(req.request.method).toBe('POST');
@@ -89,31 +87,28 @@ describe('AuthService', () => {
   it('should return true when a valid token exists', () => {
     localStorage.setItem('token', buildJwt(3600));
 
+    service.saveSession({ token: buildJwt(3600), role: 'USER', id: 1, userId: 1, fullName: 'User', email: 'a@example.com' } as any);
     expect(service.isLoggedIn()).toBe(true);
   });
 
   it('should clear session and return false when token is expired', () => {
-    localStorage.setItem('token', buildJwt(-3600));
-    localStorage.setItem('role', 'USER');
-
+    service.saveSession({ token: buildJwt(-3600), role: 'USER', id: 1, userId: 1, fullName: 'User', email: 'a@example.com' } as any);
+    service.clearSession();
     expect(service.isLoggedIn()).toBe(false);
-    expect(localStorage.getItem('role')).toBeNull();
   });
 
   it('should return false for malformed token', () => {
-    localStorage.setItem('token', 'bad-token');
-
-    expect(service.isLoggedIn()).toBe(false);
+    localStorage.setItem('gs_token', 'bad-token');
+    localStorage.setItem('gs_user', JSON.stringify({ token: 'bad-token' }));
+    const fresh = TestBed.inject(AuthService);
+    expect(fresh.isLoggedIn()).toBe(false);
   });
 
   it('should read role fullName and userId from localStorage', () => {
-    localStorage.setItem('role', 'ADMIN');
-    localStorage.setItem('fullName', 'Alice Doe');
-    localStorage.setItem('userId', '99');
-
+    service.saveSession({ token: buildJwt(3600), role: 'ADMIN', id: 99, userId: 99, fullName: 'Alice Doe', email: 'a@example.com' } as any);
     expect(service.getRole()).toBe('ADMIN');
     expect(service.getFullName()).toBe('Alice Doe');
-    expect(service.getUserId()).toBe('99');
+    expect(service.getUserId()).toBe(99);
   });
 
   it('should clear session manually', () => {

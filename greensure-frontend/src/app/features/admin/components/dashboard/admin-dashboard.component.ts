@@ -33,20 +33,19 @@ export class AdminDashboardComponent implements OnInit {
     }
 
     get totalAgents(): number {
-        return this.overview()?.agentPerformance?.length || 0;
+        return this.overview()?.totalAgents || 0;
     }
 
     // Derived computations
     get flaggedAgents(): number {
-        return this.overview()?.agentPerformance?.filter(a => a.strikes >= 3 || !a.active).length || 0;
+        return this.overview()?.flaggedAgents || 0;
     }
 
     get pendingVerifications(): number {
-        return this.overview()?.declarationsByStatus?.['SUBMITTED'] || 
-               this.overview()?.declarationsByStatus?.['UNDER_VERIFICATION'] || 0;
+        return this.overview()?.pendingVerifications || 0;
     }
 
     get totalScoresGenerated(): number {
-        return this.overview()?.declarationsByStatus?.['VERIFIED'] || 0;
+        return this.overview()?.totalScoresGenerated || 0;
     }
 }

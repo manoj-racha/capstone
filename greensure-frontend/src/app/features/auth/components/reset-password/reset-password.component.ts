@@ -53,7 +53,7 @@ export class ResetPasswordComponent implements OnInit {
         const newPassword = this.form.controls.newPassword.value || '';
 
         this.submitting.set(true);
-        this.authService.resetPassword(this.token(), newPassword).subscribe({
+        this.authService.resetPassword({ token: this.token(), newPassword }).subscribe({
             next: (res) => {
                 this.submitting.set(false);
                 if (!res.success) {

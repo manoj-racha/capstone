@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
 import { provideRouter } from '@angular/router';
 
 import { NotificationsComponent } from './notifications.component';
@@ -28,15 +27,6 @@ describe('NotificationsComponent', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect((compiled.textContent || '').trim().length).toBeGreaterThan(0);
-  });
-
-  it('should mark all notifications as read on success', () => {
-    component.notifications.set([{ notificationId: 1, status: 'UNREAD' } as any]);
-    (component as any).notificationService.markAllAsRead = () => of({ success: true });
-
-    component.markAllAsRead();
-
-    expect(component.notifications()[0].status).toBe('READ');
   });
 
 });

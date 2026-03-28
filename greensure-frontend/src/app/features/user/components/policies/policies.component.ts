@@ -133,7 +133,7 @@ export class PoliciesComponent implements OnInit {
             if (co2 < 500) zoneDiscount = 30;
             else if (co2 < 1000) zoneDiscount = 25;
             else zoneDiscount = 20;
-        } else if (zone === 'GREEN_IMPROVER') {
+        } else if (zone === 'IMPROVER') {
             if (co2 < 1800) zoneDiscount = 15;
             else if (co2 < 2100) zoneDiscount = 10;
             else zoneDiscount = 5;

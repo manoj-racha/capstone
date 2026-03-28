@@ -34,3 +34,30 @@ export interface AvailableAgent {
   assignedZones: string;
   strikeCount: number;
 }
+
+export interface AdminAnalytics extends AdminOverview {
+  averageCo2: number;
+  declarationsByStatus?: Record<string, number>;
+  zoneDistribution?: Record<string, number>;
+  fraudRiskBreakdown?: Record<string, number>;
+  agentPerformance: Array<{
+    agentId: number;
+    agentName: string;
+    activeAssignments: number;
+    completedAssignments: number;
+    strikes: number;
+    active: boolean;
+  }>;
+}
+
+export interface ManualAssignRequest {
+  declarationId: number;
+  agentId: number;
+  reason?: string;
+}
+
+export interface ReassignRequest {
+  declarationId: number;
+  newAgentId: number;
+  reason: string;
+}

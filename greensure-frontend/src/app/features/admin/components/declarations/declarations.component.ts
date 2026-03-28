@@ -39,15 +39,19 @@ export class DeclarationsComponent implements OnInit {
 
     ngOnInit(): void {
         this.loadDeclarations();
-        this.loadAvailableAgents();
     }
 
-    loadAvailableAgents(): void {
-        this.adminService.getAvailableAgents().subscribe({
+    loadAvailableAgents(pinCode?: string): void {
+        this.adminService.getAvailableAgents(pinCode).subscribe({
             next: (res) => {
                 if (res.success && res.data) {
                     this.availableAgents.set(res.data);
+                    return;
                 }
+                this.availableAgents.set([]);
+            },
+            error: () => {
+                this.availableAgents.set([]);
             }
         });
     }
@@ -61,15 +65,18 @@ export class DeclarationsComponent implements OnInit {
         this.adminService.getDeclarations(stat, this.currentPage(), this.pageSize()).subscribe({
             next: (res) => {
                 if (res.success && res.data) {
-                    this.declarations.set(res.data.content);
-                    this.totalElements.set(res.data.totalElements);
-                    this.totalPages.set(res.data.totalPages);
+                    const page = res.data as any;
+                    this.declarations.set(Array.isArray(page?.content) ? page.content : []);
+                    this.totalElements.set(typeof page?.totalElements === 'number' ? page.totalElements : 0);
+                    this.totalPages.set(typeof page?.totalPages === 'number' ? page.totalPages : 0);
                 } else {
                     this.error.set(res.error || 'Failed to load declarations.');
+                    this.declarations.set([]);
                 }
             },
             error: (err) => {
                 this.error.set(err.error?.error || 'Failed to load declarations.');
+                this.declarations.set([]);
             }
         });
     }
@@ -102,6 +109,7 @@ export class DeclarationsComponent implements OnInit {
         this.reassignMode.set(!!declaration.assignedAgentId);
         this.selectedAgentId.set(null);
         this.reason.set('');
+        this.loadAvailableAgents((declaration as any).pinCode);
         this.assignmentModalOpen.set(true);
     }
 
@@ -148,7 +156,6 @@ export class DeclarationsComponent implements OnInit {
                 if (res.success) {
                     this.toast.success(this.reassignMode() ? 'Assignment reassigned successfully' : 'Agent assigned successfully');
                     this.closeAssignmentModal();
-                    this.loadAvailableAgents();
                     this.loadDeclarations();
                     return;
                 }

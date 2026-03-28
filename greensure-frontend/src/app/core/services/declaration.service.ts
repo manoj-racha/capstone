@@ -113,11 +113,92 @@ export class DeclarationService {
 
   /** GET /declaration/{id} — full declaration detail */
   getDeclarationById(id: number): Observable<ApiResponse<DeclarationDetail>> {
-    return this.http.get<ApiResponse<DeclarationDetail>>(`${this.base}/${id}`);
+    return this.http.get<ApiResponse<any>>(`${this.base}/${id}`).pipe(
+      map((res) => {
+        if (!res?.data) {
+          return res as ApiResponse<DeclarationDetail>;
+        }
+
+        const raw = res.data;
+        const normalized: DeclarationDetail = {
+          ...raw,
+          householdSize: raw.householdSize ?? raw.householdMembers ?? 0,
+          electricityBills: Array.isArray(raw.electricityBills) ? raw.electricityBills : [],
+          electricityData: raw.electricityData ?? (
+            raw.provider
+              ? {
+                  provider: raw.provider,
+                  consumerNumber: raw.consumerNumber ?? '',
+                  userDeclaredMonthlyKwh: raw.userDeclaredMonthlyKwh ?? 0,
+                  ocrComputedMonthlyKwh: raw.ocrComputedMonthlyKwh ?? null,
+                  billsUploaded: raw.billsUploaded ?? 0,
+                  agentCorrectedMonthlyKwh: raw.agentCorrectedMonthlyKwh ?? null,
+                  billUrls: raw.electricityBillUrls ?? []
+                }
+              : null
+          ),
+          cookingData: raw.cookingData ?? (
+            raw.cookingFuelType
+              ? {
+                  fuelType: raw.cookingFuelType,
+                  pngConsumerNumber: raw.pngConsumerNumber ?? null,
+                  userDeclaredCylinders: raw.userDeclaredCylinders ?? raw.cylinders ?? null,
+                  ocrComputedCylinders: raw.ocrComputedCylinders ?? null,
+                  agentCorrectedFuelType: raw.agentCorrectedFuelType ?? null,
+                  agentCorrectedCylinders: raw.agentCorrectedCylinders ?? null,
+                  billUrls: raw.billUrls ? this.safeParseBillUrls(raw.billUrls) : []
+                }
+              : null
+          ),
+          solarData: raw.solarData ?? (
+            raw.hasSolar !== undefined
+              ? {
+                  hasSolar: !!raw.hasSolar,
+                  capacityKw: raw.solarCapacityKw ?? null,
+                  certificateUrl: raw.certificateUrl ?? null,
+                  mnreVerified: !!raw.mnreVerified,
+                  agentCorrectedCapacityKw: raw.agentCorrectedCapacityKw ?? null,
+                  agentVerifiedSolar: !!raw.agentVerifiedSolar
+                }
+              : null
+          ),
+          lifestyleData: raw.lifestyleData ?? (
+            raw.publicTransportUsage
+              ? {
+                  publicTransportUsage: raw.publicTransportUsage,
+                  wastesRecycling: !!raw.wastesRecycling
+                }
+              : null
+          )
+        };
+
+        return {
+          ...res,
+          data: normalized
+        } as ApiResponse<DeclarationDetail>;
+      })
+    );
   }
 
   /** GET /declaration/history — all past declarations */
   getHistory(): Observable<ApiResponse<DeclarationSummary[]>> {
     return this.http.get<ApiResponse<DeclarationSummary[]>>(`${this.base}/history`);
+  }
+
+  private safeParseBillUrls(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      return value.filter((u): u is string => typeof u === 'string' && u.trim().length > 0);
+    }
+    if (typeof value !== 'string' || value.trim().length === 0) {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed)
+        ? parsed.filter((u): u is string => typeof u === 'string' && u.trim().length > 0)
+        : [];
+    } catch {
+      return [];
+    }
   }
 }

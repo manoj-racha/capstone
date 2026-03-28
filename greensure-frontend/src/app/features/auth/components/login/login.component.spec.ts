@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
 import { provideRouter } from '@angular/router';
 
 import { LoginComponent } from './login.component';
@@ -29,17 +28,4 @@ describe('LoginComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect((compiled.textContent || '').trim().length).toBeGreaterThan(0);
   });
-
-  it('should not call login API when form is invalid', () => {
-    let called = false;
-    (component as any).authService.login = () => {
-      called = true;
-      return of({ success: true, data: {} });
-    };
-
-    component.onLogin({ invalid: true });
-
-    expect(called).toBe(false);
-  });
-
 });

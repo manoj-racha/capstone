@@ -33,17 +33,17 @@ export class AdminAnalyticsComponent implements OnInit {
 
   getStatusEntries(): { key: string; value: number }[] {
     const data = this.analytics()?.declarationsByStatus;
-    return data ? Object.entries(data).map(([key, value]) => ({ key, value })) : [];
+    return data ? Object.entries(data).map(([key, value]) => ({ key, value: value as number })) : [];
   }
 
   getZoneEntries(): { key: string; value: number }[] {
     const data = this.analytics()?.zoneDistribution;
-    return data ? Object.entries(data).map(([key, value]) => ({ key, value })) : [];
+    return data ? Object.entries(data).map(([key, value]) => ({ key, value: value as number })) : [];
   }
 
   getFraudEntries(): { key: string; value: number }[] {
     const data = this.analytics()?.fraudRiskBreakdown;
-    return data ? Object.entries(data).map(([key, value]) => ({ key, value })) : [];
+    return data ? Object.entries(data).map(([key, value]) => ({ key, value: value as number })) : [];
   }
 
   getZoneColor(zone: string): string {

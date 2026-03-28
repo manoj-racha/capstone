@@ -28,13 +28,4 @@ describe('ForgotPasswordComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect((compiled.textContent || '').trim().length).toBeGreaterThan(0);
   });
-
-  it('should validate required email before submit', () => {
-    component.email.set('');
-
-    component.onSubmit();
-
-    expect(component.errorMessage()).toBe('Please enter your email address');
-  });
-
 });

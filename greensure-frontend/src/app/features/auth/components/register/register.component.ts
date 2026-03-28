@@ -175,10 +175,11 @@ export class RegisterComponent {
         this.authService.register(request).subscribe({
             next: (res) => {
                 if (res.success) {
-                    this.successMessage.set('Registration successful! Redirecting to login...');
-                    setTimeout(() => this.router.navigate(['/login']), 2000);
+                    sessionStorage.setItem('gs_otp_email', baseRequest.email);
+                    this.successMessage.set('Registration successful! OTP sent to your email. Redirecting...');
+                    setTimeout(() => this.router.navigate(['/verify-otp']), 1200);
                 } else {
-                    this.errorMessage.set(res.error || 'Registration failed');
+                    this.errorMessage.set(res.message || res.error || 'Registration failed');
                 }
             },
             error: (err) => {

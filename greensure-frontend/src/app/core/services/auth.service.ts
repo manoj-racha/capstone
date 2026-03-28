@@ -21,6 +21,11 @@ export class AuthService {
   private readonly base = `${environment.apiUrl}/auth`;
   private readonly TOKEN_KEY = 'gs_token';
   private readonly USER_KEY = 'gs_user';
+  private readonly LEGACY_TOKEN_KEY = 'token';
+  private readonly LEGACY_ROLE_KEY = 'role';
+  private readonly LEGACY_USER_ID_KEY = 'userId';
+  private readonly LEGACY_FULL_NAME_KEY = 'fullName';
+  private readonly LEGACY_USER_TYPE_KEY = 'userType';
 
   // ── Reactive state ──────────────────────────────────────────
   readonly currentUser = signal<AuthResponse | null>(null);
@@ -61,6 +66,10 @@ export class AuthService {
     );
   }
 
+  resendOtp(email: string): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.base}/resend-otp`, { email });
+  }
+
   // ── Login ──────────────────────────────────────────────────
 
   login(req: LoginRequest): Observable<ApiResponse<AuthResponse>> {
@@ -88,6 +97,12 @@ export class AuthService {
   saveSession(response: AuthResponse): void {
     localStorage.setItem(this.TOKEN_KEY, response.token);
     localStorage.setItem(this.USER_KEY, JSON.stringify(response));
+    // Keep legacy keys in sync while older components are migrated.
+    localStorage.setItem(this.LEGACY_TOKEN_KEY, response.token);
+    localStorage.setItem(this.LEGACY_ROLE_KEY, response.role);
+    localStorage.setItem(this.LEGACY_USER_ID_KEY, String(response.id ?? response.userId ?? ''));
+    localStorage.setItem(this.LEGACY_FULL_NAME_KEY, response.fullName ?? '');
+    localStorage.setItem(this.LEGACY_USER_TYPE_KEY, String(response.userType ?? response.role));
     this.currentUser.set(response);
   }
 
@@ -98,7 +113,7 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    return localStorage.getItem(this.TOKEN_KEY) || localStorage.getItem(this.LEGACY_TOKEN_KEY);
   }
 
   getUser(): AuthResponse | null {
@@ -110,7 +125,7 @@ export class AuthService {
   }
 
   getUserId(): number | null {
-    return this.currentUser()?.userId ?? null;
+    return this.currentUser()?.userId ?? this.currentUser()?.id ?? null;
   }
 
   getFullName(): string | null {
@@ -122,6 +137,11 @@ export class AuthService {
   private clearStorage(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(this.LEGACY_TOKEN_KEY);
+    localStorage.removeItem(this.LEGACY_ROLE_KEY);
+    localStorage.removeItem(this.LEGACY_USER_ID_KEY);
+    localStorage.removeItem(this.LEGACY_FULL_NAME_KEY);
+    localStorage.removeItem(this.LEGACY_USER_TYPE_KEY);
   }
 
   private isTokenExpired(token: string): boolean {

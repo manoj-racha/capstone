@@ -54,16 +54,17 @@ export class AgentWorkspaceComponent implements OnInit {
     });
   }
 
-  getStatusClass(status: MatchStatus): string {
+  getStatusClass(status: MatchStatus | undefined): string {
     switch (status) {
       case 'MATCH': return 'bg-green-100 text-green-700';
       case 'MISMATCH': return 'bg-red-100 text-red-700';
       case 'UNVERIFIED': return 'bg-yellow-100 text-yellow-700';
       case 'NOT_APPLICABLE': return 'bg-gray-100 text-gray-500';
+      default: return 'bg-gray-100 text-gray-400';
     }
   }
 
-  getRiskClass(level: string): string {
+  getRiskClass(level?: string): string {
     switch (level) {
       case 'HIGH': return 'bg-red-500 text-white';
       case 'MEDIUM': return 'bg-amber-500 text-white';

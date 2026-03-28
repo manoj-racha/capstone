@@ -36,15 +36,18 @@ export class UsersComponent implements OnInit {
         this.adminService.getUsers(undefined, this.statusFilter(), this.currentPage(), this.pageSize()).subscribe({
             next: (res) => {
                 if (res.success && res.data) {
-                    this.users.set(res.data.content);
-                    this.totalElements.set(res.data.totalElements);
-                    this.totalPages.set(res.data.totalPages);
+                    const page = res.data as any;
+                    this.users.set(Array.isArray(page?.content) ? page.content : []);
+                    this.totalElements.set(typeof page?.totalElements === 'number' ? page.totalElements : 0);
+                    this.totalPages.set(typeof page?.totalPages === 'number' ? page.totalPages : 0);
                 } else {
                     this.error.set(res.message || 'Failed to load users.');
+                    this.users.set([]);
                 }
             },
             error: (err) => {
                 this.error.set(err.error?.error || 'Failed to load users.');
+                this.users.set([]);
             }
         });
     }

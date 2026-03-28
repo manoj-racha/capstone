@@ -5,15 +5,10 @@ import { routes } from './app.routes';
 import { authInterceptor } from './interceptors/auth-interceptor';
 import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
-import { toastInterceptor } from './core/interceptors/toast.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    // Tells Angular to use zone-based change detection
-    // (more compatible than zoneless for Angular 21 beginners)
     provideZoneChangeDetection({ eventCoalescing: true }),
-
-    // Registers all our routes defined in app.routes.ts setup with anchor scrolling
     provideRouter(
       routes,
       withInMemoryScrolling({
@@ -21,8 +16,6 @@ export const appConfig: ApplicationConfig = {
         anchorScrolling: 'enabled'
       })
     ),
-
-    // Enables HttpClient so all our services can make API calls, with Auth & Loading interceptors
-    provideHttpClient(withInterceptors([authInterceptor, loadingInterceptor, toastInterceptor, errorInterceptor]))
+    provideHttpClient(withInterceptors([authInterceptor, loadingInterceptor, errorInterceptor]))
   ]
 };

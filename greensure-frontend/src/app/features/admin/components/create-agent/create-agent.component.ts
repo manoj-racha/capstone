@@ -40,12 +40,14 @@ export class CreateAgentComponent implements OnInit {
         this.error.set('');
 
         const formValue = this.createForm.value;
-        const payload = {
+        const payload: import('../../../../core/models/admin').CreateAgentRequest = {
+            agentType: formValue.agentType,
             fullName: formValue.fullName,
             email: formValue.email,
-            phone: formValue.mobile,
-            pinCode: formValue.assignedZones.split(',')[0].trim(),
-            password: formValue.password
+            mobile: formValue.mobile,
+            password: formValue.password,
+            employeeId: formValue.employeeId,
+            assignedZones: formValue.assignedZones
         };
 
         this.adminService.createAgent(payload).subscribe({
@@ -59,7 +61,10 @@ export class CreateAgentComponent implements OnInit {
             },
             error: (err) => {
                 this.submitting.set(false);
-                this.error.set(err.error?.error || 'An error occurred during agent creation.');
+                const msg = err.error?.message || err.error?.error
+                    || (err.error?.data ? Object.values(err.error.data).join(', ') : null)
+                    || 'An error occurred during agent creation.';
+                this.error.set(msg);
             }
         });
     }

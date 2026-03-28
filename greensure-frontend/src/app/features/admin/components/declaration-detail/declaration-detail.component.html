@@ -55,6 +55,10 @@
             <!-- Core Metrics Grid -->
             <h3 class="text-lg font-semibold text-gs-text mb-4">Declared Footprint Metrics</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
+                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Household Members</p>
+                    <p class="text-xl font-bold text-gs-text">{{ declaration()?.householdSize || 0 }}</p>
+                </div>
                 <!-- Electricity -->
                 <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
                     <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Electricity</p>
@@ -87,6 +91,20 @@
                 </div>
             </div>
 
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
+                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Electricity Consumer</p>
+                    <p class="text-sm font-medium text-gs-text">{{ declaration()?.electricityData?.consumerNumber || 'N/A' }}</p>
+                </div>
+                <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
+                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-1">Cooking Details</p>
+                    <p class="text-sm font-medium text-gs-text">
+                        PNG: {{ declaration()?.cookingData?.pngConsumerNumber || 'N/A' }},
+                        Cylinders: {{ declaration()?.cookingData?.userDeclaredCylinders ?? 'N/A' }}
+                    </p>
+                </div>
+            </div>
+
             <!-- Vehicles Section -->
             @if (declaration()?.vehicles && declaration()!.vehicles.length > 0) {
             <div class="mt-8">
@@ -99,6 +117,7 @@
                                 <th class="px-4 py-3">Make / Model</th>
                                 <th class="px-4 py-3">Fuel Type</th>
                                 <th class="px-4 py-3">Mileage Band</th>
+                                <th class="px-4 py-3">Documents</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-green-900/10">
@@ -112,6 +131,19 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-gs-text font-medium">{{ v.mileageBand.replace('_', ' ') }}</td>
+                                <td class="px-4 py-3">
+                                    @if (v.documents && v.documents.length > 0) {
+                                    <div class="flex flex-col gap-1">
+                                        @for (doc of v.documents; track doc.documentId) {
+                                        <a [href]="doc.documentUrl" target="_blank" rel="noopener noreferrer" class="text-xs text-gs-dark hover:underline">
+                                            {{ doc.originalFileName || doc.documentType }}
+                                        </a>
+                                        }
+                                    </div>
+                                    } @else {
+                                    <span class="text-xs text-gs-muted">No docs</span>
+                                    }
+                                </td>
                             </tr>
                             }
                         </tbody>
@@ -119,6 +151,45 @@
                 </div>
             </div>
             }
+
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
+                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-2">Electricity Bills</p>
+                    @if (declaration()?.electricityData?.billUrls?.length) {
+                    <div class="flex flex-col gap-1">
+                        @for (url of declaration()!.electricityData!.billUrls!; track $index) {
+                        <a [href]="url" target="_blank" rel="noopener noreferrer" class="text-xs text-gs-dark hover:underline">Bill {{ $index + 1 }}</a>
+                        }
+                    </div>
+                    } @else {
+                    <p class="text-xs text-gs-muted">No bill documents</p>
+                    }
+                </div>
+
+                <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
+                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-2">Solar Certificate</p>
+                    @if (declaration()?.solarData?.certificateUrl) {
+                    <a [href]="declaration()!.solarData!.certificateUrl!" target="_blank" rel="noopener noreferrer" class="text-xs text-gs-dark hover:underline">
+                        View uploaded certificate
+                    </a>
+                    } @else {
+                    <p class="text-xs text-gs-muted">No solar certificate</p>
+                    }
+                </div>
+
+                <div class="bg-gs-bg border border-gs-border rounded-lg p-4">
+                    <p class="text-xs text-gs-muted uppercase tracking-wider mb-2">Cooking Bills</p>
+                    @if (declaration()?.cookingData?.billUrls?.length) {
+                    <div class="flex flex-col gap-1">
+                        @for (url of declaration()!.cookingData!.billUrls!; track $index) {
+                        <a [href]="url" target="_blank" rel="noopener noreferrer" class="text-xs text-gs-dark hover:underline">Document {{ $index + 1 }}</a>
+                        }
+                    </div>
+                    } @else {
+                    <p class="text-xs text-gs-muted">No cooking documents</p>
+                    }
+                </div>
+            </div>
         </div>
 
         <!-- Verification Findings -->

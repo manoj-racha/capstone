@@ -51,8 +51,8 @@
                 <div class="flex items-center gap-4">
                     <span class="text-3xl px-3 py-1 rounded-full text-white font-bold"
                         [class.bg-gs-dark]="score()!.zone === 'GREEN_CHAMPION'"
-                        [class.bg-yellow-500]="score()!.zone === 'GREEN_IMPROVER'"
-                        [class.bg-red-500]="score()!.zone === 'GREEN_DEFAULTER'">
+                        [class.bg-yellow-500]="score()!.zone === 'IMPROVER'"
+                        [class.bg-red-500]="score()!.zone === 'DEFAULTER'">
                         {{ score()!.perCapitaCo2 | number:'1.0-0' }}
                     </span>
                     <div>

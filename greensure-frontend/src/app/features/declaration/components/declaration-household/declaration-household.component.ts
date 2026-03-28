@@ -59,6 +59,18 @@ export class DeclarationHouseholdComponent implements OnInit {
 
   ngOnInit(): void {
     this.declarationId = Number(this.route.snapshot.paramMap.get('id'));
+    this.loadExistingData();
+  }
+
+  private loadExistingData(): void {
+    this.declarationService.getDeclarationById(this.declarationId).subscribe({
+      next: (res) => {
+        const members = res?.data?.householdSize;
+        if (res.success && typeof members === 'number' && members > 0) {
+          this.form.patchValue({ numberOfMembers: members });
+        }
+      }
+    });
   }
 
   onSave(): void {

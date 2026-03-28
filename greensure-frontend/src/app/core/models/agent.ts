@@ -26,6 +26,105 @@ export interface AgentTaskResponse {
   agentName?: string;
 }
 
+export type AgentTaskSummary = AgentTaskResponse;
+
+export interface AgentProfile {
+  agentId: number;
+  fullName: string;
+  email?: string;
+  mobile?: string;
+  employeeId?: string;
+  assignedZones?: string;
+  strikeCount?: number;
+  strikes: number;
+  active: boolean;
+  activeAssignments: number;
+  status?: string;
+  createdAt?: string;
+}
+
+export type MatchStatus = 'MATCH' | 'MISMATCH' | 'UNVERIFIED' | 'NOT_APPLICABLE';
+
+export interface AgentChecklistItem {
+  priority: string;
+  category: string;
+  finding: string;
+  action: string;
+}
+
+export interface AgentWorkspace {
+  assignmentId: number;
+  declarationId: number;
+  declarationYear?: number;
+  userId?: number;
+  userName?: string;
+  userPhone?: string;
+  userAddress?: string;
+  userPinCode?: string;
+  userCity?: string;
+  userMobile?: string;
+  userType?: string;
+  riskLevel?: string;
+  fraudRiskLevel?: string;
+  fraudScore?: number;
+  fraudFlags?: string[];
+  fraudFlagDescriptions?: string[];
+  aiVerificationChecklist?: AgentChecklistItem[];
+  comparisonTable: FieldComparison[];
+  vehicles: VehicleComparison[];
+  electricityComparison?: FieldComparison[];
+  cookingComparison?: FieldComparison[];
+  solarComparison?: FieldComparison[];
+  electricityDocumentUrls?: string[];
+  cookingDocumentUrls?: string[];
+  solarDocumentUrls?: string[];
+  matchStatus?: MatchStatus;
+}
+
+export interface FieldComparison {
+  fieldName: string;
+  userClaim: string | number | null;
+  systemValue: string | number | null;
+  matchStatus: MatchStatus;
+}
+
+export interface VehicleDocument {
+  documentId: number;
+  documentUrl: string;
+  originalFileName?: string;
+}
+
+export interface VehicleComparison {
+  vehicleLabel: string;
+  comparisons: FieldComparison[];
+  documents?: VehicleDocument[];
+}
+
+export interface AgentModifyRequest {
+  correctedFuelType?: string;
+  correctedMileageBand?: string;
+  correctedMonthlyKwh?: number;
+  correctedCookingFuelType?: string;
+  correctedAnnualCylinders?: number;
+  correctedSolarCapacityKw?: number;
+  agentVerifiedSolar?: boolean;
+  correctionNotes: string;
+}
+
+export interface AgentRejectRequest {
+  rejectionReason: string;
+}
+
+export interface AgentPerformance extends AgentPerformanceResponse {
+  strikes: number;
+  agentName?: string;
+  email?: string;
+  pinCode?: string;
+  active: boolean;
+  activeAssignments: number;
+  recentHistory?: AgentTaskSummary[];
+}
+
 export interface AgentPerformanceResponse {
   agentId: number;
   fullName: string;

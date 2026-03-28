@@ -128,6 +128,22 @@ export class DeclarationSolarComponent implements OnInit {
 
   ngOnInit(): void {
     this.declarationId = Number(this.route.snapshot.paramMap.get('id'));
+    this.loadExistingData();
+  }
+
+  private loadExistingData(): void {
+    this.declarationService.getDeclarationById(this.declarationId).subscribe({
+      next: (res) => {
+        const s = res?.data?.solarData;
+        if (res.success && s) {
+          this.form.patchValue({
+            hasSolar: !!s.hasSolar,
+            capacityKw: s.capacityKw ?? null
+          });
+          this.uploadedCertUrl.set(s.certificateUrl ?? null);
+        }
+      }
+    });
   }
 
   setHasSolar(val: boolean): void {

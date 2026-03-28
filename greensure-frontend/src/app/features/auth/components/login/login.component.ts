@@ -59,12 +59,6 @@ export class LoginComponent {
                 if (res.success) {
                     const data = res.data;
 
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('role', data.role);
-                    localStorage.setItem('userId', String(data.id));
-                    localStorage.setItem('fullName', data.fullName);
-                    localStorage.setItem('userType', data.userType);
-
                     if (data.role === 'ADMIN') {
                         this.router.navigate(['/admin/dashboard']);
                     } else if (data.role === 'AGENT') {

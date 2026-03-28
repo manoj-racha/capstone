@@ -43,8 +43,11 @@ export class AdminService {
   }
 
   /** GET /admin/agents/available */
-  getAvailableAgents(): Observable<ApiResponse<AgentProfile[]>> {
-    return this.http.get<ApiResponse<AgentProfile[]>>(`${this.base}/agents/available`);
+  getAvailableAgents(pinCode?: string): Observable<ApiResponse<AgentProfile[]>> {
+    const url = pinCode
+      ? `${this.base}/agents/available?pinCode=${encodeURIComponent(pinCode)}`
+      : `${this.base}/agents/available`;
+    return this.http.get<ApiResponse<AgentProfile[]>>(url);
   }
 
   /** POST /admin/agents/create */
