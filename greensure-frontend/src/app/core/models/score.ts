@@ -19,6 +19,7 @@ export interface Recommendation {
 }
 
 export interface CarbonScoreDetail {
+  scoreYear?: number;
   totalCo2: number;
   vehicleCo2: number;
   electricityCo2: number;
@@ -32,7 +33,7 @@ export interface CarbonScoreDetail {
   durationDiscountPercent: number;
   zoneDiscountPercent: number;
   discountBreakdown: string;
-  generatedAt: string;
+  generatedAt?: string;
   recommendations: Recommendation[];
   /** Gemini plain-language summary; optional */
   aiExplanation?: string | null;

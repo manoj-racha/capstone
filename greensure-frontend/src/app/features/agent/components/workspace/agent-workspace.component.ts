@@ -1,13 +1,26 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  Bolt,
+  Car,
+  CheckCircle2,
+  CircleAlert,
+  Flame,
+  Loader2,
+  LucideAngularModule,
+  Sparkles,
+  Sun,
+  TriangleAlert
+} from 'lucide-angular';
 import { AgentService } from '../../../../core/services/agent.service';
 import { ToastService } from '../../../../core/services/toast.service';
-import { AgentWorkspace, MatchStatus } from '../../../../core/models/agent';
+import { AgentWorkspace, AiDocumentAnalysisResult, MatchStatus } from '../../../../core/models/agent';
 
 @Component({
   selector: 'app-agent-workspace',
-  imports: [ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
   templateUrl: './agent-workspace.component.html'
 })
 export class AgentWorkspaceComponent implements OnInit {
@@ -21,7 +34,48 @@ export class AgentWorkspaceComponent implements OnInit {
   submitting = signal(false);
   workspace = signal<AgentWorkspace | null>(null);
   actionMode = signal<'confirm' | 'modify' | 'reject' | null>(null);
-  assignmentId = 0;
+  assignmentId = signal<number | null>(null);
+
+  aiAnalysis = signal<AiDocumentAnalysisResult | null>(null);
+  isRunningAi = signal<boolean>(false);
+  aiError = signal<string | null>(null);
+  aiHasRun = signal<boolean>(false);
+
+  readonly Sparkles = Sparkles;
+  readonly Loader2 = Loader2;
+  readonly TriangleAlert = TriangleAlert;
+  readonly CheckCircle2 = CheckCircle2;
+  readonly Bolt = Bolt;
+  readonly Car = Car;
+  readonly Flame = Flame;
+  readonly Sun = Sun;
+  readonly CircleAlert = CircleAlert;
+
+  hasAiResults = computed(() =>
+    this.aiAnalysis() !== null && this.aiAnalysis()!.analysisSuccess
+  );
+
+  aiOverallStatus = computed<'HIGH' | 'MEDIUM' | 'CLEAR' | null>(() => {
+    const result = this.aiAnalysis();
+    if (!result || !result.analysisSuccess) {
+      return null;
+    }
+
+    const highCount = result.overallFindings.filter(
+      finding => (finding.priority || '').toUpperCase() === 'HIGH'
+    ).length;
+    const medCount = result.overallFindings.filter(
+      finding => (finding.priority || '').toUpperCase() === 'MEDIUM'
+    ).length;
+
+    if (highCount > 0) {
+      return 'HIGH';
+    }
+    if (medCount > 0) {
+      return 'MEDIUM';
+    }
+    return 'CLEAR';
+  });
 
   modifyForm = this.fb.group({
     correctedFuelType: [''],
@@ -39,13 +93,20 @@ export class AgentWorkspaceComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.assignmentId = Number(this.route.snapshot.paramMap.get('assignmentId'));
+    const parsed = Number(this.route.snapshot.paramMap.get('assignmentId'));
+    this.assignmentId.set(Number.isFinite(parsed) && parsed > 0 ? parsed : null);
     this.loadWorkspace();
   }
 
   loadWorkspace(): void {
+    const assignmentId = this.assignmentId();
+    if (!assignmentId) {
+      this.loading.set(false);
+      return;
+    }
+
     this.loading.set(true);
-    this.agentService.getWorkspace(this.assignmentId).subscribe({
+    this.agentService.getWorkspace(assignmentId).subscribe({
       next: (res) => {
         this.loading.set(false);
         if (res.success && res.data) this.workspace.set(res.data);
@@ -72,12 +133,47 @@ export class AgentWorkspaceComponent implements OnInit {
     }
   }
 
+  runAiAnalysis(): void {
+    if (this.isRunningAi()) {
+      return;
+    }
+
+    const assignmentId = this.assignmentId();
+    if (!assignmentId) {
+      return;
+    }
+
+    this.isRunningAi.set(true);
+    this.aiError.set(null);
+
+    this.agentService.runAiAnalysis(assignmentId).subscribe({
+      next: (res) => {
+        this.aiAnalysis.set(res.data);
+        this.aiHasRun.set(true);
+        this.isRunningAi.set(false);
+
+        if (!res.data.analysisSuccess) {
+          this.aiError.set(
+            res.data.errorMessage || 'AI analysis did not complete successfully'
+          );
+        }
+      },
+      error: () => {
+        this.isRunningAi.set(false);
+        this.aiHasRun.set(true);
+        this.aiError.set(
+          'AI analysis request failed. Check backend logs for details.'
+        );
+      }
+    });
+  }
+
   async onConfirm(): Promise<void> {
     this.submitting.set(true);
     try {
       const pos = await this.agentService.getCurrentPosition();
       this.agentService.confirmVerification(
-        this.assignmentId, pos.coords.latitude, pos.coords.longitude
+        this.assignmentId()!, pos.coords.latitude, pos.coords.longitude
       ).subscribe({
         next: () => {
           this.submitting.set(false);
@@ -99,7 +195,7 @@ export class AgentWorkspaceComponent implements OnInit {
       const pos = await this.agentService.getCurrentPosition();
       const f = this.modifyForm.controls;
       this.agentService.modifyAndVerify(
-        this.assignmentId,
+        this.assignmentId()!,
         {
           correctedFuelType: f.correctedFuelType.value || undefined,
           correctedMileageBand: f.correctedMileageBand.value || undefined,
@@ -131,7 +227,7 @@ export class AgentWorkspaceComponent implements OnInit {
     try {
       const pos = await this.agentService.getCurrentPosition();
       this.agentService.rejectDeclaration(
-        this.assignmentId,
+        this.assignmentId()!,
         { rejectionReason: this.rejectForm.controls.rejectionReason.value ?? '' },
         pos.coords.latitude, pos.coords.longitude
       ).subscribe({

@@ -52,6 +52,62 @@ export interface AgentChecklistItem {
   action: string;
 }
 
+export interface AiElectricityAnalysis {
+  providerMatch: boolean;
+  providerOnBills: string | null;
+  consumerNumberMatch: boolean;
+  consumerNumberOnBills: string | null;
+  consumerNumberConsistent: boolean;
+  aiComputedMonthlyAvgKwh: number | null;
+  userDeclaredMonthlyKwh: number;
+  kwhDifference: number | null;
+  kwhMatch: boolean;
+  billsCovered: number;
+  duplicateMonths: string[];
+  missingMonths: string[];
+  findings: string[];
+}
+
+export interface AiVehicleAnalysis {
+  vehicleIndex: number;
+  registrationNumberOnDoc: string | null;
+  registrationNumberMatch: boolean;
+  fuelTypeOnDoc: string | null;
+  fuelTypeMatch: boolean;
+  documentsRead: number;
+  findings: string[];
+}
+
+export interface AiCookingAnalysis {
+  fuelType: string;
+  receiptsFound: number;
+  declaredCylinders: number | null;
+  cylinderCountMatch: boolean;
+  distributorName: string | null;
+  consumerNumberConsistent: boolean;
+  findings: string[];
+}
+
+export interface AiSolarAnalysis {
+  capacityOnCertificate: number | null;
+  declaredCapacity: number | null;
+  capacityMatch: boolean;
+  addressOnCertificate: string | null;
+  addressMatch: boolean;
+  findings: string[];
+}
+
+export interface AiDocumentAnalysisResult {
+  electricity: AiElectricityAnalysis | null;
+  vehicles: AiVehicleAnalysis[];
+  cooking: AiCookingAnalysis | null;
+  solar: AiSolarAnalysis | null;
+  overallFindings: AgentChecklistItem[];
+  analysisSuccess: boolean;
+  errorMessage: string | null;
+  analysedAt: string;
+}
+
 export interface AgentWorkspace {
   assignmentId: number;
   declarationId: number;

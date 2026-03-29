@@ -41,10 +41,6 @@ export class AdminService {
     return this.http.get<ApiResponse<UserProfile>>(`${this.base}/users/${id}`);
   }
 
-  updateUserStatus(id: number, status: string): Observable<ApiResponse<void>> {
-    return this.http.put<ApiResponse<void>>(`${this.base}/users/${id}/status?status=${status}`, {});
-  }
-
   unlockResubmission(id: number): Observable<ApiResponse<void>> {
     return this.http.put<ApiResponse<void>>(`${this.base}/users/${id}/unlock-resubmission`, {});
   }

@@ -28,9 +28,13 @@ export class DeclarationVehicleComponent implements OnInit {
   // State
   vehicles = signal<VehicleData[]>([]);
   loading = signal(false);
-  mode = signal<'LIST' | 'ADD'>('LIST');
-  vahanMode = signal<'VAHAN' | 'MANUAL'>('VAHAN');
-  vahanVerified = signal(false);
+  mode = signal<'LIST' | 'FORM'>('LIST');
+  editingVehicleId = signal<number | null>(null);
+  uploadingVehicleDocId = signal<number | null>(null);
+
+  // Per-vehicle upload state
+  private selectedFileByVehicle = signal<Record<number, File | null>>({});
+  private docTypeByVehicle = signal<Record<number, VehicleDocumentType>>({});
 
   // Constants
   readonly fuelTypes: FuelType[] = ['EV', 'PETROL', 'DIESEL', 'CNG'];
@@ -52,18 +56,6 @@ export class DeclarationVehicleComponent implements OnInit {
     mileageBand: ['BAND_3' as MileageBand, [Validators.required]],
   });
 
-  // Selected vehicle for document upload
-  selectedVehicleForDoc = signal<VehicleData | null>(null);
-  
-  // Form for Document Upload
-  docForm = this.fb.group({
-    documentType: ['RC_BOOK' as VehicleDocumentType, [Validators.required]],
-    documentUrl: ['', [Validators.required]],
-    originalFileName: ['', [Validators.required]]
-  });
-  
-  uploadingDoc = signal(false);
-
   ngOnInit(): void {
     this.declarationId = Number(this.route.snapshot.paramMap.get('id'));
     this.loadVehicles();
@@ -76,7 +68,7 @@ export class DeclarationVehicleComponent implements OnInit {
         if (res.success && res.data) {
           this.vehicles.set(res.data);
           if (res.data.length === 0) {
-            this.mode.set('ADD');
+            this.mode.set('LIST');
           }
         }
         this.loading.set(false);
@@ -92,18 +84,28 @@ export class DeclarationVehicleComponent implements OnInit {
       fuelType: 'PETROL',
       mileageBand: 'BAND_3'
     });
-    this.vahanMode.set('VAHAN');
-    this.vahanVerified.set(false);
-    this.mode.set('ADD');
+    this.editingVehicleId.set(null);
+    this.mode.set('FORM');
   }
 
   setListMode(): void {
     this.mode.set('LIST');
   }
 
-  setVahanMode(m: 'VAHAN' | 'MANUAL'): void {
-    this.vahanMode.set(m);
-    this.vahanVerified.set(false);
+  setEditMode(vehicle: VehicleData): void {
+    this.form.reset({
+      vehicleCategory: vehicle.vehicleCategory,
+      vehicleNickname: vehicle.vehicleNickname ?? '',
+      vin: '',
+      registrationNumber: vehicle.registrationNumber,
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year,
+      fuelType: vehicle.fuelType,
+      mileageBand: vehicle.mileageBand,
+    });
+    this.editingVehicleId.set(vehicle.vehicleId);
+    this.mode.set('FORM');
   }
 
   onSaveVehicle(): void {
@@ -120,14 +122,25 @@ export class DeclarationVehicleComponent implements OnInit {
       year: f.year.value ?? 2023,
       fuelType: f.fuelType.value!,
       mileageBand: f.mileageBand.value!,
-      dataSource: this.vahanMode(),
+      dataSource: 'MANUAL',
     };
-    
-    this.declarationService.addVehicle(this.declarationId, data).subscribe({
+
+    const editingId = this.editingVehicleId();
+    const request = editingId
+      ? this.declarationService.updateVehicle(this.declarationId, editingId, data)
+      : this.declarationService.addVehicle(this.declarationId, data);
+
+    request.subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          const vList = this.vehicles();
-          this.vehicles.set([...vList, res.data]);
+          if (editingId) {
+            this.vehicles.set(this.vehicles().map(v => v.vehicleId === editingId ? res.data! : v));
+            this.toastService.success('Vehicle details updated');
+          } else {
+            const vList = this.vehicles();
+            this.vehicles.set([...vList, res.data]);
+            this.toastService.success('Vehicle added');
+          }
           this.setListMode();
         }
         this.loading.set(false);
@@ -152,45 +165,42 @@ export class DeclarationVehicleComponent implements OnInit {
     });
   }
 
-  openDocModal(vehicle: VehicleData): void {
-    this.selectedVehicleForDoc.set(vehicle);
-    this.docForm.reset({ documentType: 'RC_BOOK' });
-  }
-
-  closeDocModal(): void {
-    this.selectedVehicleForDoc.set(null);
-  }
-
   private fileUploadService = inject(FileUploadService);
   private toastService = inject(ToastService);
 
-  selectedFile = signal<File | null>(null);
-
-  // Handle mock file upload for UI
-  onFileChange(event: Event): void {
+  onVehicleFileChange(event: Event, vehicleId: number): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      this.selectedFile.set(file);
-      this.docForm.patchValue({
-        documentUrl: 'placeholder',
-        originalFileName: file.name
-      });
+      this.selectedFileByVehicle.update(prev => ({ ...prev, [vehicleId]: file }));
     }
+    input.value = '';
   }
 
-  onUploadDoc(): void {
-    if (this.docForm.invalid || !this.selectedVehicleForDoc() || !this.selectedFile()) return;
-    this.uploadingDoc.set(true);
-    
-    const f = this.docForm.controls;
-    const vehicleId = this.selectedVehicleForDoc()!.vehicleId;
-    
-    this.fileUploadService.uploadFile(this.selectedFile()!, 'vehicle').subscribe({
+  onDocTypeChange(vehicleId: number, value: VehicleDocumentType): void {
+    this.docTypeByVehicle.update(prev => ({ ...prev, [vehicleId]: value }));
+  }
+
+  getDocType(vehicleId: number): VehicleDocumentType {
+    return this.docTypeByVehicle()[vehicleId] ?? 'RC_BOOK';
+  }
+
+  getSelectedFileName(vehicleId: number): string | null {
+    return this.selectedFileByVehicle()[vehicleId]?.name ?? null;
+  }
+
+  onUploadDoc(vehicleId: number): void {
+    const selectedFile = this.selectedFileByVehicle()[vehicleId];
+    if (!selectedFile) return;
+
+    this.uploadingVehicleDocId.set(vehicleId);
+    const docType = this.getDocType(vehicleId);
+
+    this.fileUploadService.uploadFile(selectedFile, 'vehicle').subscribe({
       next: (uploaded: UploadedFile) => {
         const req: UploadVehicleDocumentRequest = {
           vehicleId: vehicleId,
-          documentType: f.documentType.value!,
+          documentType: docType,
           documentUrl: uploaded.fileUrl,
           originalFileName: uploaded.originalFileName,
           mimeType: uploaded.mimeType,
@@ -207,21 +217,38 @@ export class DeclarationVehicleComponent implements OnInit {
                 return v;
               });
               this.vehicles.set(updatedVs);
-              this.toastService.success('Document safely uploaded');
-              this.closeDocModal();
+              this.selectedFileByVehicle.update(prev => ({ ...prev, [vehicleId]: null }));
+              this.toastService.success('Document uploaded');
             }
-            this.uploadingDoc.set(false);
+            this.uploadingVehicleDocId.set(null);
           },
           error: () => {
-            this.uploadingDoc.set(false);
-            this.toastService.error('Failed to link document proxy to vehicle');
+            this.uploadingVehicleDocId.set(null);
+            this.toastService.error('Failed to link uploaded document to this vehicle');
           }
         });
       },
       error: (err: Error) => {
-        this.uploadingDoc.set(false);
+        this.uploadingVehicleDocId.set(null);
         this.toastService.error(err.message);
       }
+    });
+  }
+
+  removeVehicleDocument(vehicleId: number, documentId: number): void {
+    this.declarationService.removeVehicleDocument(this.declarationId, vehicleId, documentId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.vehicles.set(this.vehicles().map(v => {
+            if (v.vehicleId !== vehicleId) return v;
+            return { ...v, documents: (v.documents || []).filter(d => d.documentId !== documentId) };
+          }));
+          this.toastService.success('Document removed');
+        } else {
+          this.toastService.error(res.error || 'Failed to remove document');
+        }
+      },
+      error: () => this.toastService.error('Failed to remove document')
     });
   }
 

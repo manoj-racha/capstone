@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 import { ApiResponse } from '../models/api-response';
 import { DeclarationSummary } from '../models/declaration';
 import {
+  AiDocumentAnalysisResult,
   AgentWorkspace,
   AgentProfile,
   AgentModifyRequest,
@@ -29,6 +30,14 @@ export class AgentService {
   getWorkspace(assignmentId: number): Observable<ApiResponse<AgentWorkspace>> {
     return this.http.get<ApiResponse<AgentWorkspace>>(
       `${this.base}/declarations/${assignmentId}/workspace`
+    );
+  }
+
+  /** POST /agent/declarations/{assignmentId}/ai-analysis */
+  runAiAnalysis(assignmentId: number): Observable<ApiResponse<AiDocumentAnalysisResult>> {
+    return this.http.post<ApiResponse<AiDocumentAnalysisResult>>(
+      `${this.base}/declarations/${assignmentId}/ai-analysis`,
+      {}
     );
   }
 

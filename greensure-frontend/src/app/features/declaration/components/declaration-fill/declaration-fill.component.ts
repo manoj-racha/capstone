@@ -38,9 +38,7 @@ export class DeclarationFillComponent implements OnInit {
           if (!d.householdSize || d.householdSize <= 0) {
             this.router.navigate(['/declaration', id, 'household']);
           } else if (d.vehicles.length === 0) {
-            // Note: Users might have no vehicles, but we usually want them to see the vehicle page at least once.
-            // However, to keep it simple, if vehicles list was confirmed (even empty), we check electricity.
-            this.router.navigate(['/declaration', id, 'vehicle']);
+            this.router.navigate(['/declaration', id, 'electricity']);
           } else if (!d.electricityData) {
             this.router.navigate(['/declaration', id, 'electricity']);
           } else if (!d.solarData) {

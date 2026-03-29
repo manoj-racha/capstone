@@ -17,7 +17,6 @@
                 class="bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-1 text-sm focus:outline-none focus:border-gs-dark">
                 <option value="ALL">All Status</option>
                 <option value="ACTIVE">Active</option>
-                <option value="SUSPENDED">Suspended</option>
             </select>
         </div>
     </div>
@@ -36,7 +35,7 @@
             <thead class="bg-gs-bg border-b border-gs-border text-gs-muted text-xs uppercase">
                 <tr>
                     <th class="px-6 py-4 font-medium">User Details</th>
-                    <th class="px-6 py-4 font-medium">Roles & Location</th>
+                    <th class="px-6 py-4 font-medium">Role</th>
                     <th class="px-6 py-4 font-medium">Status</th>
                     <th class="px-6 py-4 font-medium">Joined</th>
                     <th class="px-6 py-4 font-medium text-right">Actions</th>
@@ -58,10 +57,9 @@
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <p class="text-gs-text mb-1"><span
-                                class="px-2 py-0.5 border border-gs-dark/20 bg-green-900/20 text-gs-dark rounded text-xs">{{
-                                user.role }}</span></p>
-                        <p class="text-xs text-gs-muted">{{ user.city }}, PIN: {{ user.pincode }}</p>
+                        <p class="text-gs-text"><span
+                            class="px-2 py-0.5 border border-gs-dark/20 bg-green-900/20 text-gs-dark rounded text-xs">{{
+                            user.role }}</span></p>
                     </td>
                     <td class="px-6 py-4">
                         <span class="px-2 py-0.5 rounded text-xs font-medium border bg-gs-dark/10 text-gs-dark border-gs-dark/20">

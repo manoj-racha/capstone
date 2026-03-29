@@ -48,9 +48,19 @@ export class DeclarationService {
     return this.http.post<ApiResponse<VehicleData>>(`${this.base}/${id}/vehicles`, data);
   }
 
+  /** PUT /declaration/{id}/vehicles/{vehicleId} */
+  updateVehicle(id: number, vehicleId: number, data: AddVehicleRequest): Observable<ApiResponse<VehicleData>> {
+    return this.http.put<ApiResponse<VehicleData>>(`${this.base}/${id}/vehicles/${vehicleId}`, data);
+  }
+
   /** POST /declaration/{id}/vehicles/{vehicleId}/documents */
   addVehicleDocument(id: number, vehicleId: number, data: UploadVehicleDocumentRequest): Observable<ApiResponse<VehicleDocument>> {
     return this.http.post<ApiResponse<VehicleDocument>>(`${this.base}/${id}/vehicles/${vehicleId}/documents`, data);
+  }
+
+  /** DELETE /declaration/{id}/vehicles/{vehicleId}/documents/{documentId} */
+  removeVehicleDocument(id: number, vehicleId: number, documentId: number): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.base}/${id}/vehicles/${vehicleId}/documents/${documentId}`);
   }
 
   /** DELETE /declaration/{id}/vehicles/{vehicleId} */

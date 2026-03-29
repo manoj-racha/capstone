@@ -54,7 +54,7 @@ interface BillEntry {
               <label class="block text-sm font-semibold text-gray-700 mb-1.5">Estimated Annual Avg. Monthly Usage (kWh) <span class="text-red-500">*</span></label>
               <input type="number" formControlName="userDeclaredMonthlyKwh" placeholder="e.g. 200" min="0"
                 class="w-full px-3 py-2.5 rounded-lg border-2 border-gray-200 focus:border-green-500 focus:outline-none text-sm bg-gray-50 font-semibold" />
-              <p class="text-gray-400 text-xs mt-1">This will be automatically updated as you add bills below.</p>
+              <p class="text-gray-400 text-xs mt-1">This remains your manual value. Bill uploads will not override it.</p>
             </div>
 
             <!-- Bill Upload Section -->
@@ -202,8 +202,6 @@ export class DeclarationElectricityComponent implements OnInit {
           this.uploadedBills.update(bills => bills.map((b, i) => 
             i === index ? { ...b, fileUrl: uploaded.fileUrl, isUploading: false } : b
           ));
-          // Simulate OCR extraction logic
-          this.simulateOCR(index);
         },
         error: (err: Error) => {
           this.uploadedBills.update(bills => bills.map((b, i) => 
@@ -215,30 +213,8 @@ export class DeclarationElectricityComponent implements OnInit {
     input.value = '';
   }
 
-  private simulateOCR(index: number): void {
-    // In a real app we'd call an OCR endpoint. For now we simulate.
-    setTimeout(() => {
-      this.uploadedBills.update(bills => bills.map((b, i) => {
-        if (i === index) {
-          const randomKwh = Math.floor(Math.random() * (400 - 150 + 1) + 150);
-          const now = new Date();
-          const year = now.getFullYear();
-          const month = String(now.getMonth() + 1).padStart(2, '0');
-          return { ...b, unitsKwh: randomKwh, billingMonth: `${year}-${month}` };
-        }
-        return b;
-      }));
-      this.recalculateAverage();
-    }, 1000);
-  }
-
   recalculateAverage(): void {
-    const validBills = this.uploadedBills().filter(b => b.unitsKwh !== null);
-    if (validBills.length > 0) {
-      const sum = validBills.reduce((acc, curr) => acc + (curr.unitsKwh || 0), 0);
-      const avg = Math.round(sum / validBills.length);
-      this.form.patchValue({ userDeclaredMonthlyKwh: avg });
-    }
+    // Intentionally no-op: do not override userDeclaredMonthlyKwh with bill data.
   }
 
   removeBill(index: number): void {

@@ -1,12 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { AdminService } from '../../../../features/admin/services/admin.service';
 
 
 @Component({
     selector: 'app-reports',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, RouterLink],
     templateUrl: './reports.component.html'
 })
 export class ReportsComponent implements OnInit {
@@ -35,7 +36,9 @@ export class ReportsComponent implements OnInit {
                             ? raw.content
                             : Array.isArray(raw?.items)
                                 ? raw.items
-                                : [];
+                                : (raw && typeof raw === 'object')
+                                    ? [raw]
+                                    : [];
                     this.agentPerformance.set(rows);
                 } else {
                     this.performanceError.set(res.message || 'Failed to load performance metrics.');

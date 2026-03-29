@@ -43,9 +43,9 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-green-900/10">
-                    @for (score of history(); track score.generatedAt) {
+                    @for (score of history(); track score.scoreYear ?? $index) {
                     <tr class="hover:bg-gs-bg/50 transition-colors group">
-                        <td class="p-4 font-bold text-gs-text">{{ score.generatedAt | date:'yyyy' }}</td>
+                        <td class="p-4 font-bold text-gs-text">{{ score.scoreYear ?? (score.generatedAt | date:'yyyy') }}</td>
                         <td class="p-4 text-gs-text font-mono text-lg group-hover:text-gs-dark transition-colors">{{
                             score.totalCo2 | number:'1.0-0' }}</td>
                         <td class="p-4">
@@ -57,7 +57,8 @@
           </span>
                         </td>
                         <td class="p-4 text-gs-muted">{{ score.perCapitaCo2 | number:'1.0-1' }}</td>
-                        <td class="p-4 text-sm text-gs-muted text-right">{{ score.generatedAt | date:'mediumDate' }}
+                        <td class="p-4 text-sm text-gs-muted text-right">
+                            {{ score.generatedAt ? (score.generatedAt | date:'mediumDate') : 'N/A' }}
                         </td>
                     </tr>
                     }
