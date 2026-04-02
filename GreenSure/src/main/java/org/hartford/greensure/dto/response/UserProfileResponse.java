@@ -1,6 +1,8 @@
 package org.hartford.greensure.dto.response;
 
 import lombok.*;
+import org.hartford.greensure.entity.HouseholdProfile;
+import org.hartford.greensure.entity.User;
 import org.hartford.greensure.enums.Role;
 
 import java.time.LocalDate;
@@ -18,6 +20,9 @@ public class UserProfileResponse {
     private String fullName;
     private String email;
     private String phone;
+    private String mobile;
+    private User.UserType userType;
+    private User.UserStatus status;
     private LocalDate dateOfBirth;
     private String address;
     private String pinCode;
@@ -31,4 +36,5 @@ public class UserProfileResponse {
     
     // Household specific
     private Integer numberOfMembers;
+    private HouseholdProfile.DwellingType dwellingType;
 }

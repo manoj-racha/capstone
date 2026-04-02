@@ -8,6 +8,7 @@ import com.google.auth.oauth2.UserCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -50,16 +51,17 @@ public class GmailApiConfig {
 
     private static final Logger log = LoggerFactory.getLogger(GmailApiConfig.class);
 
-    @Value("${gmail.client.id}")
+        @Value("${gmail.client.id:}")
     private String clientId;
 
-    @Value("${gmail.client.secret}")
+        @Value("${gmail.client.secret:}")
     private String clientSecret;
 
-    @Value("${gmail.refresh.token}")
+        @Value("${gmail.refresh.token:}")
     private String refreshToken;
 
     @Bean
+        @ConditionalOnProperty(prefix = "gmail", name = {"client.id", "client.secret", "refresh.token"})
     public Gmail gmail() {
         try {
             // Build OAuth2 credentials using the refresh token.

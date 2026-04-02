@@ -40,14 +40,14 @@
 
       @if (ws.comparisonTable.length > 0) {
         <div class="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 class="font-semibold text-gray-800 mb-3">Household Data Comparison</h2>
+          <h2 class="font-semibold text-gray-800 mb-3">Household Data</h2>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead>
                 <tr class="border-b border-gray-100">
                   <th class="text-left py-2 text-gray-500 font-medium">Field</th>
                   <th class="text-left py-2 text-gray-500 font-medium">User Claimed</th>
-                  <th class="text-left py-2 text-gray-500 font-medium">System Verified</th>
+<!--                  <th class="text-left py-2 text-gray-500 font-medium">Verified Data</th>-->
                 </tr>
               </thead>
               <tbody>
@@ -55,7 +55,7 @@
                   <tr class="border-b border-gray-50">
                     <td class="py-2 font-medium text-gray-700">{{ c.fieldName }}</td>
                     <td class="py-2 text-gray-600">{{ c.userClaim }}</td>
-                    <td class="py-2 text-gray-600">{{ c.systemValue }}</td>
+<!--                    <td class="py-2 text-gray-600">{{ c.systemValue }}</td>-->
                   </tr>
                 }
               </tbody>
@@ -67,14 +67,14 @@
       @if (ws.vehicles.length > 0) {
         @for (v of ws.vehicles; track v.vehicleLabel) {
           <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 class="font-semibold text-gray-800 mb-3">Vehicle Comparison ({{ v.vehicleLabel }})</h2>
+            <h2 class="font-semibold text-gray-800 mb-3">Vehicle Data ({{ v.vehicleLabel }})</h2>
             <div class="overflow-x-auto">
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b border-gray-100">
                     <th class="text-left py-2 text-gray-500 font-medium">Field</th>
                     <th class="text-left py-2 text-gray-500 font-medium">User Claimed</th>
-                    <th class="text-left py-2 text-gray-500 font-medium">System Verified</th>
+<!--                    <th class="text-left py-2 text-gray-500 font-medium">Verified Data</th>-->
                   </tr>
                 </thead>
                 <tbody>
@@ -82,7 +82,7 @@
                     <tr class="border-b border-gray-50">
                       <td class="py-2 font-medium text-gray-700">{{ c.fieldName }}</td>
                       <td class="py-2 text-gray-600">{{ c.userClaim }}</td>
-                      <td class="py-2 text-gray-600">{{ c.systemValue }}</td>
+<!--                      <td class="py-2 text-gray-600">{{ c.systemValue }}</td>-->
                     </tr>
                   }
                 </tbody>
@@ -106,14 +106,14 @@
 
       @if (ws.electricityComparison && ws.electricityComparison.length > 0) {
         <div class="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 class="font-semibold text-gray-800 mb-3">Electricity Comparison</h2>
+          <h2 class="font-semibold text-gray-800 mb-3">Electricity Data</h2>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead>
                 <tr class="border-b border-gray-100">
                   <th class="text-left py-2 text-gray-500 font-medium">Field</th>
                   <th class="text-left py-2 text-gray-500 font-medium">User Claimed</th>
-                  <th class="text-left py-2 text-gray-500 font-medium">System Verified</th>
+<!--                  <th class="text-left py-2 text-gray-500 font-medium">Verified Data</th>-->
                 </tr>
               </thead>
               <tbody>
@@ -121,7 +121,7 @@
                   <tr class="border-b border-gray-50">
                     <td class="py-2 font-medium text-gray-700">{{ c.fieldName }}</td>
                     <td class="py-2 text-gray-600">{{ c.userClaim }}</td>
-                    <td class="py-2 text-gray-600">{{ c.systemValue }}</td>
+<!--                    <td class="py-2 text-gray-600">{{ c.systemValue }}</td>-->
                   </tr>
                 }
               </tbody>
@@ -144,14 +144,14 @@
 
       @if (ws.cookingComparison && ws.cookingComparison.length > 0) {
         <div class="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 class="font-semibold text-gray-800 mb-3">Cooking Comparison</h2>
+          <h2 class="font-semibold text-gray-800 mb-3">Cooking Data</h2>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead>
                 <tr class="border-b border-gray-100">
                   <th class="text-left py-2 text-gray-500 font-medium">Field</th>
                   <th class="text-left py-2 text-gray-500 font-medium">User Claimed</th>
-                  <th class="text-left py-2 text-gray-500 font-medium">System Verified</th>
+<!--                  <th class="text-left py-2 text-gray-500 font-medium">Verified Data</th>-->
                 </tr>
               </thead>
               <tbody>
@@ -159,7 +159,7 @@
                   <tr class="border-b border-gray-50">
                     <td class="py-2 font-medium text-gray-700">{{ c.fieldName }}</td>
                     <td class="py-2 text-gray-600">{{ c.userClaim }}</td>
-                    <td class="py-2 text-gray-600">{{ c.systemValue }}</td>
+<!--                    <td class="py-2 text-gray-600">{{ c.systemValue }}</td>-->
                   </tr>
                 }
               </tbody>
@@ -182,14 +182,14 @@
 
       @if (ws.solarComparison && ws.solarComparison.length > 0) {
         <div class="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 class="font-semibold text-gray-800 mb-3">Solar Comparison</h2>
+          <h2 class="font-semibold text-gray-800 mb-3">Solar Data</h2>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead>
                 <tr class="border-b border-gray-100">
                   <th class="text-left py-2 text-gray-500 font-medium">Field</th>
                   <th class="text-left py-2 text-gray-500 font-medium">User Claimed</th>
-                  <th class="text-left py-2 text-gray-500 font-medium">System Verified</th>
+<!--                  <th class="text-left py-2 text-gray-500 font-medium">Verified Data</th>-->
                 </tr>
               </thead>
               <tbody>
@@ -197,7 +197,7 @@
                   <tr class="border-b border-gray-50">
                     <td class="py-2 font-medium text-gray-700">{{ c.fieldName }}</td>
                     <td class="py-2 text-gray-600">{{ c.userClaim }}</td>
-                    <td class="py-2 text-gray-600">{{ c.systemValue }}</td>
+<!--                    <td class="py-2 text-gray-600">{{ c.systemValue }}</td>-->
                   </tr>
                 }
               </tbody>
@@ -527,7 +527,8 @@
                           {{ f }}
                         </p>
                       }
-                    </div>
+                    </div>Electricity Data
+
                   }
                 </div>
               </div>

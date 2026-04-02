@@ -44,7 +44,6 @@ public class CarbonScoreControllerTest {
 
         CarbonScoreResponse mockScore = CarbonScoreResponse.builder()
                 .scoreId(10L)
-                .userId(userId)
                 .totalCo2(500.0)
                 .build();
 
@@ -56,7 +55,7 @@ public class CarbonScoreControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertTrue(response.getBody().isSuccess());
-        assertEquals("Score fetched", response.getBody().getMessage());
+        assertEquals("Latest score fetched", response.getBody().getMessage());
         assertEquals(mockScore, response.getBody().getData());
 
         verify(carbonScoreService, times(1)).getMyScore(userId);
@@ -66,8 +65,8 @@ public class CarbonScoreControllerTest {
     void testGetMyHistory() {
         when(securityUser.getId()).thenReturn(userId);
 
-        CarbonScoreResponse score1 = CarbonScoreResponse.builder().scoreId(10L).userId(userId).scoreYear(2023).build();
-        CarbonScoreResponse score2 = CarbonScoreResponse.builder().scoreId(11L).userId(userId).scoreYear(2024).build();
+        CarbonScoreResponse score1 = CarbonScoreResponse.builder().scoreId(10L).scoreYear(2023).build();
+        CarbonScoreResponse score2 = CarbonScoreResponse.builder().scoreId(11L).scoreYear(2024).build();
         List<CarbonScoreResponse> history = Arrays.asList(score2, score1);
 
         when(carbonScoreService.getScoreHistory(userId)).thenReturn(history);
@@ -89,7 +88,6 @@ public class CarbonScoreControllerTest {
     void testGetScoreByUserId() {
         CarbonScoreResponse mockScore = CarbonScoreResponse.builder()
                 .scoreId(10L)
-                .userId(userId)
                 .totalCo2(500.0)
                 .build();
 
@@ -101,7 +99,7 @@ public class CarbonScoreControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertTrue(response.getBody().isSuccess());
-        assertEquals("Score fetched", response.getBody().getMessage());
+        assertEquals("Score fetched for user", response.getBody().getMessage());
         assertEquals(mockScore, response.getBody().getData());
 
         verify(carbonScoreService, times(1)).getMyScore(userId);

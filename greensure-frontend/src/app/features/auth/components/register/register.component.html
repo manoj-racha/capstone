@@ -19,18 +19,6 @@
 
             <h1 class="font-heading text-2xl font-bold text-gs-text">Create Your Account</h1>
 
-            <!-- User Type Toggle -->
-            <div class="flex rounded-lg border border-gs-border overflow-hidden">
-                <button type="button" (click)="setUserType('HOUSEHOLD')"
-                    [class]="isHousehold ? 'flex-1 py-2.5 text-sm font-semibold bg-gs-dark text-white' : 'flex-1 py-2.5 text-sm font-medium text-gs-body hover:bg-gs-bg'">
-                    Household
-                </button>
-                <button type="button" (click)="setUserType('MSME')"
-                    [class]="!isHousehold ? 'flex-1 py-2.5 text-sm font-semibold bg-gs-dark text-white' : 'flex-1 py-2.5 text-sm font-medium text-gs-body hover:bg-gs-bg'">
-                    MSME / Business
-                </button>
-            </div>
-
             @if (errorMessage()) {
             <div class="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 flex items-start gap-3">
                 <lucide-icon [img]="AlertTriangle" [size]="18" class="text-red-500 shrink-0 mt-0.5"></lucide-icon>
@@ -115,8 +103,6 @@
                     </div>
                 </div>
 
-                <!-- Household-specific fields -->
-                @if (isHousehold) {
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
                         <label class="block text-sm font-semibold text-gs-text mb-1.5">No. of Members <span class="text-red-500">*</span></label>
@@ -141,55 +127,6 @@
                         }
                     </div>
                 </div>
-                }
-
-                <!-- MSME-specific fields -->
-                @if (!isHousehold) {
-                <div class="space-y-5">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block text-sm font-semibold text-gs-text mb-1.5">Business Name <span class="text-red-500">*</span></label>
-                            <input type="text" placeholder="Acme Pvt Ltd" formControlName="businessName"
-                                [class]="isInvalid('businessName') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
-                            @if (isInvalid('businessName')) {
-                                <p class="text-red-500 text-xs mt-1">Business name is required</p>
-                            }
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gs-text mb-1.5">GST Number <span class="text-red-500">*</span></label>
-                            <input type="text" placeholder="22AAAAA0000A1Z5" formControlName="gstNumber"
-                                [class]="isInvalid('gstNumber') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
-                            @if (isInvalid('gstNumber')) {
-                                <p class="text-red-500 text-xs mt-1">Valid GST number is required</p>
-                            }
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block text-sm font-semibold text-gs-text mb-1.5">Business Type <span class="text-red-500">*</span></label>
-                            <select formControlName="businessType"
-                                [class]="isInvalid('businessType') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'">
-                                <option value="">Select type</option>
-                                <option value="MANUFACTURING">Manufacturing</option>
-                                <option value="RETAIL">Retail</option>
-                                <option value="SERVICES">Services</option>
-                                <option value="OTHER">Other</option>
-                            </select>
-                            @if (isInvalid('businessType')) {
-                                <p class="text-red-500 text-xs mt-1">Business type is required</p>
-                            }
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gs-text mb-1.5">No. of Employees <span class="text-red-500">*</span></label>
-                            <input type="number" placeholder="10" formControlName="numEmployees" min="1"
-                                [class]="isInvalid('numEmployees') ? 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-red-500 focus:outline-none text-sm' : 'w-full px-3 py-2.5 rounded-lg border-2 bg-white border-gs-border focus:border-gs-dark focus:outline-none text-sm'" />
-                            @if (isInvalid('numEmployees')) {
-                                <p class="text-red-500 text-xs mt-1">Number of employees is required</p>
-                            }
-                        </div>
-                    </div>
-                </div>
-                }
 
                 <div class="border-t border-gs-border/60 pt-1"></div>
 

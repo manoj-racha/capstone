@@ -18,9 +18,6 @@ import {
 })
 export class RegisterComponent {
 
-    // ── User type toggle ─────────────────────────────────────
-    userType = signal<'HOUSEHOLD' | 'MSME'>('HOUSEHOLD');
-
     // ── Icons ────────────────────────────────────────────────
     readonly Leaf = Leaf;
     readonly AlertTriangle = AlertTriangle;
@@ -39,7 +36,6 @@ export class RegisterComponent {
 
     registerForm = this.fb.group(
         {
-            userType: ['HOUSEHOLD', [Validators.required]],
             fullName: ['', [Validators.required]],
             email: ['', [Validators.required, Validators.email]],
             mobile: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
@@ -48,78 +44,14 @@ export class RegisterComponent {
             city: ['', [Validators.required]],
             state: ['', [Validators.required]],
 
-            numberOfMembers: [null as number | null],
-            dwellingType: [''],
-
-            businessName: [''],
-            gstNumber: [''],
-            businessType: [''],
-            numEmployees: [null as number | null],
+            numberOfMembers: [null as number | null, [Validators.required, Validators.min(1), Validators.max(20)]],
+            dwellingType: ['', [Validators.required]],
 
             password: ['', [Validators.required, Validators.minLength(8)]],
             confirmPassword: ['', [Validators.required]]
         },
         { validators: this.passwordsMatchValidator() }
     );
-
-    constructor() {
-        this.updateDynamicValidators('HOUSEHOLD');
-    }
-
-    get isHousehold(): boolean {
-        return this.userType() === 'HOUSEHOLD';
-    }
-
-    setUserType(type: 'HOUSEHOLD' | 'MSME'): void {
-        this.userType.set(type);
-        this.registerForm.controls.userType.setValue(type);
-        this.updateDynamicValidators(type);
-    }
-
-    private updateDynamicValidators(type: 'HOUSEHOLD' | 'MSME'): void {
-        const numberOfMembers = this.registerForm.controls.numberOfMembers;
-        const dwellingType = this.registerForm.controls.dwellingType;
-        const businessName = this.registerForm.controls.businessName;
-        const gstNumber = this.registerForm.controls.gstNumber;
-        const businessType = this.registerForm.controls.businessType;
-        const numEmployees = this.registerForm.controls.numEmployees;
-
-        if (type === 'HOUSEHOLD') {
-            numberOfMembers.setValidators([Validators.required, Validators.min(1), Validators.max(20)]);
-            dwellingType.setValidators([Validators.required]);
-
-            businessName.clearValidators();
-            gstNumber.clearValidators();
-            businessType.clearValidators();
-            numEmployees.clearValidators();
-
-            businessName.setValue('');
-            gstNumber.setValue('');
-            businessType.setValue('');
-            numEmployees.setValue(null);
-        } else {
-            businessName.setValidators([Validators.required]);
-            gstNumber.setValidators([
-                Validators.required,
-                Validators.pattern(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/)
-            ]);
-            businessType.setValidators([Validators.required]);
-            numEmployees.setValidators([Validators.required, Validators.min(1)]);
-
-            numberOfMembers.clearValidators();
-            dwellingType.clearValidators();
-
-            numberOfMembers.setValue(null);
-            dwellingType.setValue('');
-        }
-
-        numberOfMembers.updateValueAndValidity();
-        dwellingType.updateValueAndValidity();
-        businessName.updateValueAndValidity();
-        gstNumber.updateValueAndValidity();
-        businessType.updateValueAndValidity();
-        numEmployees.updateValueAndValidity();
-    }
 
     private passwordsMatchValidator(): ValidatorFn {
         return (control: AbstractControl): ValidationErrors | null => {
@@ -147,7 +79,7 @@ export class RegisterComponent {
         }
 
         const baseRequest = {
-            userType: this.userType(),
+            userType: 'HOUSEHOLD',
             fullName: this.registerForm.controls.fullName.value?.trim() ?? '',
             email: this.registerForm.controls.email.value?.trim() ?? '',
             mobile: this.registerForm.controls.mobile.value?.trim() ?? '',
@@ -158,19 +90,11 @@ export class RegisterComponent {
             password: this.registerForm.controls.password.value ?? ''
         };
 
-        const request: any = this.isHousehold
-            ? {
-                ...baseRequest,
-                numberOfMembers: this.registerForm.controls.numberOfMembers.value,
-                dwellingType: this.registerForm.controls.dwellingType.value
-            }
-            : {
-                ...baseRequest,
-                businessName: this.registerForm.controls.businessName.value?.trim() ?? '',
-                gstNumber: (this.registerForm.controls.gstNumber.value?.trim() ?? '').toUpperCase(),
-                businessType: (this.registerForm.controls.businessType.value ?? '').toUpperCase(),
-                numEmployees: this.registerForm.controls.numEmployees.value
-            };
+        const request: any = {
+            ...baseRequest,
+            numberOfMembers: this.registerForm.controls.numberOfMembers.value,
+            dwellingType: this.registerForm.controls.dwellingType.value
+        };
 
         this.authService.register(request).subscribe({
             next: (res) => {

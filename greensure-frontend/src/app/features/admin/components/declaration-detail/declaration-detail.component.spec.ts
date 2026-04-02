@@ -37,8 +37,8 @@ describe('DeclarationDetailComponent', () => {
   });
 
   it('should set error when declaration load is unsuccessful', () => {
-    (component as any).adminService.getDeclarationById = () =>
-      of({ success: false, error: 'Declaration not found.' });
+    (component as any).declarationService.getDeclarationById = () =>
+      of({ success: false, message: 'Declaration not found.' });
 
     component.declarationId.set(123);
     component.loadDeclaration();

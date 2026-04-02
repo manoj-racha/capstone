@@ -46,35 +46,6 @@
           </div>
           @if (d.electricityData) {
             <p class="text-sm text-gray-600 mt-1">{{ d.electricityData.provider }}, avg {{ d.electricityData.userDeclaredMonthlyKwh }} kWh/month</p>
-            @if (d.electricityBills && d.electricityBills.length > 0) {
-              <div class="mt-3 space-y-3 border-t border-gray-100 pt-3">
-                @for (bill of d.electricityBills; track $index) {
-                  <div class="text-xs text-gray-600">
-                    <div class="flex justify-between gap-2">
-                      <span>Bill {{ bill.billingMonth ?? '—' }} · {{ bill.unitsKwh ?? '—' }} kWh</span>
-                      @if (bill.ocrConfidenceScore != null) {
-                        <span [class.text-green-600]="bill.ocrConfidenceScore > 0.8"
-                          [class.text-amber-600]="bill.ocrConfidenceScore <= 0.8 && bill.ocrConfidenceScore >= 0.5"
-                          [class.text-red-600]="bill.ocrConfidenceScore < 0.5">
-                          {{ billConfidenceLabel(bill.ocrConfidenceScore).text }}
-                        </span>
-                      }
-                    </div>
-                    @if (bill.ocrConfidenceScore != null) {
-                      <div class="h-1.5 rounded-full bg-gray-200 mt-1 overflow-hidden">
-                        <div class="h-full rounded-full transition-all" [class]="billConfidenceLabel(bill.ocrConfidenceScore).barClass"
-                          [style.width.%]="100 * bill.ocrConfidenceScore"></div>
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
-              @if (electricityAnomalyCount(d) > 0) {
-                <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mt-3">
-                  AI detected {{ electricityAnomalyCount(d) }} anomaly(ies) in your uploaded bills. An agent will verify these on their visit.
-                </p>
-              }
-            }
           } @else {
             <p class="text-sm text-gray-400 mt-1">Not filled</p>
           }

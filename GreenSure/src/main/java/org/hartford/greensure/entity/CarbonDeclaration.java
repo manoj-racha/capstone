@@ -9,30 +9,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents one annual carbon footprint declaration submitted by a household user.
+ * Represents one annual carbon footprint declaration submitted by a household
+ * user.
  * The declaration is a shell / header record. All actual data lives in
  * six child module entities linked via OneToOne / OneToMany:
  * <ul>
- *   <li>Module 2 — HouseholdProfile (shared with the user account)</li>
- *   <li>Module 3 — DeclarationVehicleData</li>
- *   <li>Module 4 — ElectricityData + ElectricityBill (list)</li>
- *   <li>Module 5 — SolarData</li>
- *   <li>Module 6 — CookingData</li>
- *   <li>Module 7 — LifestyleData</li>
+ * <li>Module 2 — HouseholdProfile (shared with the user account)</li>
+ * <li>Module 3 — DeclarationVehicleData</li>
+ * <li>Module 4 — ElectricityData + ElectricityBill (list)</li>
+ * <li>Module 5 — SolarData</li>
+ * <li>Module 6 — CookingData</li>
+ * <li>Module 7 — LifestyleData</li>
  * </ul>
  *
  * Fraud advisory fields are populated at submission time and
  * are visible only to field agents — never exposed to the user.
  */
 @Entity
-@Table(
-    name = "carbon_declarations",
-    uniqueConstraints = @UniqueConstraint(
-        name = "uk_user_year",
-        columnNames = {"user_id", "declaration_year"}
-    )
-)
-@Getter @Setter
+@Table(name = "carbon_declarations", uniqueConstraints = @UniqueConstraint(name = "uk_user_year", columnNames = {
+        "user_id", "declaration_year" }))
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -126,8 +123,9 @@ public class CarbonDeclaration {
     @Builder.Default
     private List<AgentAssignment> agentAssignments = new ArrayList<>();
 
-    @OneToOne(mappedBy = "declaration", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Verification verification;
+    @OneToMany(mappedBy = "declaration", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Verification> verifications = new ArrayList<>();
 
     @OneToOne(mappedBy = "declaration", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private CarbonScore carbonScore;

@@ -44,55 +44,37 @@ describe('ProfileComponent', () => {
   });
 
   it('should enforce pin code pattern validation', () => {
-    component.profileForm.patchValue({ pinCode: '12ab' });
+    component.profileForm.patchValue({ pincode: '12ab' });
 
-    expect(component.profileForm.get('pinCode')?.hasError('pattern')).toBe(true);
+    expect(component.profileForm.get('pincode')?.hasError('pattern')).toBe(true);
   });
 
-  it('should add household-specific validators from profile data', () => {
+  it('should patch profile data into current form fields', () => {
     (component as any).userService.getProfile = () =>
       of({
         success: true,
         data: {
-          userType: 'HOUSEHOLD',
           fullName: 'Test User',
-          mobile: '9876543210',
+          phone: '9876543210',
           address: 'A',
           city: 'B',
-          pinCode: '12345',
-          numberOfMembers: null
+          pincode: '560001',
+          householdSize: 4
         }
       });
 
     (component as any).loadProfile();
-    component.profileForm.get('numberOfMembers')?.setValue(null);
 
-    expect(component.profileForm.get('numberOfMembers')?.hasError('required')).toBe(true);
+    expect(component.profileForm.get('fullName')?.value).toBe('Test User');
+    expect(component.profileForm.get('phone')?.value).toBe('9876543210');
+    expect(component.profileForm.get('pincode')?.value).toBe('560001');
+    expect(component.profileForm.get('householdSize')?.value).toBe(4);
   });
 
-  it('should add msme-specific validators from profile data', () => {
-    (component as any).userService.getProfile = () =>
-      of({
-        success: true,
-        data: {
-          userType: 'MSME',
-          fullName: 'Biz User',
-          mobile: '9876543210',
-          address: 'A',
-          city: 'B',
-          pinCode: '12345',
-          businessName: '',
-          industrySector: '',
-          employeeCount: 0
-        }
-      });
+  it('should enforce minimum household size validation', () => {
+    component.profileForm.patchValue({ householdSize: 0 });
 
-    (component as any).loadProfile();
-    component.profileForm.patchValue({ businessName: '', industrySector: '', employeeCount: 0 });
-
-    expect(component.profileForm.get('businessName')?.hasError('required')).toBe(true);
-    expect(component.profileForm.get('industrySector')?.hasError('required')).toBe(true);
-    expect(component.profileForm.get('employeeCount')?.hasError('min')).toBe(true);
+    expect(component.profileForm.get('householdSize')?.hasError('min')).toBe(true);
   });
 
 });

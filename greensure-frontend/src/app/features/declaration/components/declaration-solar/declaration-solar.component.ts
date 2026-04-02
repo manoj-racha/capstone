@@ -76,6 +76,13 @@ import { DeclarationProgressComponent } from '../../../../shared/components/decl
                       }
                     </div>
                   </div>
+
+                  @if (uploadedCertUrl()) {
+                    <a [href]="uploadedCertUrl()" target="_blank" rel="noopener"
+                      class="mt-3 inline-flex items-center px-3 py-1.5 bg-white border border-green-300 text-green-700 rounded text-xs font-semibold hover:bg-green-100 transition-colors">
+                      View Uploaded Certificate
+                    </a>
+                  }
                 </div>
               </div>
             }
@@ -135,12 +142,17 @@ export class DeclarationSolarComponent implements OnInit {
     this.declarationService.getDeclarationById(this.declarationId).subscribe({
       next: (res) => {
         const s = res?.data?.solarData;
+        const root = res?.data as any;
+        const fallbackCert = root?.certificateUrl ?? root?.solarCertificateUrl ?? null;
         if (res.success && s) {
           this.form.patchValue({
             hasSolar: !!s.hasSolar,
             capacityKw: s.capacityKw ?? null
           });
-          this.uploadedCertUrl.set(s.certificateUrl ?? null);
+          this.uploadedCertUrl.set(s.certificateUrl ?? fallbackCert);
+        } else if (res.success && fallbackCert) {
+          this.form.patchValue({ hasSolar: true });
+          this.uploadedCertUrl.set(fallbackCert);
         }
       }
     });

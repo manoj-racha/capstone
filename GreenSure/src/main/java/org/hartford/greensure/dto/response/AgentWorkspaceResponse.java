@@ -21,6 +21,8 @@ public class AgentWorkspaceResponse {
     private String userName;
     private String userAddress;
     private String userPhone;
+    private String pinCode;
+    private Integer householdMemberCount;
     private Integer declarationYear;
 
     // ── Vehicle Multiple Comparisons ───────────────────────────
@@ -55,7 +57,16 @@ public class AgentWorkspaceResponse {
     // ── Fraud Advisory ─────────────────────────────────────────
     private String fraudRiskLevel;
     private List<String> fraudFlags;
+    /** Parallel human-readable descriptions for {@link #fraudFlags}. */
+    @lombok.Builder.Default
+    private List<String> fraudFlagDescriptions = new java.util.ArrayList<>();
     private Integer fraudScore;
+
+    /**
+     * Vertex AI checklist for the site visit (structured).
+     */
+    @lombok.Builder.Default
+    private List<AgentChecklistItem> aiVerificationChecklist = new java.util.ArrayList<>();
 
     // ── Comparison Table ───────────────────────────────────────
 

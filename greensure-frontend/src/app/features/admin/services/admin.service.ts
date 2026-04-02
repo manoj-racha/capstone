@@ -10,6 +10,21 @@ import { DeclarationSummary, DeclarationDetail } from '../../../core/models/decl
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
+  private normalizeUser(user: any): UserProfile {
+    const role = (user?.role ?? user?.userType ?? 'USER') as 'USER' | 'AGENT' | 'ADMIN';
+    const status = (user?.status ?? 'ACTIVE') as 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+    return {
+      ...user,
+      role,
+      status,
+      phone: user?.phone ?? user?.mobile ?? '',
+      mobile: user?.mobile ?? user?.phone ?? '',
+      pincode: user?.pincode ?? user?.pinCode ?? '',
+      pinCode: user?.pinCode ?? user?.pincode ?? '',
+      userType: user?.userType ?? role
+    } as UserProfile;
+  }
+
   private normalizeAgent(agent: any): AgentProfile {
     const status = agent?.status ?? (agent?.active ? 'ACTIVE' : 'SUSPENDED');
     return {
@@ -34,11 +49,30 @@ export class AdminService {
     if (status) params.push(`status=${status}`);
     params.push(`page=${page}`, `size=${size}`);
     if (params.length) url += '?' + params.join('&');
-    return this.http.get<ApiResponse<Page<UserProfile>>>(url);
+    return this.http.get<ApiResponse<Page<any>>>(url).pipe(
+      map((res) => ({
+        ...res,
+        data: res.data
+          ? {
+              ...res.data,
+              content: (res.data.content ?? []).map((u: any) => this.normalizeUser(u))
+            }
+          : (res.data as any)
+      }) as ApiResponse<Page<UserProfile>>)
+    );
   }
 
   getUserById(id: number): Observable<ApiResponse<UserProfile>> {
-    return this.http.get<ApiResponse<UserProfile>>(`${this.base}/users/${id}`);
+    return this.http.get<ApiResponse<any>>(`${this.base}/users/${id}`).pipe(
+      map((res) => ({
+        ...res,
+        data: res.data ? this.normalizeUser(res.data) : res.data
+      }) as ApiResponse<UserProfile>)
+    );
+  }
+
+  updateUserStatus(id: number, status: string): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(`${this.base}/users/${id}/status?status=${status}`, {});
   }
 
   unlockResubmission(id: number): Observable<ApiResponse<void>> {

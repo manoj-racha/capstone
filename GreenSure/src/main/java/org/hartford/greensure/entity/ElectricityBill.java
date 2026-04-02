@@ -56,11 +56,19 @@ public class ElectricityBill {
     @Column(name = "ocr_confidence_score")
     private Double ocrConfidenceScore;
 
+    /** True when Vertex/Gemini reported non-empty anomaly list for this upload. */
+    @Column(name = "ai_anomaly_flag")
+    @Builder.Default
+    private Boolean aiAnomalyFlag = Boolean.FALSE;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        if (this.aiAnomalyFlag == null) {
+            this.aiAnomalyFlag = Boolean.FALSE;
+        }
     }
 }

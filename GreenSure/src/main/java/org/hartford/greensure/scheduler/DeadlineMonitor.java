@@ -1,12 +1,13 @@
 package org.hartford.greensure.scheduler;
 
-import org.hartford.greensure.entity.Agent;
 import org.hartford.greensure.entity.AgentAssignment;
 import org.hartford.greensure.entity.CarbonDeclaration;
 import org.hartford.greensure.entity.Notification;
+import org.hartford.greensure.entity.User;
+import org.hartford.greensure.enums.AssignmentStatus;
 import org.hartford.greensure.repository.AgentAssignmentRepository;
-import org.hartford.greensure.repository.AgentRepository;
 import org.hartford.greensure.repository.NotificationRepository;
+import org.hartford.greensure.repository.UserRepository;
 import org.hartford.greensure.service.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,7 @@ public class DeadlineMonitor {
         @Autowired
         private AgentAssignmentRepository assignmentRepo;
         @Autowired
-        private AgentRepository agentRepository;
+        private UserRepository userRepository;
         @Autowired
         private NotificationRepository notificationRepo;
         @Autowired
@@ -62,7 +63,7 @@ public class DeadlineMonitor {
 
                 for (AgentAssignment assignment : needingReminder) {
 
-                        Long agentId = assignment.getAgent().getAgentId();
+                        Long agentId = assignment.getAgent().getUserId();
 
                         // Check if reminder already sent in last 2 hours
                         // Prevents duplicate reminders if monitor runs twice
@@ -103,56 +104,26 @@ public class DeadlineMonitor {
 
                 for (AgentAssignment overdueAssignment : overdue) {
 
-                        Agent originalAgent = overdueAssignment.getAgent();
+                        User originalAgent = overdueAssignment.getAgent();
                         CarbonDeclaration declaration = overdueAssignment.getDeclaration();
 
                         log.warn("Overdue assignment found. Agent: {}, Declaration: {}",
                                         originalAgent.getFullName(), declaration.getDeclarationId());
 
                         // Step A — Mark original assignment REASSIGNED
-                        overdueAssignment.setStatus(
-                                        AgentAssignment.AssignmentStatus.REASSIGNED);
-                        overdueAssignment.setAssignmentStatus(AgentAssignment.AssignmentLifecycleStatus.REASSIGNED);
+                        overdueAssignment.setAssignmentStatus(AssignmentStatus.REASSIGNED);
                         overdueAssignment.setReassignReason("Missed deadline");
                         assignmentRepo.save(overdueAssignment);
-
-                        // Step B — Add strike to original agent
-                        originalAgent.setStrikeCount(
-                                        originalAgent.getStrikeCount() + 1);
-                        agentRepository.save(originalAgent);
-
-                        log.warn("Strike added to agent: {}. Total strikes: {}",
-                                        originalAgent.getFullName(), originalAgent.getStrikeCount());
-
-                        // Step C — Check if agent has reached 3 strikes
-                        if (originalAgent.getStrikeCount() >= 3) {
-                                log.warn("ALERT: Agent {} has reached 3 strikes. Admin review required.",
-                                                originalAgent.getFullName());
-
-                                // Notify admin about flagged agent
-                                // Find all admins and notify them
-                                agentRepository.findByAgentType(
-                                                Agent.AgentType.ADMIN, Pageable.unpaged())
-                                                .forEach(admin -> notificationService.sendToAgent(
-                                                                admin.getAgentId(),
-                                                                Notification.NotificationType.ASSIGNMENT_ALERT,
-                                                                "ALERT: Agent " +
-                                                                                originalAgent.getFullName() +
-                                                                                " (ID: " +
-                                                                                originalAgent.getEmployeeId() +
-                                                                                ") has reached 3 strikes. " +
-                                                                                "Please review and take action."));
-                        }
 
                         // Step D — Find new agent in same pin code
                         // Exclude the original agent to ensure different agent
                         String pinCode = declaration.getUser().getPinCode();
 
-                        List<Agent> availableAgents = agentRepository
-                                        .findLeastBusyAgentsByPinCode(pinCode)
+                        List<User> availableAgents = userRepository
+                                        .findByUserTypeAndPinCode(User.UserType.AGENT, pinCode)
                                         .stream()
-                                        .filter(a -> !a.getAgentId().equals(
-                                                        originalAgent.getAgentId()))
+                                        .filter(a -> !a.getUserId().equals(
+                                                        originalAgent.getUserId()))
                                         .toList();
 
                         if (availableAgents.isEmpty()) {
@@ -160,10 +131,10 @@ public class DeadlineMonitor {
                                                 pinCode);
 
                                 // Notify admin — manual intervention needed
-                                agentRepository.findByAgentType(
-                                                Agent.AgentType.ADMIN, Pageable.unpaged())
+                                userRepository.findByUserType(
+                                                User.UserType.ADMIN, Pageable.unpaged())
                                                 .forEach(admin -> notificationService.sendToAgent(
-                                                                admin.getAgentId(),
+                                                                admin.getUserId(),
                                                                 Notification.NotificationType.ASSIGNMENT_ALERT,
                                                                 "URGENT: No available agent found " +
                                                                                 "for pin code " + pinCode +
@@ -176,13 +147,12 @@ public class DeadlineMonitor {
                         // Step E — Assign to new agent
                         // New agent gets fresh 72-hour window
                         // New agent does NOT see previous agent's notes
-                        Agent newAgent = availableAgents.get(0);
+                        User newAgent = availableAgents.get(0);
 
                         AgentAssignment newAssignment = AgentAssignment.builder()
                                         .declaration(declaration)
                                         .agent(newAgent)
-                                        .status(AgentAssignment.AssignmentStatus.ASSIGNED)
-                                        .assignmentStatus(AgentAssignment.AssignmentLifecycleStatus.ACTIVE)
+                                        .assignmentStatus(AssignmentStatus.ACTIVE)
                                         .assignedBy("SYSTEM")
                                         .reassignReason("Missed deadline")
                                         .build();
@@ -191,14 +161,11 @@ public class DeadlineMonitor {
 
                         // Step F — Notify original agent of strike
                         notificationService.sendToAgent(
-                                        originalAgent.getAgentId(),
+                                        originalAgent.getUserId(),
                                         Notification.NotificationType.REASSIGNMENT_ALERT,
                                         "Your assignment for " +
                                                         declaration.getUser().getFullName() +
-                                                        " has been reassigned due to missed deadline. " +
-                                                        "A strike has been added to your account. " +
-                                                        "Current strikes: " +
-                                                        originalAgent.getStrikeCount());
+                                                        " has been reassigned due to missed deadline.");
 
                         // Step G — Notify user of reassignment
                         notificationService.sendToUser(
@@ -210,7 +177,7 @@ public class DeadlineMonitor {
 
                         // Step H — Notify new agent
                         notificationService.sendToAgent(
-                                        newAgent.getAgentId(),
+                                        newAgent.getUserId(),
                                         Notification.NotificationType.ASSIGNMENT_ALERT,
                                         "New verification task assigned. " +
                                                         "User: " +

@@ -38,6 +38,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Used by ADMIN — filter users by city
     List<User> findByCity(String city);
 
+    List<User> findByUserTypeAndPinCode(User.UserType userType, String pinCode);
+
     // Used by RENEWAL ENGINE — find all active users
     // List<User> findByStatus(User.UserStatus status);
 

@@ -9,7 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Advisory-only fraud detection engine.
@@ -33,6 +35,43 @@ import java.util.List;
 public class FraudAdvisoryService {
 
     private static final Logger log = LoggerFactory.getLogger(FraudAdvisoryService.class);
+
+    private static final Map<String, String> FLAG_DESCRIPTIONS = new LinkedHashMap<>();
+
+    static {
+        FLAG_DESCRIPTIONS.put("MANUAL_VEHICLE_NO_DOCUMENT", "Manual vehicle data without uploaded document");
+        FLAG_DESCRIPTIONS.put("NEW_VEHICLE_HIGH_MILEAGE", "Very new vehicle but high mileage band declared");
+        FLAG_DESCRIPTIONS.put("EV_DECLARED_LOW_ELECTRICITY", "EV declared but household electricity use looks very low");
+        FLAG_DESCRIPTIONS.put("EV_DECLARED_NO_ELECTRICITY_DATA", "EV declared but no electricity data on file");
+        FLAG_DESCRIPTIONS.put("SOLAR_CLAIMED_NO_CERTIFICATE", "Solar claimed but no certificate uploaded");
+        FLAG_DESCRIPTIONS.put("ELECTRICITY_OUTLIER_HIGH", "Declared electricity usage is extremely high");
+        FLAG_DESCRIPTIONS.put("ELECTRICITY_BILL_ANOMALY", "AI detected anomaly in electricity bill");
+        FLAG_DESCRIPTIONS.put("SOLAR_CERT_CAPACITY_MISMATCH", "Solar capacity on certificate differs from user declaration");
+        FLAG_DESCRIPTIONS.put("PNG_BILL_ANOMALY", "AI detected anomaly in PNG bill");
+        FLAG_DESCRIPTIONS.put("LPG_RECEIPT_ANOMALY", "AI detected anomaly on an LPG receipt");
+        FLAG_DESCRIPTIONS.put("LPG_CYLINDER_COUNT_MISMATCH", "LPG cylinder count from receipts differs from user declaration");
+        FLAG_DESCRIPTIONS.put("SOLAR_CERT_ANOMALY", "AI detected issue in solar certificate");
+    }
+
+    /**
+     * Human-readable labels for fraud / AI flags (agent workspace and tooling).
+     */
+    public List<String> describeFlags(List<String> codes) {
+        if (codes == null || codes.isEmpty()) {
+            return List.of();
+        }
+        return codes.stream()
+                .map(c -> {
+                    if (c == null || c.isBlank()) {
+                        return "—";
+                    }
+                    String t = c.trim();
+                    return FLAG_DESCRIPTIONS.getOrDefault(
+                            t,
+                            t.replace("_", " ").toLowerCase());
+                })
+                .toList();
+    }
 
     @Autowired private DeclarationVehicleDataRepository vehicleDataRepo;
     @Autowired private ElectricityDataRepository electricityDataRepo;

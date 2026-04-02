@@ -30,18 +30,28 @@ public class DeclarationDetailResponse {
 
     // Module 4
     private String provider;
+    private String consumerNumber;
     private Double userDeclaredMonthlyKwh;
     private Double ocrComputedMonthlyKwh;
     private Integer billsUploaded;
+    private List<String> electricityBillUrls;
+
+    /** Per-bill AI/OCR confidence and anomaly summary for the review screen. */
+    @Builder.Default
+    private List<ElectricityBillSummaryResponse> electricityBills = new java.util.ArrayList<>();
 
     // Module 5
     private Boolean hasSolar;
     private Double  solarCapacityKw;
+    private String  certificateUrl;
     private Boolean mnreVerified;
 
     // Module 6
     private CookingFuel cookingFuelType;
+    private String      pngConsumerNumber;
+    private Integer     userDeclaredCylinders;
     private Integer     cylinders;
+    private String      billUrls;
 
     // Module 7
     private PublicTransportUsage publicTransportUsage;

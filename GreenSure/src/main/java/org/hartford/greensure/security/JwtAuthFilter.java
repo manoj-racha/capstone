@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.hartford.greensure.entity.User;
+import org.hartford.greensure.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,12 +28,15 @@ import java.util.List;
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    @Autowired private JwtUtil jwtUtil;
+    @Autowired
+    private JwtUtil jwtUtil;
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
@@ -41,14 +46,28 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             if (jwtUtil.isTokenValid(token)) {
                 String email = jwtUtil.extractEmail(token);
-                String role  = jwtUtil.extractRole(token);
-                Long   id    = jwtUtil.extractId(token);
+                String role = jwtUtil.extractRole(token);
+                Long id = jwtUtil.extractId(token);
 
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    // Reject stale tokens for deleted/suspended users and role-changed accounts.
+                    var dbUserOpt = userRepository.findById(id)
+                            .filter(u -> u.getStatus() == User.UserStatus.ACTIVE)
+                            .filter(u -> u.getEmail() != null && u.getEmail().equalsIgnoreCase(email))
+                            .filter(u -> {
+                                String dbRole = u.getRole() != null ? u.getRole().name() : null;
+                                return dbRole != null && dbRole.equalsIgnoreCase(role);
+                            });
+
+                    if (dbUserOpt.isEmpty()) {
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+
                     var authority = new SimpleGrantedAuthority("ROLE_" + role);
                     var principal = new SecurityUser(id, email, "", List.of(authority));
                     var auth = new UsernamePasswordAuthenticationToken(
-                            principal,   // principal = SecurityUser so @AuthenticationPrincipal works
+                            principal, // principal = SecurityUser so @AuthenticationPrincipal works
                             null,
                             List.of(authority));
                     auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

@@ -5,6 +5,7 @@ import { AdminService } from '../../../../features/admin/services/admin.service'
 import { DeclarationService } from '../../../../features/declaration/services/declaration.service';
 import { DeclarationDetail } from '../../../../core/models/declaration';
 import { ApiResponse } from '../../../../core/models/api-response';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
     selector: 'app-declaration-detail',
@@ -16,6 +17,7 @@ export class DeclarationDetailComponent implements OnInit {
     private adminService = inject(AdminService);
     private declarationService = inject(DeclarationService);
     private route = inject(ActivatedRoute);
+    private toast = inject(ToastService);
 
     declarationId = signal<number>(0);
     declaration = signal<DeclarationDetail | null>(null);
@@ -23,6 +25,7 @@ export class DeclarationDetailComponent implements OnInit {
 
     error = signal<string>('');
     actioning = signal<boolean>(false);
+    confirmModalOpen = signal<boolean>(false);
 
     ngOnInit(): void {
         const idParam = this.route.snapshot.paramMap.get('id');
@@ -52,24 +55,33 @@ export class DeclarationDetailComponent implements OnInit {
     unlockDeclaration(): void {
         if (!this.declaration() || this.declaration()?.status !== 'REJECTED') return;
 
-        if (confirm('Are you sure you want to unlock this rejected declaration for user resubmission?')) {
-            this.actioning.set(true);
-            this.adminService.unlockDeclaration(this.declarationId()).subscribe({
-                next: (res: ApiResponse<void>) => {
-                    this.actioning.set(false);
-                    if (res.success) {
-                        this.declaration.update(d => d ? { ...d, status: 'DRAFT' } : null); // Assumes it returns to draft state
-                        alert('Declaration unlocked successfully.');
-                    } else {
-                        alert('Failed to unlock declaration: ' + res.message);
-                    }
-                },
-                error: (_err: unknown) => {
-                    this.actioning.set(false);
-                    alert('Failed to unlock declaration.');
+        this.confirmModalOpen.set(true);
+    }
+
+    closeConfirmModal(): void {
+        this.confirmModalOpen.set(false);
+    }
+
+    confirmUnlockDeclaration(): void {
+        this.closeConfirmModal();
+        if (!this.declaration() || this.declaration()?.status !== 'REJECTED') return;
+
+        this.actioning.set(true);
+        this.adminService.unlockDeclaration(this.declarationId()).subscribe({
+            next: (res: ApiResponse<void>) => {
+                this.actioning.set(false);
+                if (res.success) {
+                    this.declaration.update(d => d ? { ...d, status: 'DRAFT' } : null); // Assumes it returns to draft state
+                    this.toast.success('Declaration unlocked successfully.');
+                } else {
+                    this.toast.error('Failed to unlock declaration: ' + res.message);
                 }
-            });
-        }
+            },
+            error: (_err: unknown) => {
+                this.actioning.set(false);
+                this.toast.error('Failed to unlock declaration.');
+            }
+        });
     }
 
     getStatusBadgeClass(status?: string): string {

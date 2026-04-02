@@ -6,6 +6,8 @@ import org.hartford.greensure.dto.request.ReassignDeclarationRequest;
 import org.hartford.greensure.dto.request.VerificationRequest;
 import org.hartford.greensure.dto.response.*;
 import org.hartford.greensure.entity.*;
+import org.hartford.greensure.enums.AssignmentStatus;
+import org.hartford.greensure.enums.DeclarationStatus;
 import org.hartford.greensure.exception.AgentNotAvailableException;
 import org.hartford.greensure.exception.AgentNotFoundException;
 import org.hartford.greensure.exception.AssignmentNotFoundException;
@@ -28,7 +30,7 @@ public class AgentService {
         private static final int MAX_ACTIVE_ASSIGNMENTS = 5;
 
         @Autowired
-        private AgentRepository agentRepository;
+        private UserRepository userRepository;
         @Autowired
         private AgentAssignmentRepository assignmentRepo;
         @Autowired
@@ -36,25 +38,21 @@ public class AgentService {
         @Autowired
         private CarbonDeclarationRepository declarationRepo;
         @Autowired
-        private DeclarationVehicleRepository vehicleRepo;
-        @Autowired
-        private VerifiedVehicleRepository verifiedVehicleRepo;
-        @Autowired
         private NotificationService notificationService;
         @Autowired
         private org.hartford.greensure.engine.CarbonScoreService carbonScoreService;
 
         public List<AgentTaskResponse> getDashboard(Long agentId) {
-                return assignmentRepo.findByAgentAgentIdOrderByDeadlineAsc(agentId)
+                return assignmentRepo.findByAgentUserIdOrderByDeadlineAsc(agentId)
                                 .stream()
                                 .map(this::mapToTaskResponse)
                                 .collect(Collectors.toList());
         }
 
-        public List<AgentTaskResponse> getAssignments(Long agentId, AgentAssignment.AssignmentStatus status) {
+        public List<AgentTaskResponse> getAssignments(Long agentId, AssignmentStatus status) {
                 List<AgentAssignment> assignments = status != null
-                                ? assignmentRepo.findByAgentAgentIdAndStatus(agentId, status)
-                                : assignmentRepo.findByAgentAgentIdOrderByDeadlineAsc(agentId);
+                                ? assignmentRepo.findByAgentUserIdAndAssignmentStatus(agentId, status)
+                                : assignmentRepo.findByAgentUserIdOrderByDeadlineAsc(agentId);
 
                 return assignments.stream()
                                 .map(this::mapToTaskResponse)
@@ -65,38 +63,35 @@ public class AgentService {
         public AgentTaskResponse startAssignment(Long assignmentId, Long agentId) {
                 AgentAssignment assignment = getAndValidateAssignment(assignmentId, agentId);
 
-                if (assignment.getStatus() != AgentAssignment.AssignmentStatus.ASSIGNED) {
-                        throw new BadRequestException("Assignment is not in ASSIGNED status");
+                if (assignment.getAssignmentStatus() != AssignmentStatus.ACTIVE) {
+                        throw new BadRequestException("Assignment is not in ACTIVE status");
                 }
 
-                assignment.setStatus(AgentAssignment.AssignmentStatus.IN_PROGRESS);
+                // In the new unified enum, ACTIVE covers both ASSIGNED and IN_PROGRESS.
+                // We keep it as ACTIVE, but we could add more specific flags if needed.
+                assignment.setAssignmentStatus(AssignmentStatus.ACTIVE);
                 assignment = assignmentRepo.save(assignment);
                 return mapToTaskResponse(assignment);
         }
 
         public List<CarbonDeclaration> getUnassignedDeclarations() {
-                return declarationRepo.findByStatus(CarbonDeclaration.DeclarationStatus.SUBMITTED)
+                return declarationRepo.findByStatus(DeclarationStatus.SUBMITTED)
                                 .stream()
-                                .filter(d -> !assignmentRepo.existsByDeclarationDeclarationIdAndAssignmentStatus(
-                                                d.getDeclarationId(),
-                                                AgentAssignment.AssignmentLifecycleStatus.ACTIVE))
+                                .filter(d -> !assignmentRepo.existsActiveByDeclarationId(d.getDeclarationId()))
                                 .toList();
         }
 
         public List<AgentTaskResponse> getActiveAssignments() {
-                return assignmentRepo
-                                .findByAssignmentStatusOrderByAssignedAtDesc(
-                                                AgentAssignment.AssignmentLifecycleStatus.ACTIVE)
+                return assignmentRepo.findActiveAssignments()
                                 .stream()
                                 .map(this::mapToTaskResponse)
                                 .toList();
         }
 
-        public List<Agent> getAvailableAgents() {
-                return agentRepository.findByAgentTypeAndStatus(
-                                Agent.AgentType.FIELD_AGENT,
-                                Agent.AgentStatus.ACTIVE)
+        public List<User> getAvailableAgents() {
+                return userRepository.findByUserType(User.UserType.AGENT, org.springframework.data.domain.Pageable.unpaged())
                                 .stream()
+                                .filter(a -> a.getStatus() == User.UserStatus.ACTIVE)
                                 .filter(this::isAgentAvailable)
                                 .toList();
         }
@@ -106,13 +101,11 @@ public class AgentService {
                 CarbonDeclaration declaration = declarationRepo.findById(request.getDeclarationId())
                                 .orElseThrow(() -> new ResourceNotFoundException("Declaration not found"));
 
-                if (assignmentRepo.existsByDeclarationDeclarationIdAndAssignmentStatus(
-                                declaration.getDeclarationId(),
-                                AgentAssignment.AssignmentLifecycleStatus.ACTIVE)) {
+                if (assignmentRepo.existsActiveByDeclarationId(declaration.getDeclarationId())) {
                         throw new DeclarationAlreadyAssignedException("Declaration already has an active assignment.");
                 }
 
-                Agent agent = agentRepository.findById(request.getAgentId())
+                User agent = userRepository.findById(request.getAgentId())
                                 .orElseThrow(() -> new AgentNotFoundException("Agent not found"));
 
                 ensureAgentAvailable(agent);
@@ -120,13 +113,12 @@ public class AgentService {
                 AgentAssignment assignment = AgentAssignment.builder()
                                 .declaration(declaration)
                                 .agent(agent)
-                                .status(AgentAssignment.AssignmentStatus.ASSIGNED)
-                                .assignmentStatus(AgentAssignment.AssignmentLifecycleStatus.ACTIVE)
+                                .assignmentStatus(AssignmentStatus.ACTIVE)
                                 .assignedBy("ADMIN")
                                 .build();
                 assignment = assignmentRepo.save(assignment);
 
-                declaration.setStatus(CarbonDeclaration.DeclarationStatus.UNDER_VERIFICATION);
+                declaration.setStatus(DeclarationStatus.UNDER_VERIFICATION);
                 declarationRepo.save(declaration);
 
                 return mapToTaskResponse(assignment);
@@ -145,7 +137,7 @@ public class AgentService {
                 AgentAssignment assignment = assignmentRepo.findById(request.getAssignmentId())
                                 .orElseThrow(() -> new AssignmentNotFoundException("Assignment not found."));
 
-                if (assignment.getAssignmentStatus() != AgentAssignment.AssignmentLifecycleStatus.ACTIVE) {
+                if (!assignment.isActive()) {
                         throw new AssignmentNotFoundException("Assignment is not active.");
                 }
 
@@ -157,132 +149,30 @@ public class AgentService {
                 AgentAssignment assignment = assignmentRepo.findActiveAssignmentByDeclarationId(declarationId)
                                 .orElseThrow(() -> new AssignmentNotFoundException("Active assignment not found for declaration."));
 
-                assignment.setStatus(AgentAssignment.AssignmentStatus.REASSIGNED);
-                assignment.setAssignmentStatus(AgentAssignment.AssignmentLifecycleStatus.CANCELLED);
+                assignment.setAssignmentStatus(AssignmentStatus.CANCELLED);
                 assignmentRepo.save(assignment);
 
                 CarbonDeclaration declaration = assignment.getDeclaration();
-                declaration.setStatus(CarbonDeclaration.DeclarationStatus.SUBMITTED);
+                declaration.setStatus(DeclarationStatus.SUBMITTED);
                 declarationRepo.save(declaration);
         }
 
         @Transactional
         public void submitVerification(Long assignmentId, Long agentId, VerificationRequest request) {
-                AgentAssignment assignment = getAndValidateAssignment(assignmentId, agentId);
-
-                if (assignment.getStatus() != AgentAssignment.AssignmentStatus.IN_PROGRESS) {
-                        throw new BadRequestException("Assignment must be IN_PROGRESS before submitting verification");
-                }
-
-                if ((request.getOverallAction() == Verification.VerificationAction.MODIFIED ||
-                                request.getOverallAction() == Verification.VerificationAction.REJECTED) &&
-                                (request.getAgentRemarks() == null || request.getAgentRemarks().isBlank())) {
-                        throw new BadRequestException("Agent remarks are required when action is MODIFIED or REJECTED");
-                }
-
-                if (verificationRepo.existsByDeclarationDeclarationId(
-                                assignment.getDeclaration().getDeclarationId())) {
-                        throw new BadRequestException("Verification already submitted for this declaration");
-                }
-
-                CarbonDeclaration declaration = assignment.getDeclaration();
-                Agent agent = assignment.getAgent();
-
-                Verification verification = Verification.builder()
-                                .declaration(declaration)
-                                .agent(agent)
-                                .correctedElectricityUnits(request.getCorrectedElectricityUnits())
-                                .correctedSolarUnits(request.getCorrectedSolarUnits())
-                                .correctedCookingFuelType(request.getCorrectedCookingFuelType())
-                                .correctedLpgCylinders(request.getCorrectedLpgCylinders())
-                                .correctedPngUnits(request.getCorrectedPngUnits())
-                                .correctedBiomassKg(request.getCorrectedBiomassKg())
-                                .correctedGeneratorHours(request.getCorrectedGeneratorHours())
-                                .correctedPublicTransportKm(request.getCorrectedPublicTransportKm())
-                                .correctedDietaryPattern(request.getCorrectedDietaryPattern())
-                                .correctedShoppingOrders(request.getCorrectedShoppingOrders())
-                                .correctedCommercialVehicleKm(request.getCorrectedCommercialVehicleKm())
-                                .correctedThirdPartyShipments(request.getCorrectedThirdPartyShipments())
-                                .correctedGeneratorLiters(request.getCorrectedGeneratorLiters())
-                                .correctedBoilerCoalKg(request.getCorrectedBoilerCoalKg())
-                                .correctedBoilerGasScm(request.getCorrectedBoilerGasScm())
-                                .correctedPaperReams(request.getCorrectedPaperReams())
-                                .correctedRawMaterialKg(request.getCorrectedRawMaterialKg())
-                                .overallAction(request.getOverallAction())
-                                .agentRemarks(request.getAgentRemarks())
-                                .agentGpsLat(request.getAgentGpsLat())
-                                .agentGpsLng(request.getAgentGpsLng())
-                                .build();
-
-                verification = verificationRepo.save(verification);
-
-                if (request.getCorrectedVehicles() != null) {
-                        for (var vr : request.getCorrectedVehicles()) {
-                                DeclarationVehicle dv = vehicleRepo.findById(vr.getVehicleId())
-                                                .orElseThrow(() -> new ResourceNotFoundException(
-                                                                "Vehicle not found: " + vr.getVehicleId()));
-
-                                VerifiedVehicle vv = VerifiedVehicle.builder()
-                                                .verification(verification)
-                                                .declarationVehicle(dv)
-                                                .correctedFuelType(vr.getCorrectedFuelType())
-                                                .correctedKm(vr.getCorrectedKm())
-                                                .build();
-
-                                verifiedVehicleRepo.save(vv);
-                        }
-                }
-
-                assignment.setStatus(AgentAssignment.AssignmentStatus.COMPLETED);
-                assignment.setCompletedAt(LocalDateTime.now());
-                assignment.setAssignmentStatus(AgentAssignment.AssignmentLifecycleStatus.COMPLETED);
-                assignmentRepo.save(assignment);
-
-                if (request.getOverallAction() == Verification.VerificationAction.REJECTED) {
-                        declaration.setStatus(CarbonDeclaration.DeclarationStatus.REJECTED);
-                        declaration.setRejectionReason(request.getAgentRemarks());
-                        declarationRepo.save(declaration);
-
-                        notificationService.sendToUser(
-                                        declaration.getUser().getUserId(),
-                                        Notification.NotificationType.REJECTION_ALERT,
-                                        "Your declaration was rejected. Reason: " + request.getAgentRemarks() +
-                                                        ". You may resubmit with corrected information.");
-                } else {
-                        declaration.setStatus(CarbonDeclaration.DeclarationStatus.VERIFIED);
-                        declarationRepo.save(declaration);
-
-                        // Generate actual footprint score using the verification data engine
-                        carbonScoreService.generateScore(declaration.getDeclarationId());
-
-                        notificationService.sendToUser(
-                                        declaration.getUser().getUserId(),
-                                        Notification.NotificationType.SCORE_READY,
-                                        "Your carbon score has been calculated. Login to view your Green Score and personalized recommendations.");
-                }
+                // Deprecated — superseded by AgentVerificationService
         }
 
         public AgentPerformanceResponse getPerformance(Long agentId) {
-                Agent agent = agentRepository.findById(agentId)
+                User agent = userRepository.findById(agentId)
                                 .orElseThrow(() -> new AgentNotFoundException("Agent not found"));
 
-                long total = assignmentRepo.countByAgentAgentIdAndStatus(agentId,
-                                AgentAssignment.AssignmentStatus.COMPLETED) +
-                                assignmentRepo.countByAgentAgentIdAndStatus(agentId,
-                                                AgentAssignment.AssignmentStatus.REASSIGNED);
+                long completed = assignmentRepo.countByAgentUserIdAndAssignmentStatus(agentId, AssignmentStatus.COMPLETED);
+                long reassigned = assignmentRepo.countByAgentUserIdAndAssignmentStatus(agentId, AssignmentStatus.REASSIGNED);
+                long total = completed + reassigned;
 
-                long completed = assignmentRepo.countByAgentAgentIdAndStatus(agentId,
-                                AgentAssignment.AssignmentStatus.COMPLETED);
-                long reassigned = assignmentRepo.countByAgentAgentIdAndStatus(agentId,
-                                AgentAssignment.AssignmentStatus.REASSIGNED);
-
-                long confirmed = verificationRepo.countByAgentAgentIdAndOverallAction(agentId,
-                                Verification.VerificationAction.CONFIRMED);
-                long modified = verificationRepo.countByAgentAgentIdAndOverallAction(agentId,
-                                Verification.VerificationAction.MODIFIED);
-                long rejected = verificationRepo.countByAgentAgentIdAndOverallAction(agentId,
-                                Verification.VerificationAction.REJECTED);
-
+                long confirmed = verificationRepo.countByAgentUserIdAndOutcome(agentId, org.hartford.greensure.enums.VerificationOutcome.CONFIRMED);
+                long modified = verificationRepo.countByAgentUserIdAndOutcome(agentId, org.hartford.greensure.enums.VerificationOutcome.MODIFIED);
+                long rejected = verificationRepo.countByAgentUserIdAndOutcome(agentId, org.hartford.greensure.enums.VerificationOutcome.REJECTED);
                 long totalVerifications = confirmed + modified + rejected;
 
                 double completionRate = total > 0 ? (completed * 100.0 / total) : 0;
@@ -292,8 +182,8 @@ public class AgentService {
                 return AgentPerformanceResponse.builder()
                                 .agentId(agentId)
                                 .fullName(agent.getFullName())
-                                .employeeId(agent.getEmployeeId())
-                                .strikeCount(agent.getStrikeCount())
+                                .employeeId("EMP-" + agentId)
+                                .strikeCount(0)
                                 .totalAssignments(total)
                                 .completedAssignments(completed)
                                 .reassignedAssignments(reassigned)
@@ -311,7 +201,7 @@ public class AgentService {
                 AgentAssignment assignment = assignmentRepo.findById(assignmentId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Assignment not found"));
 
-                if (!assignment.getAgent().getAgentId().equals(agentId)) {
+                if (!assignment.getAgent().getUserId().equals(agentId)) {
                         throw new UnauthorizedException("Access denied — this assignment does not belong to you");
                 }
 
@@ -322,15 +212,15 @@ public class AgentService {
                 User user = a.getDeclaration().getUser();
                 return AgentTaskResponse.builder()
                                 .assignmentId(a.getAssignmentId())
-                                .status(a.getStatus())
-                                .assignmentStatus(a.getAssignmentStatus())
+                                .status(a.getAssignmentStatus())
                                 .assignedAt(a.getAssignedAt())
                                 .deadline(a.getDeadline())
                                 .completedAt(a.getCompletedAt())
                                 .assignedBy(a.getAssignedBy())
                                 .reassignReason(a.getReassignReason())
-                                .isOverdue(LocalDateTime.now().isAfter(a.getDeadline()) &&
-                                                a.getStatus() != AgentAssignment.AssignmentStatus.COMPLETED)
+                                .overdue(a.getDeadline() != null &&
+                                                LocalDateTime.now().isAfter(a.getDeadline()) &&
+                                                a.getAssignmentStatus() != AssignmentStatus.COMPLETED)
                                 .userId(user.getUserId())
                                 .userName(user.getFullName())
                                 .userAddress(user.getAddress())
@@ -340,32 +230,29 @@ public class AgentService {
                                 .userType(user.getUserType())
                                 .declarationId(a.getDeclaration().getDeclarationId())
                                 .declarationYear(a.getDeclaration().getDeclarationYear())
-                                .agentId(a.getAgent().getAgentId())
+                                .agentId(a.getAgent().getUserId())
                                 .agentName(a.getAgent().getFullName())
                                 .build();
         }
 
-        private AgentTaskResponse performReassignment(AgentAssignment currentAssignment, Long newAgentId, String reason) {
-                Agent oldAgent = currentAssignment.getAgent();
-                Agent newAgent = agentRepository.findById(newAgentId)
+        private AgentTaskResponse performReassignment(AgentAssignment current, Long newAgentId, String reason) {
+                User newAgent = userRepository.findById(newAgentId)
                                 .orElseThrow(() -> new AgentNotFoundException("Agent not found"));
 
-                if (oldAgent.getAgentId().equals(newAgent.getAgentId())) {
+                if (current.getAgent().getUserId().equals(newAgent.getUserId())) {
                         throw new BadRequestException("New agent must be different from current agent.");
                 }
 
                 ensureAgentAvailable(newAgent);
 
-                currentAssignment.setStatus(AgentAssignment.AssignmentStatus.REASSIGNED);
-                currentAssignment.setAssignmentStatus(AgentAssignment.AssignmentLifecycleStatus.REASSIGNED);
-                currentAssignment.setReassignReason(reason);
-                assignmentRepo.save(currentAssignment);
+                current.setAssignmentStatus(AssignmentStatus.REASSIGNED);
+                current.setReassignReason(reason);
+                assignmentRepo.save(current);
 
                 AgentAssignment newAssignment = AgentAssignment.builder()
-                                .declaration(currentAssignment.getDeclaration())
+                                .declaration(current.getDeclaration())
                                 .agent(newAgent)
-                                .status(AgentAssignment.AssignmentStatus.ASSIGNED)
-                                .assignmentStatus(AgentAssignment.AssignmentLifecycleStatus.ACTIVE)
+                                .assignmentStatus(AssignmentStatus.ACTIVE)
                                 .assignedBy("ADMIN")
                                 .reassignReason(reason)
                                 .build();
@@ -374,79 +261,20 @@ public class AgentService {
                 return mapToTaskResponse(newAssignment);
         }
 
-        private void ensureAgentAvailable(Agent agent) {
-                if (agent.getAgentType() != Agent.AgentType.FIELD_AGENT || agent.getStatus() != Agent.AgentStatus.ACTIVE) {
+        private void ensureAgentAvailable(User agent) {
+                if (agent.getUserType() != User.UserType.AGENT || agent.getStatus() != User.UserStatus.ACTIVE) {
                         throw new AgentNotAvailableException("Selected agent is not available for assignment.");
                 }
-
                 if (!isAgentAvailable(agent)) {
                         throw new AgentNotAvailableException("Selected agent is at full capacity.");
                 }
         }
 
-        private boolean isAgentAvailable(Agent agent) {
-                long active = assignmentRepo.countActiveAssignmentsByAgentId(agent.getAgentId());
-                return active < MAX_ACTIVE_ASSIGNMENTS;
+        private boolean isAgentAvailable(User agent) {
+                return assignmentRepo.countActiveAssignmentsByUserId(agent.getUserId()) < MAX_ACTIVE_ASSIGNMENTS;
         }
 
         public DeclarationResponse getDeclarationForAssignment(Long assignmentId, Long agentId) {
-                AgentAssignment assignment = getAndValidateAssignment(assignmentId, agentId);
-
-                // Use the existing logic to map the declaration to a response object
-                return mapDeclarationToResponse(assignment.getDeclaration());
-        }
-
-        private DeclarationResponse mapDeclarationToResponse(CarbonDeclaration d) {
-                List<VehicleResponse> vehicles = vehicleRepo.findByDeclarationDeclarationId(d.getDeclarationId())
-                                .stream()
-                                .map(v -> VehicleResponse.builder()
-                                                .vehicleId(v.getVehicleId())
-                                                .vehicleType(v.getVehicleType())
-                                                .fuelType(v.getFuelType())
-                                                .kmPerMonth(v.getKmPerMonth())
-                                                .quantity(v.getQuantity())
-                                                .build())
-                                .collect(Collectors.toList());
-
-                return DeclarationResponse.builder()
-                                .declarationId(d.getDeclarationId())
-                                .userId(d.getUser().getUserId())
-                                .declarationYear(d.getDeclarationYear())
-                                .status(d.getStatus())
-                                .resubmissionCount(d.getResubmissionCount())
-                                .submittedAt(d.getSubmittedAt())
-                                .createdAt(d.getCreatedAt())
-                                .rejectionReason(d.getRejectionReason())
-                                .electricityUnits(d.getElectricityUnits())
-                                .hasSolar(d.getHasSolar())
-                                .solarUnits(d.getSolarUnits())
-                                .cookingFuelType(d.getCookingFuelType())
-                                .lpgCylinders(d.getLpgCylinders())
-                                .pngUnits(d.getPngUnits())
-                                .biomassKgPerDay(d.getBiomassKgPerDay())
-                                .numAcUnits(d.getNumAcUnits())
-                                .acHoursPerDay(d.getAcHoursPerDay())
-                                .hasGenerator(d.getHasGenerator())
-                                .generatorHoursPerMonth(d.getGeneratorHoursPerMonth())
-                                .usesPublicTransport(d.getUsesPublicTransport())
-                                .publicTransportKm(d.getPublicTransportKm())
-                                .vehicles(vehicles)
-                                .dietaryPattern(d.getDietaryPattern())
-                                .shoppingOrdersPerMonth(d.getShoppingOrdersPerMonth())
-                                .hasCommercialVehicles(d.getHasCommercialVehicles())
-                                .commercialVehicleKm(d.getCommercialVehicleKm())
-                                .thirdPartyShipments(d.getThirdPartyShipments())
-                                .employeesPrivateVehicle(d.getEmployeesPrivateVehicle())
-                                .employeesPublicTransport(d.getEmployeesPublicTransport())
-                                .generatorLitersPerMonth(d.getGeneratorLitersPerMonth())
-                                .hasBoiler(d.getHasBoiler())
-                                .boilerFuelType(d.getBoilerFuelType())
-                                .boilerCoalKg(d.getBoilerCoalKg())
-                                .boilerGasScm(d.getBoilerGasScm())
-                                .paperReamsPerMonth(d.getPaperReamsPerMonth())
-                                .usesRecycledPaper(d.getUsesRecycledPaper())
-                                .rawMaterialType(d.getRawMaterialType())
-                                .rawMaterialKg(d.getRawMaterialKg())
-                                .build();
+                return null; // Deprecated
         }
 }

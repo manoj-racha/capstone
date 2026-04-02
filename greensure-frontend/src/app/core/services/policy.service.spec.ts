@@ -7,7 +7,7 @@ import { PolicyService } from './policy.service';
 describe('PolicyService', () => {
   let service: PolicyService;
   let httpMock: HttpTestingController;
-  const baseUrl = 'http://localhost:9090/api/policies';
+  const baseUrl = 'http://localhost:9090';
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -25,17 +25,18 @@ describe('PolicyService', () => {
   it('should get available policies', () => {
     service.getPolicies().subscribe();
 
-    const req = httpMock.expectOne(baseUrl);
+    const req = httpMock.expectOne(`${baseUrl}/policy`);
     expect(req.request.method).toBe('GET');
     req.flush({ success: true, data: [] });
   });
 
   it('should buy a policy', () => {
+    const policyId = '1';
     const request = { planId: 1, durationMonths: 12, finalPrice: 1999 };
 
-    service.buyPolicy(request).subscribe();
+    service.buyPolicy(policyId, request).subscribe();
 
-    const req = httpMock.expectOne(`${baseUrl}/buy`);
+    const req = httpMock.expectOne(`${baseUrl}/policy/purchase/${policyId}`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(request);
     req.flush({ success: true, data: {} });
@@ -44,7 +45,7 @@ describe('PolicyService', () => {
   it('should get current user policies', () => {
     service.getMyPolicies().subscribe();
 
-    const req = httpMock.expectOne(`${baseUrl}/my-policies`);
+    const req = httpMock.expectOne(`${baseUrl}/user/my-policies`);
     expect(req.request.method).toBe('GET');
     req.flush({ success: true, data: [] });
   });

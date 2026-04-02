@@ -16,12 +16,28 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(
+    public ResponseEntity<ApiResponse<String>> register(
             @Valid @RequestBody RegisterRequest request) {
 
-        AuthResponse response = authService.register(request);
+        String message = authService.register(request);
         return ResponseEntity.ok(
-            ApiResponse.success("Registration successful", response));
+                ApiResponse.success("OTP sent", message));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(
+            @Valid @RequestBody OtpVerifyRequest request) {
+
+        AuthResponse response = authService.verifyOtp(request);
+        return ResponseEntity.ok(ApiResponse.success("OTP verified", response));
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<ApiResponse<Void>> resendOtp(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+
+        authService.resendOtp(request);
+        return ResponseEntity.ok(ApiResponse.success("If this email is registered, a new OTP has been sent."));
     }
 
     @PostMapping("/login")
@@ -32,22 +48,18 @@ public class AuthController {
         try {
             response = authService.loginUser(request);
         } catch (RuntimeException e) {
-            try {
-                response = authService.loginAgent(request);
-            } catch (RuntimeException ex) {
-                // Return 200 OK with success=false to prevent 400 Bad Request console errors
-                return ResponseEntity.ok(ApiResponse.error("Invalid email or password"));
-            }
+            // Return 200 OK with success=false to prevent 400 Bad Request console errors
+            return ResponseEntity.ok(ApiResponse.error("Invalid email or password"));
         }
 
         return ResponseEntity.ok(
-            ApiResponse.success("Login successful", response));
+                ApiResponse.success("Login successful", response));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout() {
         return ResponseEntity.ok(
-            ApiResponse.success("Logged out successfully. Please discard your token."));
+                ApiResponse.success("Logged out successfully. Please discard your token."));
     }
 
     @PostMapping("/forgot-password")
@@ -56,7 +68,7 @@ public class AuthController {
 
         authService.forgotPassword(request);
         return ResponseEntity.ok(
-            ApiResponse.success("If this email is registered, you will receive a reset link shortly."));
+                ApiResponse.success("If this email is registered, you will receive a reset link shortly."));
     }
 
     @PostMapping("/reset-password")
@@ -65,6 +77,6 @@ public class AuthController {
 
         authService.resetPassword(request);
         return ResponseEntity.ok(
-            ApiResponse.success("Password reset successfully."));
+                ApiResponse.success("Password reset successfully."));
     }
 }

@@ -128,6 +128,14 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
+    @ExceptionHandler(FileProcessingException.class)
+    public ResponseEntity<ApiResponse<Void>> handleFileProcessing(
+            FileProcessingException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
     // Fallback handler for all other RuntimeExceptions
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntime(

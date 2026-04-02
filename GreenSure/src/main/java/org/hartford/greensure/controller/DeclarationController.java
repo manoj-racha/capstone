@@ -18,276 +18,340 @@ import java.util.stream.Collectors;
 /**
  * All declaration lifecycle endpoints for the USER role.
  *
- * POST   /declaration/start                  — start a new declaration
- * PUT    /declaration/{id}/household         — save Module 2
- * PUT    /declaration/{id}/vehicle           — save Module 3
- * PUT    /declaration/{id}/electricity       — save Module 4
- * POST   /declaration/{id}/electricity/bills — add a bill OCR record
- * PUT    /declaration/{id}/solar             — save Module 5 (optional)
- * PUT    /declaration/{id}/cooking           — save Module 6
- * PUT    /declaration/{id}/lifestyle         — save Module 7 (optional)
- * POST   /declaration/{id}/submit            — submit for verification
- * POST   /declaration/{id}/resubmit          — resubmit after rejection
- * GET    /declaration/history                — list own declarations
- * GET    /declaration/{id}                   — get full detail
+ * POST /declaration/start — start a new declaration
+ * PUT /declaration/{id}/household — save Module 2
+ * PUT /declaration/{id}/vehicle — save Module 3
+ * PUT /declaration/{id}/electricity — save Module 4
+ * POST /declaration/{id}/electricity/bills — add a bill OCR record
+ * PUT /declaration/{id}/solar — save Module 5 (optional)
+ * PUT /declaration/{id}/cooking — save Module 6
+ * PUT /declaration/{id}/lifestyle — save Module 7 (optional)
+ * POST /declaration/{id}/submit — submit for verification
+ * POST /declaration/{id}/resubmit — resubmit after rejection
+ * GET /declaration/history — list own declarations
+ * GET /declaration/{id} — get full detail
  */
 @RestController
 @RequestMapping("/declaration")
 public class DeclarationController {
 
-    @Autowired private DeclarationModuleService moduleService;
-    @Autowired private CarbonDeclarationRepository declarationRepo;
-    @Autowired private CarbonScoreRepository scoreRepository;
-    @Autowired private VerificationRepository verificationRepo;
-    @Autowired private HouseholdProfileRepository householdRepo;
-    @Autowired private DeclarationVehicleDataRepository vehicleDataRepo;
-    @Autowired private ElectricityDataRepository electricityDataRepo;
-    @Autowired private CookingDataRepository cookingDataRepo;
-    @Autowired private SolarDataRepository solarDataRepo;
-    @Autowired private LifestyleDataRepository lifestyleDataRepo;
+        @Autowired
+        private DeclarationModuleService moduleService;
+        @Autowired
+        private CarbonDeclarationRepository declarationRepo;
+        @Autowired
+        private CarbonScoreRepository scoreRepository;
+        @Autowired
+        private VerificationRepository verificationRepo;
+        @Autowired
+        private HouseholdProfileRepository householdRepo;
+        @Autowired
+        private DeclarationVehicleDataRepository vehicleDataRepo;
+        @Autowired
+        private ElectricityDataRepository electricityDataRepo;
+        @Autowired
+        private CookingDataRepository cookingDataRepo;
+        @Autowired
+        private SolarDataRepository solarDataRepo;
+        @Autowired
+        private LifestyleDataRepository lifestyleDataRepo;
+        @Autowired
+        private ElectricityBillRepository electricityBillRepo;
 
-    private Long userId(Authentication auth) {
-        return ((org.hartford.greensure.security.SecurityUser) auth.getPrincipal()).getId();
-    }
+        private Long userId(Authentication auth) {
+                return ((org.hartford.greensure.security.SecurityUser) auth.getPrincipal()).getId();
+        }
 
-    // ── Start ──────────────────────────────────────────────────
+        // ── Start ──────────────────────────────────────────────────
 
-    @PostMapping("/start")
-    public ResponseEntity<ApiResponse<Long>> start(Authentication auth) {
-        CarbonDeclaration d = moduleService.startDeclaration(userId(auth));
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Declaration started", d.getDeclarationId()));
-    }
+        @PostMapping("/start")
+        public ResponseEntity<ApiResponse<Long>> start(Authentication auth) {
+                CarbonDeclaration d = moduleService.startDeclaration(userId(auth));
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(ApiResponse.success("Declaration started", d.getDeclarationId()));
+        }
 
-    // ── Module 2 — Household ───────────────────────────────────
+        // ── Module 2 — Household ───────────────────────────────────
 
-    @PutMapping("/{id}/household")
-    public ResponseEntity<ApiResponse<Void>> saveHousehold(
-            Authentication auth,
-            @PathVariable Long id,
-            @Valid @RequestBody HouseholdDataRequest req) {
-        moduleService.saveHouseholdData(userId(auth), req);
-        return ResponseEntity.ok(ApiResponse.success("Household data saved"));
-    }
+        @PutMapping("/{id}/household")
+        public ResponseEntity<ApiResponse<Void>> saveHousehold(
+                        Authentication auth,
+                        @PathVariable Long id,
+                        @Valid @RequestBody HouseholdDataRequest req) {
+                moduleService.saveHouseholdData(userId(auth), req);
+                return ResponseEntity.ok(ApiResponse.success("Household data saved"));
+        }
 
-    @PostMapping("/{id}/vehicles")
-    public ResponseEntity<ApiResponse<org.hartford.greensure.dto.response.VehicleResponseDTO>> addVehicle(
-            @PathVariable Long id,
-            @Valid @RequestBody AddVehicleRequestDTO req) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Vehicle added", moduleService.addVehicle(id, req)));
-    }
+        @PostMapping("/{id}/vehicles")
+        public ResponseEntity<ApiResponse<org.hartford.greensure.dto.response.VehicleResponseDTO>> addVehicle(
+                        @PathVariable Long id,
+                        @Valid @RequestBody AddVehicleRequestDTO req) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(ApiResponse.success("Vehicle added", moduleService.addVehicle(id, req)));
+        }
 
-    @PostMapping("/{id}/vehicles/{vehicleId}/documents")
-    public ResponseEntity<ApiResponse<org.hartford.greensure.dto.response.VehicleDocumentResponseDTO>> addVehicleDocument(
-            @PathVariable Long id,
-            @PathVariable Long vehicleId,
-            @Valid @RequestBody UploadVehicleDocumentRequestDTO req) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Document uploaded", moduleService.addVehicleDocument(vehicleId, id, req)));
-    }
+        @PutMapping("/{id}/vehicles/{vehicleId}")
+        public ResponseEntity<ApiResponse<org.hartford.greensure.dto.response.VehicleResponseDTO>> updateVehicle(
+                        @PathVariable Long id,
+                        @PathVariable Long vehicleId,
+                        @Valid @RequestBody AddVehicleRequestDTO req) {
+                return ResponseEntity.ok(
+                                ApiResponse.success("Vehicle updated",
+                                                moduleService.updateVehicle(id, vehicleId, req)));
+        }
 
-    @DeleteMapping("/{id}/vehicles/{vehicleId}")
-    public ResponseEntity<Void> removeVehicle(
-            @PathVariable Long id,
-            @PathVariable Long vehicleId) {
-        moduleService.removeVehicle(vehicleId, id);
-        return ResponseEntity.noContent().build();
-    }
+        @PostMapping("/{id}/vehicles/{vehicleId}/documents")
+        public ResponseEntity<ApiResponse<org.hartford.greensure.dto.response.VehicleDocumentResponseDTO>> addVehicleDocument(
+                        @PathVariable Long id,
+                        @PathVariable Long vehicleId,
+                        @Valid @RequestBody UploadVehicleDocumentRequestDTO req) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(ApiResponse.success("Document uploaded",
+                                                moduleService.addVehicleDocument(vehicleId, id, req)));
+        }
 
-    @GetMapping("/{id}/vehicles")
-    public ResponseEntity<ApiResponse<List<org.hartford.greensure.dto.response.VehicleResponseDTO>>> getVehiclesForDeclaration(
-            @PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.success("Vehicles retrieved", moduleService.getVehiclesForDeclaration(id)));
-    }
+        @DeleteMapping("/{id}/vehicles/{vehicleId}/documents/{documentId}")
+        public ResponseEntity<ApiResponse<Void>> removeVehicleDocument(
+                        @PathVariable Long id,
+                        @PathVariable Long vehicleId,
+                        @PathVariable Long documentId) {
+                moduleService.removeVehicleDocument(id, vehicleId, documentId);
+                return ResponseEntity.ok(ApiResponse.success("Document removed"));
+        }
 
-    // ── Module 4 — Electricity ─────────────────────────────────
+        @DeleteMapping("/{id}/vehicles/{vehicleId}")
+        public ResponseEntity<Void> removeVehicle(
+                        @PathVariable Long id,
+                        @PathVariable Long vehicleId) {
+                moduleService.removeVehicle(vehicleId, id);
+                return ResponseEntity.noContent().build();
+        }
 
-    @PutMapping("/{id}/electricity")
-    public ResponseEntity<ApiResponse<Void>> saveElectricity(
-            @PathVariable Long id,
-            @Valid @RequestBody ElectricityDataRequest req) {
-        moduleService.saveElectricityData(id, req);
-        return ResponseEntity.ok(ApiResponse.success("Electricity data saved"));
-    }
+        @GetMapping("/{id}/vehicles")
+        public ResponseEntity<ApiResponse<List<org.hartford.greensure.dto.response.VehicleResponseDTO>>> getVehiclesForDeclaration(
+                        @PathVariable Long id) {
+                return ResponseEntity
+                                .ok(ApiResponse.success("Vehicles retrieved",
+                                                moduleService.getVehiclesForDeclaration(id)));
+        }
 
-    @PostMapping("/{id}/electricity/bills")
-    public ResponseEntity<ApiResponse<Void>> addBill(
-            @PathVariable Long id,
-            @RequestParam String billingMonth,
-            @RequestParam Double unitsKwh,
-            @RequestParam(required = false) Double amount,
-            @RequestParam(required = false) String billUrl,
-            @RequestParam(defaultValue = "1.0") Double confidence) {
-        moduleService.addElectricityBill(id, billingMonth, unitsKwh, amount, billUrl, confidence);
-        return ResponseEntity.ok(ApiResponse.success("Bill added and average kWh updated."));
-    }
+        // ── Module 4 — Electricity ─────────────────────────────────
 
-    // ── Module 5 — Solar ───────────────────────────────────────
+        @PutMapping("/{id}/electricity")
+        public ResponseEntity<ApiResponse<Void>> saveElectricity(
+                        @PathVariable Long id,
+                        @Valid @RequestBody ElectricityDataRequest req) {
+                moduleService.saveElectricityData(id, req);
+                return ResponseEntity.ok(ApiResponse.success("Electricity data saved"));
+        }
 
-    @PutMapping("/{id}/solar")
-    public ResponseEntity<ApiResponse<Void>> saveSolar(
-            @PathVariable Long id,
-            @Valid @RequestBody SolarDataRequest req) {
-        moduleService.saveSolarData(id, req);
-        return ResponseEntity.ok(ApiResponse.success("Solar data saved"));
-    }
+        @PostMapping("/{id}/electricity/bills")
+        public ResponseEntity<ApiResponse<Void>> addBill(
+                        @PathVariable Long id,
+                        @RequestParam String billingMonth,
+                        @RequestParam Double unitsKwh,
+                        @RequestParam(required = false) Double amount,
+                        @RequestParam(required = false) String billUrl,
+                        @RequestParam(defaultValue = "1.0") Double confidence) {
+                moduleService.addElectricityBill(id, billingMonth, unitsKwh, amount, billUrl, confidence);
+                return ResponseEntity.ok(ApiResponse.success("Bill added and average kWh updated."));
+        }
 
-    // ── Module 6 — Cooking ─────────────────────────────────────
+        // ── Module 5 — Solar ───────────────────────────────────────
 
-    @PutMapping("/{id}/cooking")
-    public ResponseEntity<ApiResponse<Void>> saveCooking(
-            @PathVariable Long id,
-            @Valid @RequestBody CookingDataRequest req) {
-        moduleService.saveCookingData(id, req);
-        return ResponseEntity.ok(ApiResponse.success("Cooking data saved"));
-    }
+        @PutMapping("/{id}/solar")
+        public ResponseEntity<ApiResponse<Void>> saveSolar(
+                        @PathVariable Long id,
+                        @Valid @RequestBody SolarDataRequest req) {
+                moduleService.saveSolarData(id, req);
+                return ResponseEntity.ok(ApiResponse.success("Solar data saved"));
+        }
 
-    // ── Module 7 — Lifestyle ───────────────────────────────────
+        // ── Module 6 — Cooking ─────────────────────────────────────
 
-    @PutMapping("/{id}/lifestyle")
-    public ResponseEntity<ApiResponse<Void>> saveLifestyle(
-            @PathVariable Long id,
-            @RequestBody LifestyleDataRequest req) {
-        moduleService.saveLifestyleData(id, req);
-        return ResponseEntity.ok(ApiResponse.success("Lifestyle data saved"));
-    }
+        @PutMapping("/{id}/cooking")
+        public ResponseEntity<ApiResponse<Void>> saveCooking(
+                        @PathVariable Long id,
+                        @Valid @RequestBody CookingDataRequest req) {
+                moduleService.saveCookingData(id, req);
+                return ResponseEntity.ok(ApiResponse.success("Cooking data saved"));
+        }
 
-    // ── Submit ─────────────────────────────────────────────────
+        // ── Module 7 — Lifestyle ───────────────────────────────────
 
-    @PostMapping("/{id}/submit")
-    public ResponseEntity<ApiResponse<Void>> submit(
-            Authentication auth,
-            @PathVariable Long id) {
-        moduleService.submitDeclaration(id, userId(auth));
-        return ResponseEntity.ok(ApiResponse.success(
-                "Declaration submitted. A field agent will be assigned within 48 hours."));
-    }
+        @PutMapping("/{id}/lifestyle")
+        public ResponseEntity<ApiResponse<Void>> saveLifestyle(
+                        @PathVariable Long id,
+                        @RequestBody LifestyleDataRequest req) {
+                moduleService.saveLifestyleData(id, req);
+                return ResponseEntity.ok(ApiResponse.success("Lifestyle data saved"));
+        }
 
-    // ── Resubmit ───────────────────────────────────────────────
+        // ── Submit ─────────────────────────────────────────────────
 
-    @PostMapping("/{id}/resubmit")
-    public ResponseEntity<ApiResponse<Void>> resubmit(
-            Authentication auth,
-            @PathVariable Long id) {
-        moduleService.resubmitDeclaration(id, userId(auth));
-        return ResponseEntity.ok(ApiResponse.success("Declaration resubmitted."));
-    }
+        @PostMapping("/{id}/submit")
+        public ResponseEntity<ApiResponse<Void>> submit(
+                        Authentication auth,
+                        @PathVariable Long id) {
+                moduleService.submitDeclaration(id, userId(auth));
+                return ResponseEntity.ok(ApiResponse.success(
+                                "Declaration submitted. A field agent will be assigned within 48 hours."));
+        }
 
-    // ── History ────────────────────────────────────────────────
+        // ── Resubmit ───────────────────────────────────────────────
 
-    @GetMapping("/history")
-    public ResponseEntity<ApiResponse<List<DeclarationSummaryResponse>>> history(
-            Authentication auth) {
-        List<DeclarationSummaryResponse> list = declarationRepo
-                .findByUserUserIdOrderByDeclarationYearDesc(userId(auth))
-                .stream()
-                .map(this::toSummary)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(ApiResponse.success("Declarations retrieved", list));
-    }
+        @PostMapping("/{id}/resubmit")
+        public ResponseEntity<ApiResponse<Void>> resubmit(
+                        Authentication auth,
+                        @PathVariable Long id) {
+                moduleService.resubmitDeclaration(id, userId(auth));
+                return ResponseEntity.ok(ApiResponse.success("Declaration resubmitted."));
+        }
 
-    // ── Detail ─────────────────────────────────────────────────
+        // ── History ────────────────────────────────────────────────
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<DeclarationDetailResponse>> detail(
-            Authentication auth,
-            @PathVariable Long id) {
-        
-        org.hartford.greensure.security.SecurityUser userAuth = 
-            (org.hartford.greensure.security.SecurityUser) auth.getPrincipal();
+        @GetMapping("/history")
+        public ResponseEntity<ApiResponse<List<DeclarationSummaryResponse>>> history(
+                        Authentication auth) {
+                List<DeclarationSummaryResponse> list = declarationRepo
+                                .findByUserUserIdOrderByDeclarationYearDesc(userId(auth))
+                                .stream()
+                                .map(this::toSummary)
+                                .collect(Collectors.toList());
+                return ResponseEntity.ok(ApiResponse.success("Declarations retrieved", list));
+        }
 
-        boolean isAdmin = userAuth.getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        // ── Detail ─────────────────────────────────────────────────
 
-        CarbonDeclaration d = declarationRepo.findById(id)
-                .filter(decl -> isAdmin || decl.getUser().getUserId().equals(userAuth.getId()))
-                .orElseThrow(() -> new org.hartford.greensure.exception.DeclarationNotFoundException(
-                        "Declaration not found"));
-        return ResponseEntity.ok(ApiResponse.success("Declaration details", toDetail(d)));
-    }
+        @GetMapping("/{id}")
+        public ResponseEntity<ApiResponse<DeclarationDetailResponse>> detail(
+                        Authentication auth,
+                        @PathVariable Long id) {
 
-    // ── Private mappers ────────────────────────────────────────
+                org.hartford.greensure.security.SecurityUser userAuth = (org.hartford.greensure.security.SecurityUser) auth
+                                .getPrincipal();
 
-    private DeclarationSummaryResponse toSummary(CarbonDeclaration d) {
-        DeclarationSummaryResponse.DeclarationSummaryResponseBuilder b =
-                DeclarationSummaryResponse.builder()
-                        .declarationId(d.getDeclarationId())
-                        .userId(d.getUser().getUserId())
-                        .fullName(d.getUser().getFullName())
-                        .declarationYear(d.getDeclarationYear())
-                        .status(d.getStatus())
-                        .submittedAt(d.getSubmittedAt())
-                        .createdAt(d.getCreatedAt());
+                boolean isAdmin = userAuth.getAuthorities().stream()
+                                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        scoreRepository.findByDeclarationDeclarationId(d.getDeclarationId())
-                .ifPresent(s -> b.totalCo2(s.getTotalCo2())
-                        .perCapitaCo2(s.getPerCapitaCo2())
-                        .zone(s.getZone() != null ? s.getZone().name() : null)
-                        .discountPercent(s.getDiscountPercent()));
+                CarbonDeclaration d = declarationRepo.findById(id)
+                                .filter(decl -> isAdmin || decl.getUser().getUserId().equals(userAuth.getId()))
+                                .orElseThrow(() -> new org.hartford.greensure.exception.DeclarationNotFoundException(
+                                                "Declaration not found"));
+                return ResponseEntity.ok(ApiResponse.success("Declaration details", toDetail(d)));
+        }
 
-        return b.build();
-    }
+        // ── Private mappers ────────────────────────────────────────
 
-    private DeclarationDetailResponse toDetail(CarbonDeclaration d) {
-        Long did = d.getDeclarationId();
-        DeclarationDetailResponse.DeclarationDetailResponseBuilder b =
-                DeclarationDetailResponse.builder()
-                        .declarationId(did)
-                        .userId(d.getUser().getUserId())
-                        .fullName(d.getUser().getFullName())
-                        .declarationYear(d.getDeclarationYear())
-                        .status(d.getStatus())
-                        .resubmissionCount(d.getResubmissionCount())
-                        .submittedAt(d.getSubmittedAt())
-                        .createdAt(d.getCreatedAt());
+        private DeclarationSummaryResponse toSummary(CarbonDeclaration d) {
+                DeclarationSummaryResponse.DeclarationSummaryResponseBuilder b = DeclarationSummaryResponse.builder()
+                                .declarationId(d.getDeclarationId())
+                                .userId(d.getUser().getUserId())
+                                .fullName(d.getUser().getFullName())
+                                .declarationYear(d.getDeclarationYear())
+                                .status(d.getStatus())
+                                .submittedAt(d.getSubmittedAt())
+                                .createdAt(d.getCreatedAt());
 
-        householdRepo.findByUserUserId(d.getUser().getUserId())
-                .ifPresent(h -> b.householdMembers(h.getNumberOfMembers()));
+                scoreRepository.findByDeclarationDeclarationId(d.getDeclarationId())
+                                .ifPresent(s -> b.totalCo2(s.getTotalCo2())
+                                                .perCapitaCo2(s.getPerCapitaCo2())
+                                                .zone(s.getZone() != null ? s.getZone().name() : null)
+                                                .discountPercent(s.getDiscountPercent()));
 
-        b.vehicles(moduleService.getVehiclesForDeclaration(did));
+                return b.build();
+        }
 
-        electricityDataRepo.findByDeclarationDeclarationId(did).ifPresent(e ->
-                b.provider(e.getProvider())
-                 .userDeclaredMonthlyKwh(e.getUserDeclaredMonthlyKwh())
-                 .ocrComputedMonthlyKwh(e.getOcrComputedMonthlyKwh())
-                 .billsUploaded(e.getBillsUploaded()));
+        private DeclarationDetailResponse toDetail(CarbonDeclaration d) {
+                Long did = d.getDeclarationId();
+                DeclarationDetailResponse.DeclarationDetailResponseBuilder b = DeclarationDetailResponse.builder()
+                                .declarationId(did)
+                                .userId(d.getUser().getUserId())
+                                .fullName(d.getUser().getFullName())
+                                .declarationYear(d.getDeclarationYear())
+                                .status(d.getStatus())
+                                .resubmissionCount(d.getResubmissionCount())
+                                .submittedAt(d.getSubmittedAt())
+                                .createdAt(d.getCreatedAt());
 
-        solarDataRepo.findByDeclarationDeclarationId(did).ifPresent(s ->
-                b.hasSolar(s.isHasSolar())
-                 .solarCapacityKw(s.getEffectiveCapacityKw())
-                 .mnreVerified(s.isMnreVerified()));
+                householdRepo.findByUserUserId(d.getUser().getUserId())
+                                .ifPresent(h -> b.householdMembers(h.getNumberOfMembers()));
 
-        cookingDataRepo.findByDeclarationDeclarationId(did).ifPresent(c ->
-                b.cookingFuelType(c.getEffectiveFuelType())
-                 .cylinders(c.getEffectiveCylinders()));
+                b.vehicles(moduleService.getVehiclesForDeclaration(did));
 
-        lifestyleDataRepo.findByDeclarationDeclarationId(did).ifPresent(l ->
-                b.publicTransportUsage(l.getPublicTransportUsage())
-                 .wastesRecycling(l.isWastesRecycling()));
+                electricityDataRepo.findByDeclarationDeclarationId(did).ifPresent(e -> b.provider(e.getProvider())
+                                .consumerNumber(e.getConsumerNumber())
+                                .userDeclaredMonthlyKwh(e.getUserDeclaredMonthlyKwh())
+                                .ocrComputedMonthlyKwh(e.getOcrComputedMonthlyKwh())
+                                .billsUploaded(e.getBillsUploaded()));
 
-        scoreRepository.findByDeclarationDeclarationId(did).ifPresent(s ->
-                b.carbonScore(CarbonScoreResponse.builder()
-                        .scoreId(s.getScoreId())
-                        .scoreYear(s.getScoreYear())
-                        .vehicleCo2(s.getVehicleCo2())
-                        .electricityCo2(s.getElectricityCo2())
-                        .cookingCo2(s.getCookingCo2())
-                        .solarOffset(s.getSolarOffset())
-                        .lifestyleBonus(s.getLifestyleBonus())
-                        .totalCo2(s.getTotalCo2())
-                        .perCapitaCo2(s.getPerCapitaCo2())
-                        .zone(s.getZone() != null ? s.getZone().name() : null)
-                        .discountPercent(s.getDiscountPercent())
-                        .discountBreakdown(s.getDiscountBreakdown())
-                        .build()));
+                try {
+                        b.electricityBillUrls(moduleService.getElectricityBillUrls(did));
+                } catch (Exception ex) {
+                        b.electricityBillUrls(List.of());
+                }
 
-        verificationRepo.findByDeclarationDeclarationId(did).ifPresent(v -> {
-            b.verificationOutcome(v.getOutcome() != null ? v.getOutcome().name() : null)
-             .rejectionReason(v.getRejectionReason())
-             .agentNotes(v.getAgentNotes());
-        });
+                try {
+                        b.electricityBills(
+                                        electricityBillRepo.findByDeclarationDeclarationIdOrderByBillingMonthDesc(did)
+                                                        .stream()
+                                                        .map(
+                                                                        bill -> ElectricityBillSummaryResponse.builder()
+                                                                                        .billingMonth(bill
+                                                                                                        .getBillingMonth())
+                                                                                        .unitsKwh(bill.getUnitsKwh())
+                                                                                        .amount(bill.getAmount())
+                                                                                        .billUrl(bill.getBillUrl())
+                                                                                        .ocrConfidenceScore(bill
+                                                                                                        .getOcrConfidenceScore())
+                                                                                        .aiAnomalyFlag(Boolean.TRUE
+                                                                                                        .equals(bill.getAiAnomalyFlag()))
+                                                                                        .build())
+                                                        .toList());
+                } catch (Exception ex) {
+                        b.electricityBills(List.of());
+                }
 
-        return b.build();
-    }
+                solarDataRepo.findByDeclarationDeclarationId(did).ifPresent(s -> b.hasSolar(s.isHasSolar())
+                                .solarCapacityKw(s.getEffectiveCapacityKw())
+                                .certificateUrl(s.getCertificateUrl())
+                                .mnreVerified(s.isMnreVerified()));
+
+                cookingDataRepo.findByDeclarationDeclarationId(did)
+                                .ifPresent(c -> b.cookingFuelType(c.getEffectiveFuelType())
+                                                .pngConsumerNumber(c.getPngConsumerNumber())
+                                                .userDeclaredCylinders(c.getUserDeclaredCylinders())
+                                                .billUrls(c.getBillUrls())
+                                                .cylinders(c.getEffectiveCylinders()));
+
+                lifestyleDataRepo.findByDeclarationDeclarationId(did)
+                                .ifPresent(l -> b.publicTransportUsage(l.getPublicTransportUsage())
+                                                .wastesRecycling(l.isWastesRecycling()));
+
+                scoreRepository.findByDeclarationDeclarationId(did)
+                                .ifPresent(s -> b.carbonScore(CarbonScoreResponse.builder()
+                                                .scoreId(s.getScoreId())
+                                                .scoreYear(s.getScoreYear())
+                                                .vehicleCo2(s.getVehicleCo2())
+                                                .electricityCo2(s.getElectricityCo2())
+                                                .cookingCo2(s.getCookingCo2())
+                                                .solarOffset(s.getSolarOffset())
+                                                .lifestyleBonus(s.getLifestyleBonus())
+                                                .totalCo2(s.getTotalCo2())
+                                                .perCapitaCo2(s.getPerCapitaCo2())
+                                                .zone(s.getZone() != null ? s.getZone().name() : null)
+                                                .discountPercent(s.getDiscountPercent())
+                                                .discountBreakdown(s.getDiscountBreakdown())
+                                                .aiExplanation(s.getAiExplanation())
+                                                .build()));
+
+                verificationRepo.findTopByDeclarationDeclarationIdOrderByVerifiedAtDescVerificationIdDesc(did)
+                                .ifPresent(v -> {
+                                        b.verificationOutcome(v.getOutcome() != null ? v.getOutcome().name() : null)
+                                                        .rejectionReason(v.getRejectionReason())
+                                                        .agentNotes(v.getAgentNotes());
+                                });
+
+                return b.build();
+        }
 }

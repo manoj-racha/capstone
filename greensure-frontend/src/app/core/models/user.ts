@@ -12,6 +12,10 @@ export interface UserProfile {
   pincode?: string;
   householdSize?: number;
   role: 'USER' | 'AGENT' | 'ADMIN';
+  status?: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+  mobile?: string;
+  pinCode?: string;
+  userType?: 'USER' | 'AGENT' | 'ADMIN';
   createdAt?: string;
 }
 

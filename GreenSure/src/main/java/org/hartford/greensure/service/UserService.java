@@ -1,6 +1,7 @@
 package org.hartford.greensure.service;
 
 import org.hartford.greensure.dto.response.*;
+import org.hartford.greensure.engine.CarbonScoreService;
 import org.hartford.greensure.entity.*;
 import org.hartford.greensure.exception.UserNotFoundException;
 import org.hartford.greensure.repository.*;
@@ -10,16 +11,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService {
 
-    @Autowired private UserRepository userRepository;
-    @Autowired private HouseholdProfileRepository householdRepo;
-    @Autowired private MsmeProfileRepository msmeRepo;
-    @Autowired private CarbonDeclarationRepository declarationRepo;
-    @Autowired private CarbonScoreRepository scoreRepository;
-    @Autowired private NotificationRepository notificationRepo;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private HouseholdProfileRepository householdRepo;
+    @Autowired
+    private CarbonDeclarationRepository declarationRepo;
+    @Autowired
+    private CarbonScoreRepository scoreRepository;
+    @Autowired
+    private NotificationRepository notificationRepo;
+    @Autowired
+    private CarbonScoreService carbonScoreService;
 
     public UserProfileResponse getProfile(Long userId) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         UserProfileResponse.UserProfileResponseBuilder builder = UserProfileResponse.builder()
                 .userId(user.getUserId())
@@ -39,13 +46,6 @@ public class UserService {
                 builder.numberOfMembers(p.getNumberOfMembers());
                 builder.dwellingType(p.getDwellingType());
             });
-        } else {
-            msmeRepo.findByUserUserId(userId).ifPresent(p -> {
-                builder.businessName(p.getBusinessName());
-                builder.gstNumber(p.getGstNumber());
-                builder.businessType(p.getBusinessType());
-                builder.numEmployees(p.getNumEmployees());
-            });
         }
 
         return builder.build();
@@ -53,7 +53,7 @@ public class UserService {
 
     public UserProfileResponse updateProfile(Long userId, UserProfileResponse request) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (request.getFullName() != null) {
             user.setFullName(request.getFullName());
@@ -77,7 +77,7 @@ public class UserService {
 
     public DashboardResponse getDashboard(Long userId) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         boolean hasDeclaration = declarationRepo.existsByUserUserId(userId);
 
@@ -97,6 +97,8 @@ public class UserService {
             builder.declarationStatus(d.getStatus());
             builder.declarationYear(d.getDeclarationYear());
         });
+
+        carbonScoreService.backfillAiExplanationForLatestScoreIfMissing(userId);
 
         scoreRepository.findTopByUserUserIdOrderByScoreYearDesc(userId).ifPresent(score -> {
             builder.latestScore(buildScoreResponse(score));
@@ -123,16 +125,18 @@ public class UserService {
     private CarbonScoreResponse buildScoreResponse(CarbonScore score) {
         return CarbonScoreResponse.builder()
                 .scoreId(score.getScoreId())
-                .userId(score.getUser().getUserId())
                 .scoreYear(score.getScoreYear())
-                .energyCo2(score.getEnergyCo2())
-                .transportCo2(score.getTransportCo2())
-                .lifestyleCo2(score.getLifestyleCo2())
-                .operationsCo2(score.getOperationsCo2())
+                .vehicleCo2(score.getVehicleCo2())
+                .electricityCo2(score.getElectricityCo2())
+                .cookingCo2(score.getCookingCo2())
+                .solarOffset(score.getSolarOffset())
+                .lifestyleBonus(score.getLifestyleBonus())
                 .totalCo2(score.getTotalCo2())
                 .perCapitaCo2(score.getPerCapitaCo2())
-                .zone(score.getZone())
-                .generatedAt(score.getGeneratedAt())
+                .zone(score.getZone() != null ? score.getZone().name() : null)
+                .discountPercent(score.getDiscountPercent())
+                .discountBreakdown(score.getDiscountBreakdown())
+                .aiExplanation(score.getAiExplanation())
                 .build();
     }
 }

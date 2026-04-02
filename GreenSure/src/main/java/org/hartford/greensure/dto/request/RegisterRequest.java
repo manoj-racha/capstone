@@ -4,7 +4,6 @@ package org.hartford.greensure.dto.request;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hartford.greensure.entity.HouseholdProfile;
-import org.hartford.greensure.entity.MsmeProfile;
 import org.hartford.greensure.entity.User;
 
 @Getter @Setter
@@ -58,16 +57,4 @@ public class RegisterRequest {
 
     private HouseholdProfile.DwellingType dwellingType;
 
-    // ── MSME ONLY FIELDS ───────────────────────────────────────
-
-    // Required when userType = MSME
-    @Size(max = 150, message = "Business name too long")
-    private String businessName;
-
-    private String gstNumber;
-
-        private String businessType;
-
-    @Min(value = 1, message = "Must have at least 1 employee")
-    private Integer numEmployees;
 }

@@ -40,7 +40,7 @@ describe('AgentDashboardComponent', () => {
 
   it('should set error when assignments request is unsuccessful', () => {
     (component as any).agentService.getAssignments = () =>
-      of({ success: false, error: 'Failed to load assignments.' });
+      of({ success: false, message: 'Failed to load assignments.' });
 
     component.loadTasks('ASSIGNED');
 

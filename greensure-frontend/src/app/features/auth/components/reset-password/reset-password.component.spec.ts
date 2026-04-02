@@ -1,5 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { vi } from 'vitest';
+import { AuthService } from '../../../../core/services/auth.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 import { ResetPasswordComponent } from './reset-password.component';
 
@@ -7,16 +11,42 @@ describe('ResetPasswordComponent', () => {
   let component: ResetPasswordComponent;
   let fixture: ComponentFixture<ResetPasswordComponent>;
 
+  const authServiceSpy = {
+    resetPassword: vi.fn()
+  };
+
+  const toastServiceSpy = {
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn()
+  };
+
   beforeEach(async () => {
+    authServiceSpy.resetPassword.mockReturnValue(of({ success: true, data: 'ok' }));
+
     await TestBed.configureTestingModule({
       imports: [ResetPasswordComponent],
-      providers: [provideRouter([])]
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { queryParams: of({}) } },
+        { provide: AuthService, useValue: authServiceSpy },
+        { provide: ToastService, useValue: toastServiceSpy }
+      ]
     })
     .compileComponents();
 
     fixture = TestBed.createComponent(ResetPasswordComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    authServiceSpy.resetPassword.mockReset();
+    toastServiceSpy.success.mockReset();
+    toastServiceSpy.error.mockReset();
+    toastServiceSpy.warning.mockReset();
+    toastServiceSpy.info.mockReset();
   });
 
   it('should create', () => {
@@ -31,32 +61,34 @@ describe('ResetPasswordComponent', () => {
 
   it('should validate password confirmation match', () => {
     component.token.set('token123');
-    component.newPassword.set('password123');
-    component.confirmPassword.set('password456');
+    component.form.patchValue({
+      newPassword: 'password123',
+      confirmPassword: 'password456'
+    });
 
-    component.onSubmit();
-
-    expect(component.errorMessage()).toBe('Passwords do not match');
+    expect(component.passwordMismatch()).toBe(true);
   });
 
   it('should validate that token exists before submit', () => {
     component.token.set('');
-    component.newPassword.set('password123');
-    component.confirmPassword.set('password123');
+    component.form.patchValue({
+      newPassword: 'password123',
+      confirmPassword: 'password123'
+    });
 
     component.onSubmit();
 
-    expect(component.errorMessage()).toContain('No reset token found');
+    expect(component.tokenExpired()).toBe(true);
   });
 
   it('should validate minimum password length', () => {
-    component.token.set('token123');
-    component.newPassword.set('short');
-    component.confirmPassword.set('short');
+    component.form.patchValue({
+      newPassword: 'short',
+      confirmPassword: 'short'
+    });
 
-    component.onSubmit();
-
-    expect(component.errorMessage()).toBe('Password must be at least 8 characters');
+    expect(component.form.controls.newPassword.invalid).toBe(true);
+    expect(component.form.controls.newPassword.errors?.['minlength']).toBeTruthy();
   });
 
 });

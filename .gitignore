@@ -1,0 +1,20 @@
+# Root-level generated artifacts
+*.zip
+
+# Runtime databases and traces
+/data/*.db
+/data/*.mv.db
+/data/*.trace.db
+/GreenSure/data/*.db
+/GreenSure/data/*.mv.db
+/GreenSure/data/*.trace.db
+
+# Generated logs/reports
+/GreenSure/compile_errors*.txt
+/GreenSure/errors*.log
+
+# Local uploaded documents
+/uploads/**/*.pdf
+/uploads/**/*.jpg
+/uploads/**/*.jpeg
+/uploads/**/*.png

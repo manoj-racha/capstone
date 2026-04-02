@@ -24,7 +24,7 @@ import java.util.UUID;
 @Slf4j
 public class FileUploadController {
 
-    @Value("${app.upload.dir:uploads}")
+    @Value("${app.upload.dir}")
     private String uploadDir;
 
     @PostMapping(value = "/file", produces = "application/json")

@@ -38,7 +38,7 @@ describe('UserDetailComponent', () => {
 
   it('should set error when user load is unsuccessful', () => {
     (component as any).adminService.getUserById = () =>
-      of({ success: false, error: 'User not found.' });
+      of({ success: false, message: 'User not found.' });
 
     component.userId.set(55);
     component.loadUser();

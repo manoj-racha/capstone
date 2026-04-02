@@ -1,32 +1,40 @@
 package org.hartford.greensure.engine;
 
-
-
+import lombok.extern.slf4j.Slf4j;
 import org.hartford.greensure.dto.response.CarbonScoreResponse;
 import org.hartford.greensure.entity.*;
+import org.hartford.greensure.enums.Zone;
 import org.hartford.greensure.exception.ResourceNotFoundException;
 import org.hartford.greensure.repository.*;
 import org.hartford.greensure.service.RecommendationService;
+import org.hartford.greensure.service.ai.GeminiApiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class CarbonScoreService {
 
     @Autowired
     private CarbonDeclarationRepository declarationRepo;
-    @Autowired private VerificationRepository verificationRepo;
-    @Autowired private DeclarationVehicleRepository vehicleRepo;
-    @Autowired private VerifiedVehicleRepository verifiedVehicleRepo;
-    @Autowired private HouseholdProfileRepository householdRepo;
-    @Autowired private MsmeProfileRepository msmeRepo;
-    @Autowired private CarbonScoreRepository scoreRepo;
-    @Autowired private RecommendationService recommendationService;
+    @Autowired
+    private HouseholdProfileRepository householdRepo;
+    @Autowired
+    private CarbonScoreRepository scoreRepo;
+    @Autowired
+    private RecommendationService recommendationService;
+    @Autowired
+    private GeminiApiService geminiApiService;
+    @Autowired
+    private DeclarationVehicleDataRepository vehicleRepository;
+    @Autowired
+    private CookingDataRepository cookingDataRepository;
+    @Autowired
+    private SolarDataRepository solarDataRepository;
 
     // ── GENERATE SCORE — called after verification ─────────────
 
@@ -34,595 +42,274 @@ public class CarbonScoreService {
     public void generateScore(Long declarationId) {
 
         // Prevent duplicate score generation
-        if (scoreRepo.existsByDeclarationDeclarationId(
-                declarationId)) {
+        if (scoreRepo.existsByDeclarationDeclarationId(declarationId)) {
             return;
         }
 
         CarbonDeclaration declaration = declarationRepo
                 .findById(declarationId)
-                .orElseThrow(() -> new RuntimeException(
-                        "Declaration not found: " + declarationId));
-
-        Verification verification = verificationRepo
-                .findByDeclarationDeclarationId(declarationId)
-                .orElseThrow(() -> new RuntimeException(
-                        "Verification not found for declaration: "
-                                + declarationId));
+                .orElseThrow(() -> new RuntimeException("Declaration not found: " + declarationId));
 
         User user = declaration.getUser();
-        boolean isHousehold =
-                user.getUserType() == User.UserType.HOUSEHOLD;
 
-        // ── Step 1 — Calculate Energy CO2 ─────────────────────
-        double energyCo2 = calculateEnergyCo2(
-                declaration, verification);
-
-        // ── Step 2 — Calculate Transport CO2 ──────────────────
-        double transportCo2 = calculateTransportCo2(
-                declaration, verification);
-
-        // ── Step 3 — Calculate Lifestyle or Operations CO2 ────
-        double lifestyleCo2 = 0.0;
-        double operationsCo2 = 0.0;
-
-        if (isHousehold) {
-            lifestyleCo2 = calculateLifestyleCo2(
-                    declaration, verification, user);
-        } else {
-            operationsCo2 = calculateOperationsCo2(
-                    declaration, verification);
+        // 1. Electricity CO2
+        double electricityCo2 = 0.0;
+        if (declaration.getElectricityData() != null) {
+            double kwh = declaration.getElectricityData().getEffectiveMonthlyKwh();
+            electricityCo2 = kwh * EmissionFactors.ELECTRICITY_KG_PER_KWH * EmissionFactors.MONTHS_IN_YEAR;
         }
 
-        // ── Step 4 — Sum all categories ───────────────────────
-        double totalCo2 = energyCo2 + transportCo2
-                + lifestyleCo2 + operationsCo2;
-
-        // ── Step 5 — Calculate Per Capita CO2 ─────────────────
-        double perCapitaCo2;
-        if (isHousehold) {
-            int members = householdRepo
-                    .findByUserUserId(user.getUserId())
-                    .map(p -> p.getNumberOfMembers())
-                    .orElse(1);
-            perCapitaCo2 = totalCo2 / members;
-        } else {
-            int employees = msmeRepo
-                    .findByUserUserId(user.getUserId())
-                    .map(p -> p.getNumEmployees())
-                    .orElse(1);
-            perCapitaCo2 = totalCo2 / employees;
+        // 2. Solar Offset
+        double solarOffset = 0.0;
+        if (declaration.getSolarData() != null && Boolean.TRUE.equals(declaration.getSolarData().isHasSolar())) {
+            Double kw = declaration.getSolarData().getEffectiveCapacityKw();
+            if (kw != null) {
+                // Approximate solar offset: kw * 4 units/day * 365 days * emission factor
+                solarOffset = kw * 4 * 365 * EmissionFactors.ELECTRICITY_KG_PER_KWH;
+            }
         }
 
-        // ── Step 6 — Classify Zone ────────────────────────────
-        CarbonScore.CarbonZone zone = classifyZone(
-                perCapitaCo2, isHousehold);
+        // 3. Cooking CO2
+        double cookingCo2 = 0.0;
+        if (declaration.getCookingData() != null && declaration.getCookingData().getEffectiveFuelType() != null) {
+            switch (declaration.getCookingData().getEffectiveFuelType()) {
+                case LPG:
+                    Integer cylinders = declaration.getCookingData().getEffectiveCylinders();
+                    if (cylinders != null) {
+                        cookingCo2 = cylinders * EmissionFactors.LPG_KG_CO2_PER_CYLINDER;
+                    }
+                    break;
+                case PNG:
+                    cookingCo2 = 15 * EmissionFactors.PNG_KG_CO2_PER_SCM * EmissionFactors.MONTHS_IN_YEAR; // Approximation
+                    break;
+                case BIOGAS:
+                case ELECTRIC:
+                    cookingCo2 = 0.0;
+                    break;
+            }
+        }
 
-        // ── Step 7 — Save Carbon Score ────────────────────────
+        // 4. Transport/Vehicle CO2
+        double vehicleCo2 = 0.0;
+        if (declaration.getVehicles() != null) {
+            for (var v : declaration.getVehicles()) {
+                double kmPerYear = 10000;
+                if (v.getEffectiveMileageBand() != null) {
+                    switch (v.getEffectiveMileageBand().name()) {
+                        case "LESS_THAN_5000":
+                            kmPerYear = 3500;
+                            break;
+                        case "FIVE_TO_TEN_THOUSAND":
+                            kmPerYear = 7500;
+                            break;
+                        case "TEN_TO_FIFTEEN_THOUSAND":
+                            kmPerYear = 12500;
+                            break;
+                        case "MORE_THAN_FIFTEEN_THOUSAND":
+                            kmPerYear = 18000;
+                            break;
+                        default:
+                            kmPerYear = 10000;
+                    }
+                }
+
+                double factor = 0.0;
+                if (v.getVehicleCategory() == org.hartford.greensure.enums.VehicleCategory.TWO_WHEELER) {
+                    if (v.getEffectiveFuelType() == org.hartford.greensure.enums.FuelType.PETROL)
+                        factor = EmissionFactors.TWO_WHEELER_PETROL_KG_PER_KM;
+                    else if (v.getEffectiveFuelType() == org.hartford.greensure.enums.FuelType.EV)
+                        factor = 0;
+                } else if (v.getVehicleCategory() == org.hartford.greensure.enums.VehicleCategory.FOUR_WHEELER) {
+                    if (v.getEffectiveFuelType() == org.hartford.greensure.enums.FuelType.PETROL)
+                        factor = EmissionFactors.FOUR_WHEELER_PETROL_KG_PER_KM;
+                    else if (v.getEffectiveFuelType() == org.hartford.greensure.enums.FuelType.DIESEL)
+                        factor = EmissionFactors.FOUR_WHEELER_DIESEL_KG_PER_KM;
+                    else if (v.getEffectiveFuelType() == org.hartford.greensure.enums.FuelType.CNG)
+                        factor = 0.15; // fallback approximation
+                    else if (v.getEffectiveFuelType() == org.hartford.greensure.enums.FuelType.EV)
+                        factor = 0;
+                }
+                vehicleCo2 += kmPerYear * factor;
+            }
+        }
+
+        // 5. Lifestyle Bonus
+        double lifestyleBonus = 0.0;
+        if (declaration.getLifestyleData() != null) {
+            if (declaration.getLifestyleData().isWastesRecycling()) {
+                lifestyleBonus += 50.0; // Flat 50 kg reduction
+            }
+            if (declaration.getLifestyleData().getPublicTransportUsage() != null) {
+                switch (declaration.getLifestyleData().getPublicTransportUsage().name()) {
+                    case "OFTEN":
+                        lifestyleBonus += vehicleCo2 * 0.20;
+                        break; // 20% vehicle emission reduction
+                    case "SOMETIMES":
+                        lifestyleBonus += vehicleCo2 * 0.05;
+                        break;
+                    case "NEVER":
+                        break;
+                }
+            }
+        }
+
+        // Note: MSME Operations logic was removed as part of the Unified User
+        // refactoring.
+
+        // Subtract offsets/bonuses from total components
+        double adjustedElectricity = Math.max(0, electricityCo2 - solarOffset);
+        double adjustedVehicle = Math.max(0, vehicleCo2 - lifestyleBonus);
+
+        // Total computation
+        double totalCo2 = adjustedElectricity + cookingCo2 + adjustedVehicle;
+
+        // Per Capita
+        int members = householdRepo.findByUserUserId(user.getUserId())
+                .map(HouseholdProfile::getNumberOfMembers)
+                .orElse(1);
+        double perCapitaCo2 = totalCo2 / members;
+
+        // Classify Zone
+        Zone zone = classifyZone(perCapitaCo2);
+
+        // Save Carbon Score
         CarbonScore score = CarbonScore.builder()
                 .user(user)
                 .declaration(declaration)
                 .scoreYear(declaration.getDeclarationYear())
-                .energyCo2(round(energyCo2))
-                .transportCo2(round(transportCo2))
-                .lifestyleCo2(isHousehold
-                        ? round(lifestyleCo2) : null)
-                .operationsCo2(!isHousehold
-                        ? round(operationsCo2) : null)
+                .vehicleCo2(round(vehicleCo2))
+                .electricityCo2(round(electricityCo2))
+                .cookingCo2(round(cookingCo2))
+                .solarOffset(round(solarOffset))
+                .lifestyleBonus(round(lifestyleBonus))
                 .totalCo2(round(totalCo2))
                 .perCapitaCo2(round(perCapitaCo2))
                 .zone(zone)
+                .discountPercent(getDiscountForZone(zone)) // Simple mapping
                 .build();
 
-        score = scoreRepo.save(score);
+        CarbonScore savedScore = scoreRepo.save(score);
 
-        // ── Step 8 — Generate Recommendations ─────────────────
-        recommendationService.generateRecommendations(score);
+        // Generate Recommendations
+        recommendationService.generateRecommendations(savedScore);
+
+        // Generate AI explanation (best-effort; never fails score persistence)
+        persistAiExplanationForScore(savedScore, declaration, declarationId);
     }
 
-    // ── GET MY SCORE ───────────────────────────────────────────
+    /**
+     * Fills {@code aiExplanation} for the user's latest score when it was never set
+     * (e.g. score created before this feature, or generation failed earlier).
+     * Safe to call on every dashboard load; no-ops when text is already present.
+     */
+    @Transactional
+    public void backfillAiExplanationForLatestScoreIfMissing(Long userId) {
+        CarbonScore score = scoreRepo.findTopByUserUserIdOrderByScoreYearDesc(userId).orElse(null);
+        if (score == null) {
+            return;
+        }
+        if (score.getAiExplanation() != null && !score.getAiExplanation().isBlank()) {
+            return;
+        }
+        CarbonDeclaration linked = score.getDeclaration();
+        if (linked == null) {
+            return;
+        }
+        CarbonDeclaration declaration = declarationRepo.findById(linked.getDeclarationId()).orElse(null);
+        if (declaration == null) {
+            return;
+        }
+        persistAiExplanationForScore(score, declaration, declaration.getDeclarationId());
+    }
+
+    private void persistAiExplanationForScore(
+            CarbonScore savedScore, CarbonDeclaration declaration, Long declarationId) {
+        try {
+            HouseholdProfile profile = householdRepo.findByUserUserId(declaration.getUser().getUserId()).orElse(null);
+
+            List<DeclarationVehicleData> vehicles = vehicleRepository.findByDeclarationDeclarationId(declarationId);
+
+            CookingData cooking = cookingDataRepository.findByDeclarationDeclarationId(declarationId).orElse(null);
+
+            SolarData solar = solarDataRepository.findByDeclarationDeclarationId(declarationId).orElse(null);
+
+            Double previousYearCo2 = scoreRepo
+                    .findTopByUserUserIdAndScoreYearLessThanOrderByScoreYearDesc(
+                            declaration.getUser().getUserId(),
+                            declaration.getDeclarationYear())
+                    .map(CarbonScore::getTotalCo2)
+                    .orElse(null);
+
+            String explanation = geminiApiService.generateScoreExplanation(
+                    savedScore, profile, vehicles, cooking, solar, previousYearCo2);
+
+            savedScore.setAiExplanation(explanation);
+            scoreRepo.save(savedScore);
+
+            log.info("AI explanation generated for score {}", savedScore.getScoreId());
+        } catch (Exception e) {
+            log.warn(
+                    "AI explanation generation failed: {}. Score saved without explanation.",
+                    e.getMessage());
+        }
+    }
 
     public CarbonScoreResponse getMyScore(Long userId) {
-        CarbonScore score = scoreRepo
-                .findTopByUserUserIdOrderByScoreYearDesc(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No score found yet"));
-        return mapToResponse(score);
+        backfillAiExplanationForLatestScoreIfMissing(userId);
+        CarbonScore score = scoreRepo.findTopByUserUserIdOrderByScoreYearDesc(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("No score found yet"));
+        return toResponse(score);
     }
 
-    // ── GET SCORE HISTORY ──────────────────────────────────────
-
     public List<CarbonScoreResponse> getScoreHistory(Long userId) {
-        List<CarbonScore> scores = scoreRepo
-                .findByUserUserIdOrderByScoreYearDesc(userId);
-
-        return scores.stream()
-                .map(this::mapToResponse)
+        return scoreRepo.findByUserUserIdOrderByScoreYearDesc(userId).stream()
+                .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // CALCULATION METHODS
-    // ═══════════════════════════════════════════════════════════
-
-    // ── ENERGY CO2 ─────────────────────────────────────────────
-
-    private double calculateEnergyCo2(
-            CarbonDeclaration d, Verification v) {
-
-        double total = 0.0;
-
-        // 1. Electricity
-        double electricityUnits = resolve(
-                v.getCorrectedElectricityUnits(),
-                d.getElectricityUnits());
-
-        double electricityCo2 = electricityUnits
-                * EmissionFactors.ELECTRICITY_KG_PER_KWH
-                * EmissionFactors.MONTHS_IN_YEAR;
-
-        // Subtract solar generation if applicable
-        if (Boolean.TRUE.equals(d.getHasSolar())) {
-            double solarUnits = resolve(
-                    v.getCorrectedSolarUnits(),
-                    d.getSolarUnits());
-            electricityCo2 -= solarUnits
-                    * EmissionFactors.ELECTRICITY_KG_PER_KWH
-                    * EmissionFactors.MONTHS_IN_YEAR;
+    private Zone classifyZone(double perCapitaCo2) {
+        if (perCapitaCo2 <= EmissionFactors.HH_GREEN_CHAMPION_THRESHOLD) {
+            return Zone.GREEN_CHAMPION;
+        } else if (perCapitaCo2 <= EmissionFactors.HH_GREEN_IMPROVER_THRESHOLD) {
+            return Zone.IMPROVER;
+        } else {
+            return Zone.DEFAULTER;
         }
-
-        // Ensure electricity CO2 never goes negative
-        total += Math.max(0, electricityCo2);
-
-        // 2. Cooking fuel
-        if (d.getCookingFuelType() != null) {
-            CarbonDeclaration.CookingFuelType fuelType = resolveEnum(
-                    v.getCorrectedCookingFuelType(),
-                    d.getCookingFuelType());
-
-            total += calculateCookingCo2(fuelType, d, v);
-        }
-
-        // 3. AC units
-        if (d.getNumAcUnits() != null
-                && d.getAcHoursPerDay() != null) {
-            int acUnits = d.getNumAcUnits();
-            double acHours = d.getAcHoursPerDay();
-
-            total += acUnits
-                    * acHours
-                    * EmissionFactors.AC_KG_CO2_PER_UNIT_PER_HOUR
-                    * EmissionFactors.DAYS_IN_YEAR;
-        }
-
-        // 4. Generator
-        if (Boolean.TRUE.equals(d.getHasGenerator())) {
-            double genHours = resolve(
-                    v.getCorrectedGeneratorHours(),
-                    d.getGeneratorHoursPerMonth());
-
-            total += genHours
-                    * EmissionFactors.GENERATOR_KG_CO2_PER_HOUR
-                    * EmissionFactors.MONTHS_IN_YEAR;
-        }
-
-        return total;
     }
 
-    private double calculateCookingCo2(
-            CarbonDeclaration.CookingFuelType fuelType,
-            CarbonDeclaration d, Verification v) {
-
-        switch (fuelType) {
-            case LPG:
-                double cylinders = resolve(
-                        v.getCorrectedLpgCylinders(),
-                        d.getLpgCylinders());
-                return cylinders
-                        * EmissionFactors.LPG_KG_CO2_PER_CYLINDER
-                        * EmissionFactors.MONTHS_IN_YEAR;
-
-            case PNG:
-                double pngUnits = resolve(
-                        v.getCorrectedPngUnits(), d.getPngUnits());
-                return pngUnits
-                        * EmissionFactors.PNG_KG_CO2_PER_SCM
-                        * EmissionFactors.MONTHS_IN_YEAR;
-
-            case BIOMASS:
-                double biomassKg = resolve(
-                        v.getCorrectedBiomassKg(),
-                        d.getBiomassKgPerDay());
-                return biomassKg
-                        * EmissionFactors.BIOMASS_KG_CO2_PER_KG
-                        * EmissionFactors.DAYS_IN_YEAR;
-
-            case ELECTRIC:
-                // Already counted in electricity units
+    private double getDiscountForZone(Zone zone) {
+        switch (zone) {
+            case GREEN_CHAMPION:
+                return 15.0;
+            case IMPROVER:
+                return 5.0;
+            case DEFAULTER:
                 return 0.0;
-
-            case NONE:
             default:
                 return 0.0;
         }
-    }
-
-    // ── TRANSPORT CO2 ──────────────────────────────────────────
-
-    private double calculateTransportCo2(
-            CarbonDeclaration d, Verification v) {
-
-        double total = 0.0;
-
-        // 1. All declared vehicles
-        List<DeclarationVehicle> vehicles = vehicleRepo
-                .findByDeclarationDeclarationId(d.getDeclarationId());
-
-        for (DeclarationVehicle vehicle : vehicles) {
-
-            // Check if agent corrected this vehicle
-            double km = vehicle.getKmPerMonth();
-            DeclarationVehicle.FuelType fuelType =
-                    vehicle.getFuelType();
-
-            // Look for a verified vehicle correction
-            Optional<VerifiedVehicle> corrected =
-                    verifiedVehicleRepo
-                            .findByDeclarationVehicleVehicleId(
-                                    vehicle.getVehicleId());
-
-            if (corrected.isPresent()) {
-                if (corrected.get().getCorrectedKm() != null) {
-                    km = corrected.get().getCorrectedKm();
-                }
-                if (corrected.get().getCorrectedFuelType() != null) {
-                    fuelType = corrected.get().getCorrectedFuelType();
-                }
-            }
-
-            double emissionFactor = getVehicleEmissionFactor(
-                    vehicle.getVehicleType(), fuelType);
-
-            total += km
-                    * vehicle.getQuantity()
-                    * emissionFactor
-                    * EmissionFactors.MONTHS_IN_YEAR;
-        }
-
-        // 2. Public transport
-        if (Boolean.TRUE.equals(d.getUsesPublicTransport())) {
-            double publicKm = resolve(
-                    v.getCorrectedPublicTransportKm(),
-                    d.getPublicTransportKm());
-
-            total += publicKm
-                    * EmissionFactors.PUBLIC_BUS_KG_PER_KM
-                    * EmissionFactors.MONTHS_IN_YEAR;
-        }
-
-        return total;
-    }
-
-    private double getVehicleEmissionFactor(
-            DeclarationVehicle.VehicleType vehicleType,
-            DeclarationVehicle.FuelType fuelType) {
-
-        switch (vehicleType) {
-            case TWO_WHEELER:
-                switch (fuelType) {
-                    case PETROL:
-                        return EmissionFactors
-                                .TWO_WHEELER_PETROL_KG_PER_KM;
-                    case DIESEL:
-                        return EmissionFactors
-                                .TWO_WHEELER_DIESEL_KG_PER_KM;
-                    case ELECTRIC:
-                        return EmissionFactors
-                                .TWO_WHEELER_ELECTRIC_KG_PER_KM;
-                    default: return 0.0;
-                }
-
-            case FOUR_WHEELER:
-                switch (fuelType) {
-                    case PETROL:
-                        return EmissionFactors
-                                .FOUR_WHEELER_PETROL_KG_PER_KM;
-                    case DIESEL:
-                        return EmissionFactors
-                                .FOUR_WHEELER_DIESEL_KG_PER_KM;
-                    case CNG:
-                        return EmissionFactors
-                                .FOUR_WHEELER_CNG_KG_PER_KM;
-                    case ELECTRIC:
-                        return EmissionFactors
-                                .FOUR_WHEELER_ELECTRIC_KG_PER_KM;
-                    default: return 0.0;
-                }
-
-            case COMMERCIAL:
-                switch (fuelType) {
-                    case DIESEL:
-                        return EmissionFactors
-                                .COMMERCIAL_DIESEL_KG_PER_KM;
-                    case CNG:
-                        return EmissionFactors
-                                .COMMERCIAL_CNG_KG_PER_KM;
-                    default: return 0.0;
-                }
-
-            default: return 0.0;
-        }
-    }
-
-    // ── LIFESTYLE CO2 — Household Only ─────────────────────────
-
-    private double calculateLifestyleCo2(
-            CarbonDeclaration d, Verification v, User user) {
-
-        double total = 0.0;
-
-        // Get number of members for diet calculation
-        int members = householdRepo
-                .findByUserUserId(user.getUserId())
-                .map(p -> p.getNumberOfMembers())
-                .orElse(1);
-
-        // 1. Diet
-        CarbonDeclaration.DietaryPattern diet = resolveEnum(
-                v.getCorrectedDietaryPattern(),
-                d.getDietaryPattern());
-
-        if (diet != null) {
-            total += getDietCo2PerPerson(diet) * members;
-        }
-
-        // 2. Online shopping
-        CarbonDeclaration.ShoppingOrders shopping = resolveEnum(
-                v.getCorrectedShoppingOrders(),
-                d.getShoppingOrdersPerMonth());
-
-        if (shopping != null) {
-            total += getShoppingCo2(shopping);
-        }
-
-        return total;
-    }
-
-    private double getDietCo2PerPerson(
-            CarbonDeclaration.DietaryPattern diet) {
-        switch (diet) {
-            case VEGAN:
-                return EmissionFactors.DIET_VEGAN;
-            case VEGETARIAN:
-                return EmissionFactors.DIET_VEGETARIAN;
-            case EGGETARIAN:
-                return EmissionFactors.DIET_EGGETARIAN;
-            case NON_VEGETARIAN:
-                return EmissionFactors.DIET_NON_VEGETARIAN;
-            case HEAVY_NON_VEGETARIAN:
-                return EmissionFactors.DIET_HEAVY_NON_VEGETARIAN;
-            default: return 0.0;
-        }
-    }
-
-    private double getShoppingCo2(
-            CarbonDeclaration.ShoppingOrders shopping) {
-        switch (shopping) {
-            case ZERO_TO_FIVE:
-                return EmissionFactors.SHOPPING_ZERO_TO_FIVE;
-            case SIX_TO_FIFTEEN:
-                return EmissionFactors.SHOPPING_SIX_TO_FIFTEEN;
-            case ABOVE_FIFTEEN:
-                return EmissionFactors.SHOPPING_ABOVE_FIFTEEN;
-            default: return 0.0;
-        }
-    }
-
-    // ── OPERATIONS CO2 — MSME Only ─────────────────────────────
-
-    private double calculateOperationsCo2(
-            CarbonDeclaration d, Verification v) {
-
-        double total = 0.0;
-
-        // 1. MSME generator — diesel litres per month
-        if (d.getGeneratorLitersPerMonth() != null) {
-            double liters = resolve(
-                    v.getCorrectedGeneratorLiters(),
-                    d.getGeneratorLitersPerMonth());
-
-            total += liters
-                    * EmissionFactors.DIESEL_KG_CO2_PER_LITRE
-                    * EmissionFactors.MONTHS_IN_YEAR;
-        }
-
-        // 2. Commercial vehicles
-        if (Boolean.TRUE.equals(d.getHasCommercialVehicles())) {
-            double commKm = resolve(
-                    v.getCorrectedCommercialVehicleKm(),
-                    d.getCommercialVehicleKm());
-
-            total += commKm
-                    * EmissionFactors.COMMERCIAL_DIESEL_KG_PER_KM
-                    * EmissionFactors.MONTHS_IN_YEAR;
-        }
-
-        // 3. Third party shipments
-        if (d.getThirdPartyShipments() != null) {
-            int shipments = resolve(
-                    v.getCorrectedThirdPartyShipments(),
-                    d.getThirdPartyShipments());
-
-            total += shipments
-                    * EmissionFactors.LOGISTICS_KG_CO2_PER_SHIPMENT
-                    * EmissionFactors.MONTHS_IN_YEAR;
-        }
-
-        // 4. Boiler
-        if (Boolean.TRUE.equals(d.getHasBoiler())
-                && d.getBoilerFuelType() != null) {
-
-            switch (d.getBoilerFuelType()) {
-                case COAL:
-                    double coalKg = resolve(
-                            v.getCorrectedBoilerCoalKg(),
-                            d.getBoilerCoalKg());
-                    total += coalKg
-                            * EmissionFactors.BOILER_COAL_KG_CO2_PER_KG
-                            * EmissionFactors.MONTHS_IN_YEAR;
-                    break;
-
-                case NATURAL_GAS:
-                    double gasScm = resolve(
-                            v.getCorrectedBoilerGasScm(),
-                            d.getBoilerGasScm());
-                    total += gasScm
-                            * EmissionFactors.BOILER_GAS_KG_CO2_PER_SCM
-                            * EmissionFactors.MONTHS_IN_YEAR;
-                    break;
-
-                default: break;
-            }
-        }
-
-        // 5. Paper consumption
-        if (d.getPaperReamsPerMonth() != null) {
-            int reams = resolve(
-                    v.getCorrectedPaperReams(),
-                    d.getPaperReamsPerMonth());
-
-            double paperCo2 = reams
-                    * EmissionFactors.PAPER_KG_CO2_PER_REAM
-                    * EmissionFactors.MONTHS_IN_YEAR;
-
-            // Recycled paper has 50% lower footprint
-            if (Boolean.TRUE.equals(d.getUsesRecycledPaper())) {
-                paperCo2 *= EmissionFactors.PAPER_RECYCLED_FACTOR;
-            }
-
-            total += paperCo2;
-        }
-
-        // 6. Raw material
-        if (d.getRawMaterialKg() != null
-                && d.getRawMaterialType() != null) {
-            double rawKg = resolve(
-                    v.getCorrectedRawMaterialKg(),
-                    d.getRawMaterialKg());
-
-            double rawFactor = getRawMaterialFactor(
-                    d.getRawMaterialType());
-
-            total += rawKg * rawFactor
-                    * EmissionFactors.MONTHS_IN_YEAR;
-        }
-
-        return total;
-    }
-
-    private double getRawMaterialFactor(
-            CarbonDeclaration.RawMaterialType type) {
-        switch (type) {
-            case VIRGIN:
-                return EmissionFactors
-                        .RAW_MATERIAL_VIRGIN_KG_CO2_PER_KG;
-            case RECYCLED:
-                return EmissionFactors
-                        .RAW_MATERIAL_RECYCLED_KG_CO2_PER_KG;
-            case MIXED:
-                return EmissionFactors
-                        .RAW_MATERIAL_MIXED_KG_CO2_PER_KG;
-            default: return 0.0;
-        }
-    }
-
-    // ── ZONE CLASSIFICATION ────────────────────────────────────
-
-    private CarbonScore.CarbonZone classifyZone(
-            double perCapitaCo2, boolean isHousehold) {
-
-        if (isHousehold) {
-            if (perCapitaCo2 <= EmissionFactors.HH_GREEN_CHAMPION_THRESHOLD) {
-                return CarbonScore.CarbonZone.GREEN_CHAMPION;
-            } else if (perCapitaCo2 <= EmissionFactors.HH_GREEN_IMPROVER_THRESHOLD) {
-                return CarbonScore.CarbonZone.GREEN_IMPROVER;
-            } else {
-                return CarbonScore.CarbonZone.GREEN_DEFAULTER;
-            }
-        } else {
-            if (perCapitaCo2 <= EmissionFactors.MSME_GREEN_CHAMPION_THRESHOLD) {
-                return CarbonScore.CarbonZone.GREEN_CHAMPION;
-            } else if (perCapitaCo2 <= EmissionFactors.MSME_GREEN_IMPROVER_THRESHOLD) {
-                return CarbonScore.CarbonZone.GREEN_IMPROVER;
-            } else {
-                return CarbonScore.CarbonZone.GREEN_DEFAULTER;
-            }
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // UTILITY METHODS
-    // ═══════════════════════════════════════════════════════════
-
-    // Core resolve rule:
-    // If agent corrected the value → use corrected
-    // If agent left it null → use declared value
-    private Double resolve(Double corrected, Double declared) {
-        if (corrected != null) return corrected;
-        if (declared != null) return declared;
-        return 0.0;
-    }
-
-    private Integer resolve(Integer corrected, Integer declared) {
-        if (corrected != null) return corrected;
-        if (declared != null) return declared;
-        return 0;
-    }
-
-    private <T extends Enum<T>> T resolveEnum(T corrected, T declared) {
-        return corrected != null ? corrected : declared;
     }
 
     private double round(double value) {
         return Math.round(value * 100.0) / 100.0;
     }
 
-    // ── MAP TO RESPONSE ────────────────────────────────────────
-
-    public CarbonScoreResponse mapToResponse(CarbonScore score) {
-        double total = score.getTotalCo2();
-
-        double energyPct = total > 0
-                ? round(score.getEnergyCo2() * 100.0 / total)
-                : 0;
-        double transportPct = total > 0
-                ? round(score.getTransportCo2() * 100.0 / total)
-                : 0;
-        double lifestylePct = total > 0
-                && score.getLifestyleCo2() != null
-                ? round(score.getLifestyleCo2() * 100.0 / total)
-                : 0;
-        double operationsPct = total > 0
-                && score.getOperationsCo2() != null
-                ? round(score.getOperationsCo2() * 100.0 / total)
-                : 0;
-
+    public CarbonScoreResponse toResponse(CarbonScore score) {
         return CarbonScoreResponse.builder()
                 .scoreId(score.getScoreId())
-                .userId(score.getUser().getUserId())
                 .scoreYear(score.getScoreYear())
-                .energyCo2(score.getEnergyCo2())
-                .transportCo2(score.getTransportCo2())
-                .lifestyleCo2(score.getLifestyleCo2())
-                .operationsCo2(score.getOperationsCo2())
+                .vehicleCo2(score.getVehicleCo2())
+                .electricityCo2(score.getElectricityCo2())
+                .cookingCo2(score.getCookingCo2())
+                .solarOffset(score.getSolarOffset())
+                .lifestyleBonus(score.getLifestyleBonus())
                 .totalCo2(score.getTotalCo2())
                 .perCapitaCo2(score.getPerCapitaCo2())
-                .zone(score.getZone())
+                .zone(score.getZone() != null ? score.getZone().name() : null)
+                .discountPercent(score.getDiscountPercent())
+                .discountBreakdown(score.getDiscountBreakdown())
                 .generatedAt(score.getGeneratedAt())
-                .energyPercentage(energyPct)
-                .transportPercentage(transportPct)
-                .lifestylePercentage(lifestylePct)
-                .operationsPercentage(operationsPct)
+                .aiExplanation(score.getAiExplanation())
                 .build();
     }
 }

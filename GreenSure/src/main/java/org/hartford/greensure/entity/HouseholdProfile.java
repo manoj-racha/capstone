@@ -34,6 +34,10 @@ public class HouseholdProfile {
     @Column(name = "number_of_members", nullable = false)
     private Integer numberOfMembers;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "dwelling_type")
+    private DwellingType dwellingType;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -48,5 +52,9 @@ public class HouseholdProfile {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public enum DwellingType {
+        APARTMENT, INDEPENDENT_HOUSE, VILLA, OTHER
     }
 }

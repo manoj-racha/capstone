@@ -51,19 +51,6 @@ export class DeclarationReviewComponent implements OnInit {
     return zone ? this.zoneLabels[zone] : 'N/A';
   }
 
-  billConfidenceLabel(score: number | null | undefined): { text: string; barClass: string } {
-    if (score == null || Number.isNaN(score)) {
-      return { text: 'Confidence unknown', barClass: 'bg-gray-300' };
-    }
-    if (score > 0.8) {
-      return { text: 'High confidence', barClass: 'bg-green-500' };
-    }
-    if (score >= 0.5) {
-      return { text: 'Medium confidence', barClass: 'bg-amber-500' };
-    }
-    return { text: 'Low confidence — agent will verify', barClass: 'bg-red-500' };
-  }
-
   electricityAnomalyCount(d: { electricityBills?: { aiAnomalyFlag?: boolean | null }[] }): number {
     if (!d.electricityBills?.length) return 0;
     return d.electricityBills.filter((b) => b.aiAnomalyFlag === true).length;

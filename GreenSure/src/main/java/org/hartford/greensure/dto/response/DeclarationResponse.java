@@ -20,4 +20,6 @@ public class DeclarationResponse {
     private LocalDateTime submittedAt;
     private LocalDateTime createdAt;
     private String rejectionReason;
+    private Long assignedAgentId;
+    private String assignedAgentName;
 }

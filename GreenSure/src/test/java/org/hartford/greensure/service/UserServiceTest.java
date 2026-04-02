@@ -2,6 +2,7 @@ package org.hartford.greensure.service;
 
 import org.hartford.greensure.dto.response.DashboardResponse;
 import org.hartford.greensure.dto.response.UserProfileResponse;
+import org.hartford.greensure.engine.CarbonScoreService;
 import org.hartford.greensure.entity.*;
 import org.hartford.greensure.repository.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,9 +27,6 @@ public class UserServiceTest {
     private HouseholdProfileRepository householdRepo;
 
     @Mock
-    private MsmeProfileRepository msmeRepo;
-
-    @Mock
     private CarbonDeclarationRepository declarationRepo;
 
     @Mock
@@ -36,6 +34,9 @@ public class UserServiceTest {
 
     @Mock
     private NotificationRepository notificationRepo;
+
+    @Mock
+    private CarbonScoreService carbonScoreService;
 
     @InjectMocks
     private UserService userService;
@@ -52,12 +53,7 @@ public class UserServiceTest {
         householdUser.setEmail("household@test.com");
         householdUser.setCity("CityA");
 
-        msmeUser = new User();
-        msmeUser.setUserId(2L);
-        msmeUser.setUserType(User.UserType.MSME);
-        msmeUser.setFullName("MSME Name");
-        msmeUser.setEmail("msme@test.com");
-        msmeUser.setCity("CityB");
+        householdUser.setCity("CityA");
     }
 
     @Test
@@ -78,26 +74,6 @@ public class UserServiceTest {
 
         verify(userRepository, times(1)).findById(1L);
         verify(householdRepo, times(1)).findByUserUserId(1L);
-    }
-
-    @Test
-    void testGetProfile_Msme() {
-        MsmeProfile mp = new MsmeProfile();
-        mp.setBusinessName("Test Business");
-        mp.setNumEmployees(10);
-
-        when(userRepository.findById(2L)).thenReturn(Optional.of(msmeUser));
-        when(msmeRepo.findByUserUserId(2L)).thenReturn(Optional.of(mp));
-
-        UserProfileResponse response = userService.getProfile(2L);
-
-        assertNotNull(response);
-        assertEquals("MSME Name", response.getFullName());
-        assertEquals("Test Business", response.getBusinessName());
-        assertEquals(10, response.getNumEmployees());
-
-        verify(userRepository, times(1)).findById(2L);
-        verify(msmeRepo, times(1)).findByUserUserId(2L);
     }
 
     @Test
@@ -155,7 +131,7 @@ public class UserServiceTest {
 
         CarbonDeclaration declaration = new CarbonDeclaration();
         declaration.setDeclarationId(10L);
-        declaration.setStatus(CarbonDeclaration.DeclarationStatus.VERIFIED);
+        declaration.setStatus(org.hartford.greensure.enums.DeclarationStatus.VERIFIED);
         declaration.setDeclarationYear(currentYear);
         when(declarationRepo.findByUserUserIdAndDeclarationYear(1L, currentYear)).thenReturn(Optional.of(declaration));
 
@@ -165,7 +141,7 @@ public class UserServiceTest {
         score.setScoreYear(currentYear);
         score.setTotalCo2(1000.0);
         score.setPerCapitaCo2(250.0);
-        score.setZone(CarbonScore.CarbonZone.GREEN_CHAMPION);
+        score.setZone(org.hartford.greensure.enums.Zone.GREEN_CHAMPION);
         when(scoreRepository.findTopByUserUserIdOrderByScoreYearDesc(1L)).thenReturn(Optional.of(score));
 
         // Renewal due
@@ -180,11 +156,12 @@ public class UserServiceTest {
         assertNotNull(response);
         assertTrue(response.isHasDeclaration());
         assertEquals(10L, response.getCurrentDeclarationId());
-        assertEquals(CarbonDeclaration.DeclarationStatus.VERIFIED, response.getDeclarationStatus());
+        assertEquals(org.hartford.greensure.enums.DeclarationStatus.VERIFIED, response.getDeclarationStatus());
         assertNotNull(response.getLatestScore());
         assertEquals(1000.0, response.getLatestScore().getTotalCo2());
-        assertEquals(CarbonScore.CarbonZone.GREEN_CHAMPION, response.getZone());
+        assertEquals(org.hartford.greensure.enums.Zone.GREEN_CHAMPION, response.getZone());
         assertFalse(response.isRenewalDue());
         assertEquals(5L, response.getUnreadNotifications());
+        verify(carbonScoreService, times(1)).backfillAiExplanationForLatestScoreIfMissing(1L);
     }
 }

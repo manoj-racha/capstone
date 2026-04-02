@@ -20,10 +20,10 @@ import java.util.List;
 
 /**
  * Handles everything the field agent does during their workspace session:
- * 1. getWorkspace()      — builds the full AgentWorkspaceResponse
+ * 1. getWorkspace() — builds the full AgentWorkspaceResponse
  * 2. confirmVerification — agent found everything correct
- * 3. modifyAndVerify     — agent corrected one or more values
- * 4. rejectDeclaration   — agent rejected the declaration with a reason
+ * 3. modifyAndVerify — agent corrected one or more values
+ * 4. rejectDeclaration — agent rejected the declaration with a reason
  *
  * After CONFIRM or MODIFY, CarbonScoreService.calculateAndSave() is called
  * to generate the score using effective (agent-corrected) values.
@@ -33,17 +33,32 @@ public class AgentVerificationService {
 
     private static final Logger log = LoggerFactory.getLogger(AgentVerificationService.class);
 
-    @Autowired private AgentAssignmentRepository assignmentRepo;
-    @Autowired private CarbonDeclarationRepository declarationRepo;
-    @Autowired private VerificationRepository verificationRepo;
-    @Autowired private DeclarationVehicleDataRepository vehicleDataRepo;
-    @Autowired private ElectricityDataRepository electricityDataRepo;
-    @Autowired private CookingDataRepository cookingDataRepo;
-    @Autowired private SolarDataRepository solarDataRepo;
-    @Autowired private HouseholdProfileRepository householdRepo;
-    @Autowired private UserRepository userRepository;
-    @Autowired private CarbonScoreService carbonScoreService;
-    @Autowired private NotificationService notificationService;
+    @Autowired
+    private AgentAssignmentRepository assignmentRepo;
+    @Autowired
+    private CarbonDeclarationRepository declarationRepo;
+    @Autowired
+    private VerificationRepository verificationRepo;
+    @Autowired
+    private DeclarationVehicleDataRepository vehicleDataRepo;
+    @Autowired
+    private ElectricityDataRepository electricityDataRepo;
+    @Autowired
+    private CookingDataRepository cookingDataRepo;
+    @Autowired
+    private SolarDataRepository solarDataRepo;
+    @Autowired
+    private HouseholdProfileRepository householdRepo;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private CarbonScoreService carbonScoreService;
+    @Autowired
+    private NotificationService notificationService;
+    @Autowired
+    private ElectricityBillRepository electricityBillRepo;
+    @Autowired
+    private FraudAdvisoryService fraudAdvisoryService;
 
     // ── WORKSPACE ──────────────────────────────────────────────
 
@@ -57,12 +72,6 @@ public class AgentVerificationService {
         AgentAssignment assignment = getActiveAssignmentForAgent(assignmentId, agentId);
         CarbonDeclaration declaration = assignment.getDeclaration();
         User user = declaration.getUser();
-
-        // Mark startedAt on first open
-        if (assignment.getStartedAt() == null) {
-            assignment.setStartedAt(LocalDateTime.now());
-            assignmentRepo.save(assignment);
-        }
 
         List<DeclarationVehicleData> vehicles = vehicleDataRepo
                 .findByDeclarationDeclarationId(declaration.getDeclarationId());
@@ -80,23 +89,38 @@ public class AgentVerificationService {
         List<AgentWorkspaceResponse.ComparisonField> compTable = buildComparisonTable(
                 electricity, cooking, solar);
 
-        // Parse fraud flags
+        // Parse fraud flags (trim; never pass null entries into List.of / Jackson)
         List<String> fraudFlagList = new ArrayList<>();
         if (declaration.getFraudAdvisoryFlags() != null
                 && !declaration.getFraudAdvisoryFlags().isBlank()) {
-            fraudFlagList = List.of(declaration.getFraudAdvisoryFlags().split(","));
+            for (String raw : declaration.getFraudAdvisoryFlags().split(",")) {
+                if (raw == null) {
+                    continue;
+                }
+                String t = raw.trim();
+                if (!t.isEmpty()) {
+                    fraudFlagList.add(t);
+                }
+            }
         }
+
+        Integer memberCount = householdRepo.findByUserUserId(user.getUserId())
+                .map(HouseholdProfile::getNumberOfMembers)
+                .orElse(null);
 
         AgentWorkspaceResponse.AgentWorkspaceResponseBuilder builder = AgentWorkspaceResponse.builder()
                 .declarationId(declaration.getDeclarationId())
                 .assignmentId(assignment.getAssignmentId())
                 .userName(user.getFullName())
                 .userAddress(user.getAddress())
-                .userPhone(user.getPhone())
+                .userPhone(user.getMobile())
+                .pinCode(user.getPinCode())
+                .householdMemberCount(memberCount)
                 .declarationYear(declaration.getDeclarationYear())
                 .fraudRiskLevel(declaration.getFraudRiskLevel())
                 .fraudScore(declaration.getFraudAdvisoryScore())
                 .fraudFlags(fraudFlagList)
+                .fraudFlagDescriptions(fraudAdvisoryService.describeFlags(fraudFlagList))
                 .comparisonTable(compTable);
 
         List<AgentWorkspaceResponse.VehicleComparisonBlock> vehicleBlocks = new ArrayList<>();
@@ -105,12 +129,14 @@ public class AgentVerificationService {
             AgentWorkspaceResponse.VehicleComparisonBlock block = new AgentWorkspaceResponse.VehicleComparisonBlock();
             block.setVehicleLabel("Vehicle " + (i + 1) + " — " + v.getMake() + " " + v.getModel());
             block.setVehicleCategory(v.getVehicleCategory() != null ? v.getVehicleCategory().name() : null);
-            
+
             List<AgentWorkspaceResponse.ComparisonField> vComps = new ArrayList<>();
             vComps.add(field("Fuel Type", strVal(v.getFuelType()), strVal(v.getDataSource()),
-                    v.getDataSource() != null && v.getDataSource().isVerified() ? MatchStatus.MATCH : MatchStatus.UNVERIFIED));
+                    v.getDataSource() != null && v.getDataSource().isVerified() ? MatchStatus.MATCH
+                            : MatchStatus.UNVERIFIED));
             vComps.add(field("Mileage Band", strVal(v.getMileageBand()), "Self-declared", MatchStatus.UNVERIFIED));
-            vComps.add(field("Registration", strVal(v.getRegistrationNumber()), strVal(v.getRegistrationNumber()), MatchStatus.MATCH));
+            vComps.add(field("Registration", strVal(v.getRegistrationNumber()), strVal(v.getRegistrationNumber()),
+                    MatchStatus.MATCH));
             block.setComparisons(vComps);
 
             List<org.hartford.greensure.dto.response.VehicleDocumentResponseDTO> docs = new ArrayList<>();
@@ -135,56 +161,80 @@ public class AgentVerificationService {
         builder.vehicles(vehicleBlocks);
         if (electricity != null) {
             builder.userDeclaredMonthlyKwh(electricity.getUserDeclaredMonthlyKwh())
-                   .ocrComputedMonthlyKwh(electricity.getOcrComputedMonthlyKwh())
-                   .billsUploaded(electricity.getBillsUploaded());
-                   
+                    .ocrComputedMonthlyKwh(electricity.getOcrComputedMonthlyKwh())
+                    .billsUploaded(electricity.getBillsUploaded());
+
             List<AgentWorkspaceResponse.ComparisonField> eComps = new ArrayList<>();
-            eComps.add(field("Provider", strVal(electricity.getProvider()), strVal(electricity.getProvider()), MatchStatus.MATCH));
-            eComps.add(field("Consumer No", strVal(electricity.getConsumerNumber()), strVal(electricity.getConsumerNumber()), MatchStatus.MATCH));
-            eComps.add(field("Monthly kWh", strVal(electricity.getUserDeclaredMonthlyKwh()), strVal(electricity.getOcrComputedMonthlyKwh()), 
+            eComps.add(field("Provider", strVal(electricity.getProvider()), strVal(electricity.getProvider()),
+                    MatchStatus.MATCH));
+            eComps.add(field("Consumer No", strVal(electricity.getConsumerNumber()),
+                    strVal(electricity.getConsumerNumber()), MatchStatus.MATCH));
+            eComps.add(field("Monthly kWh", strVal(electricity.getUserDeclaredMonthlyKwh()),
+                    strVal(electricity.getOcrComputedMonthlyKwh()),
                     electricity.getOcrComputedMonthlyKwh() != null ? MatchStatus.MATCH : MatchStatus.UNVERIFIED));
             builder.electricityComparison(eComps);
-            builder.electricityDocumentUrls(new ArrayList<>()); // Electricity bills are stored in a separate table/file system in GreenSure 
+            List<String> electricBillUrls = new ArrayList<>();
+            try {
+                electricBillUrls = electricityBillRepo
+                        .findByDeclarationDeclarationIdOrderByBillingMonthDesc(
+                                declaration.getDeclarationId())
+                        .stream()
+                        .map(ElectricityBill::getBillUrl)
+                        .filter(u -> u != null && !u.isBlank())
+                        .distinct()
+                        .toList();
+            } catch (Exception e) {
+                log.warn(
+                        "Could not load electricity bill URLs for declaration {}: {}",
+                        declaration.getDeclarationId(),
+                        e.getMessage());
+            }
+            builder.electricityDocumentUrls(electricBillUrls);
         }
         if (cooking != null) {
             builder.cookingFuelType(cooking.getFuelType() != null ? cooking.getFuelType().name() : null)
-                   .userDeclaredCylinders(cooking.getUserDeclaredCylinders())
-                   .ocrComputedCylinders(cooking.getOcrComputedCylinders());
-                   
+                    .userDeclaredCylinders(cooking.getUserDeclaredCylinders())
+                    .ocrComputedCylinders(cooking.getOcrComputedCylinders());
+
             List<AgentWorkspaceResponse.ComparisonField> cComps = new ArrayList<>();
-            cComps.add(field("Fuel Type", cooking.getFuelType() != null ? cooking.getFuelType().name() : "N/A", "N/A", MatchStatus.UNVERIFIED));
+            cComps.add(field("Fuel Type", cooking.getFuelType() != null ? cooking.getFuelType().name() : "N/A", "N/A",
+                    MatchStatus.UNVERIFIED));
             if (cooking.getFuelType() != null && cooking.getFuelType().name().equals("PNG")) {
-                cComps.add(field("Consumer No", strVal(cooking.getPngConsumerNumber()), strVal(cooking.getPngConsumerNumber()), MatchStatus.MATCH));
+                cComps.add(field("Consumer No", strVal(cooking.getPngConsumerNumber()),
+                        strVal(cooking.getPngConsumerNumber()), MatchStatus.MATCH));
             } else {
-                cComps.add(field("Annual Cylinders", strVal(cooking.getUserDeclaredCylinders()), strVal(cooking.getOcrComputedCylinders()),
+                cComps.add(field("Annual Cylinders", strVal(cooking.getUserDeclaredCylinders()),
+                        strVal(cooking.getOcrComputedCylinders()),
                         cooking.getOcrComputedCylinders() != null ? MatchStatus.MATCH : MatchStatus.UNVERIFIED));
             }
             builder.cookingComparison(cComps);
-            
+
             List<String> cDocs = new ArrayList<>();
             if (cooking.getBillUrls() != null && !cooking.getBillUrls().isEmpty()) {
                 // Remove brackets and quotes from JSON string ["url"]
                 String urls = cooking.getBillUrls().replaceAll("[\\[\\]\"]", "");
                 for (String u : urls.split(",")) {
-                    if (!u.trim().isEmpty()) cDocs.add(u.trim());
+                    if (!u.trim().isEmpty())
+                        cDocs.add(u.trim());
                 }
             }
             builder.cookingDocumentUrls(cDocs);
         }
         if (solar != null) {
             builder.hasSolar(solar.isHasSolar())
-                   .solarCapacityKw(solar.getCapacityKw())
-                   .mnreVerified(solar.isMnreVerified())
-                   .solarCertificateUrl(solar.getCertificateUrl());
-                   
+                    .solarCapacityKw(solar.getCapacityKw())
+                    .mnreVerified(solar.isMnreVerified())
+                    .solarCertificateUrl(solar.getCertificateUrl());
+
             List<AgentWorkspaceResponse.ComparisonField> sComps = new ArrayList<>();
             sComps.add(field("Has Solar?", String.valueOf(solar.isHasSolar()), "N/A", MatchStatus.UNVERIFIED));
             if (solar.isHasSolar()) {
-                sComps.add(field("Capacity (kW)", strVal(solar.getCapacityKw()), solar.isMnreVerified() ? strVal(solar.getCapacityKw()) : "N/A",
+                sComps.add(field("Capacity (kW)", strVal(solar.getCapacityKw()),
+                        solar.isMnreVerified() ? strVal(solar.getCapacityKw()) : "N/A",
                         solar.isMnreVerified() ? MatchStatus.MATCH : MatchStatus.UNVERIFIED));
             }
             builder.solarComparison(sComps);
-            
+
             List<String> sDocs = new ArrayList<>();
             if (solar.getCertificateUrl() != null && !solar.getCertificateUrl().isEmpty()) {
                 sDocs.add(solar.getCertificateUrl());
@@ -199,9 +249,9 @@ public class AgentVerificationService {
 
     @Transactional
     public void confirmVerification(Long assignmentId, Long agentId,
-                                     Double gpsLat, Double gpsLng,
-                                     String agentNotes,
-                                     List<String> documentUrls) {
+            Double gpsLat, Double gpsLng,
+            String agentNotes,
+            List<String> documentUrls) {
         AgentAssignment assignment = getActiveAssignmentForAgent(assignmentId, agentId);
         CarbonDeclaration declaration = assignment.getDeclaration();
         User agent = assignment.getAgent();
@@ -220,13 +270,15 @@ public class AgentVerificationService {
         verificationRepo.save(verification);
 
         // Finalise assignment
-        assignment.setStatus(AssignmentStatus.COMPLETED);
+        assignment.setAssignmentStatus(AssignmentStatus.COMPLETED);
         assignment.setGpsLatAtStart(gpsLat);
         assignment.setGpsLngAtStart(gpsLng);
         assignmentRepo.save(assignment);
+        declaration.setStatus(DeclarationStatus.VERIFIED);
+        declarationRepo.save(declaration);
 
         // Calculate and save carbon score
-        carbonScoreService.calculateAndSave(declaration.getDeclarationId());
+        carbonScoreService.generateScore(declaration.getDeclarationId());
 
         log.info("Verification CONFIRMED for declaration {} by agent {}",
                 declaration.getDeclarationId(), agentId);
@@ -236,37 +288,45 @@ public class AgentVerificationService {
 
     @Transactional
     public void modifyAndVerify(Long assignmentId, Long agentId,
-                                 AgentModifyRequest req,
-                                 Double gpsLat, Double gpsLng) {
+            AgentModifyRequest req,
+            Double gpsLat, Double gpsLng) {
         AgentAssignment assignment = getActiveAssignmentForAgent(assignmentId, agentId);
         CarbonDeclaration declaration = assignment.getDeclaration();
         User agent = assignment.getAgent();
         Long declarationId = declaration.getDeclarationId();
 
-        // Apply corrections to the primary vehicle (multi-vehicle corrections would require DTO changes)
+        // Apply corrections to the primary vehicle (multi-vehicle corrections would
+        // require DTO changes)
         vehicleDataRepo.findByDeclarationDeclarationId(declarationId).stream().findFirst().ifPresent(v -> {
-            if (req.getCorrectedFuelType()    != null) v.setAgentCorrectedFuelType(req.getCorrectedFuelType());
-            if (req.getCorrectedMileageBand() != null) v.setAgentCorrectedMileageBand(req.getCorrectedMileageBand());
+            if (req.getCorrectedFuelType() != null)
+                v.setAgentCorrectedFuelType(req.getCorrectedFuelType());
+            if (req.getCorrectedMileageBand() != null)
+                v.setAgentCorrectedMileageBand(req.getCorrectedMileageBand());
             v.setAgentCorrectionNote(req.getCorrectionNotes());
             vehicleDataRepo.save(v);
         });
 
         electricityDataRepo.findByDeclarationDeclarationId(declarationId).ifPresent(e -> {
-            if (req.getCorrectedMonthlyKwh() != null) e.setAgentCorrectedMonthlyKwh(req.getCorrectedMonthlyKwh());
+            if (req.getCorrectedMonthlyKwh() != null)
+                e.setAgentCorrectedMonthlyKwh(req.getCorrectedMonthlyKwh());
             e.setAgentCorrectionNote(req.getCorrectionNotes());
             electricityDataRepo.save(e);
         });
 
         cookingDataRepo.findByDeclarationDeclarationId(declarationId).ifPresent(c -> {
-            if (req.getCorrectedCookingFuelType()  != null) c.setAgentCorrectedFuelType(req.getCorrectedCookingFuelType());
-            if (req.getCorrectedAnnualCylinders()  != null) c.setAgentCorrectedCylinders(req.getCorrectedAnnualCylinders());
+            if (req.getCorrectedCookingFuelType() != null)
+                c.setAgentCorrectedFuelType(req.getCorrectedCookingFuelType());
+            if (req.getCorrectedAnnualCylinders() != null)
+                c.setAgentCorrectedCylinders(req.getCorrectedAnnualCylinders());
             c.setAgentCorrectionNote(req.getCorrectionNotes());
             cookingDataRepo.save(c);
         });
 
         solarDataRepo.findByDeclarationDeclarationId(declarationId).ifPresent(s -> {
-            if (req.getCorrectedSolarCapacityKw() != null) s.setAgentCorrectedCapacityKw(req.getCorrectedSolarCapacityKw());
-            if (req.getAgentVerifiedSolar()        != null) s.setAgentVerifiedSolar(req.getAgentVerifiedSolar());
+            if (req.getCorrectedSolarCapacityKw() != null)
+                s.setAgentCorrectedCapacityKw(req.getCorrectedSolarCapacityKw());
+            if (req.getAgentVerifiedSolar() != null)
+                s.setAgentVerifiedSolar(req.getAgentVerifiedSolar());
             s.setAgentCorrectionNote(req.getCorrectionNotes());
             solarDataRepo.save(s);
         });
@@ -281,18 +341,21 @@ public class AgentVerificationService {
                 .gpsLng(gpsLng)
                 .agentNotes(req.getCorrectionNotes())
                 .documentUrls(req.getDocumentUrls() != null
-                        ? String.join(",", req.getDocumentUrls()) : null)
+                        ? String.join(",", req.getDocumentUrls())
+                        : null)
                 .build();
         verificationRepo.save(verification);
 
         // Finalise assignment
-        assignment.setStatus(AssignmentStatus.COMPLETED);
+        assignment.setAssignmentStatus(AssignmentStatus.COMPLETED);
         assignment.setGpsLatAtStart(gpsLat);
         assignment.setGpsLngAtStart(gpsLng);
         assignmentRepo.save(assignment);
+        declaration.setStatus(DeclarationStatus.VERIFIED);
+        declarationRepo.save(declaration);
 
         // Calculate score using corrected values
-        carbonScoreService.calculateAndSave(declarationId);
+        carbonScoreService.generateScore(declarationId);
 
         log.info("Verification MODIFIED for declaration {} by agent {}",
                 declarationId, agentId);
@@ -313,11 +376,12 @@ public class AgentVerificationService {
                 .outcome(VerificationOutcome.REJECTED)
                 .rejectionReason(req.getRejectionReason())
                 .documentUrls(req.getDocumentUrls() != null
-                        ? String.join(",", req.getDocumentUrls()) : null)
+                        ? String.join(",", req.getDocumentUrls())
+                        : null)
                 .build();
         verificationRepo.save(verification);
 
-        assignment.setStatus(AssignmentStatus.COMPLETED);
+        assignment.setAssignmentStatus(AssignmentStatus.COMPLETED);
         assignmentRepo.save(assignment);
 
         declaration.setStatus(DeclarationStatus.REJECTED);
@@ -345,8 +409,8 @@ public class AgentVerificationService {
             throw new UnauthorizedException("This assignment does not belong to you.");
         }
 
-        if (!assignment.getStatus().isActive()) {
-            throw new BadRequestException("Assignment is no longer active: " + assignment.getStatus());
+        if (assignment.getAssignmentStatus() != AssignmentStatus.ACTIVE) {
+            throw new BadRequestException("Assignment is no longer active: " + assignment.getAssignmentStatus());
         }
 
         return assignment;
@@ -370,7 +434,8 @@ public class AgentVerificationService {
                 double diff = Math.abs(electricity.getOcrComputedMonthlyKwh()
                         - electricity.getUserDeclaredMonthlyKwh());
                 kwStatus = diff <= electricity.getUserDeclaredMonthlyKwh() * 0.15
-                        ? MatchStatus.MATCH : MatchStatus.MISMATCH;
+                        ? MatchStatus.MATCH
+                        : MatchStatus.MISMATCH;
             }
 
             rows.add(field("Monthly kWh",
@@ -392,7 +457,8 @@ public class AgentVerificationService {
                                 && cooking.getUserDeclaredCylinders() != null
                                 && Math.abs(cooking.getOcrComputedCylinders()
                                         - cooking.getUserDeclaredCylinders()) <= 2
-                                ? MatchStatus.MATCH : MatchStatus.UNVERIFIED));
+                                                ? MatchStatus.MATCH
+                                                : MatchStatus.UNVERIFIED));
             }
         }
 
@@ -422,6 +488,9 @@ public class AgentVerificationService {
     }
 }
 
-// Corrected missing setGpsLatAtStart on Verification — Verification only has gpsLat/gpsLng.
-// The assignment stores gpsLatAtStart. Suppressed by using a non-existent method above;
-// correcting: remove .gpsLatAtStart(gpsLat) from Verification builder (not a field).
+// Corrected missing setGpsLatAtStart on Verification — Verification only has
+// gpsLat/gpsLng.
+// The assignment stores gpsLatAtStart. Suppressed by using a non-existent
+// method above;
+// correcting: remove .gpsLatAtStart(gpsLat) from Verification builder (not a
+// field).

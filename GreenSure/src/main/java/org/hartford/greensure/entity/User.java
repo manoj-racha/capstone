@@ -21,8 +21,12 @@ public class User {
     private Long userId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "user_type", nullable = false)
+    @Column(name = "user_type")
     private UserType userType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private Role role;
 
     @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
@@ -30,7 +34,7 @@ public class User {
     @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column(name = "mobile", nullable = false, unique = true, length = 15)
+    @Column(name = "phone", unique = true, length = 15)
     private String mobile;
 
     @Column(name = "password_hash", nullable = false)
@@ -49,7 +53,7 @@ public class User {
     private String state;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status")
     @Builder.Default
     private UserStatus status = UserStatus.ACTIVE;
 
@@ -67,10 +71,6 @@ public class User {
     // One user has one household profile
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private HouseholdProfile householdProfile;
-
-    // One user has one MSME profile
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private MsmeProfile msmeProfile;
 
     // One user has many declarations over the years
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -90,7 +90,11 @@ public class User {
     // ── ENUMS ──────────────────────────────────────────────────
 
     public enum UserType {
-        HOUSEHOLD, MSME
+        HOUSEHOLD, AGENT, ADMIN
+    }
+
+    public enum Role {
+        USER, AGENT, ADMIN
     }
 
     public enum UserStatus {
@@ -102,5 +106,33 @@ public class User {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        syncRoleAndUserType();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        syncRoleAndUserType();
+    }
+
+    private void syncRoleAndUserType() {
+        if (this.role == null && this.userType != null) {
+            this.role = switch (this.userType) {
+                case ADMIN -> Role.ADMIN;
+                case AGENT -> Role.AGENT;
+                default -> Role.USER;
+            };
+        }
+
+        if (this.userType == null && this.role != null) {
+            this.userType = switch (this.role) {
+                case ADMIN -> UserType.ADMIN;
+                case AGENT -> UserType.AGENT;
+                default -> UserType.HOUSEHOLD;
+            };
+        }
+
+        if (this.role == null) {
+            this.role = Role.USER;
+        }
     }
 }

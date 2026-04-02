@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -57,10 +58,16 @@ public class SecurityConfig {
                                                 // ── PUBLIC ENDPOINTS — No token required ───────
                                                 .requestMatchers(
                                                                 "/auth/register",
+                                                                "/auth/verify-otp",
+                                                                "/auth/resend-otp",
                                                                 "/auth/login",
                                                                 "/auth/forgot-password",
                                                                 "/auth/reset-password")
                                                 .permitAll()
+
+                                                // ── FILE UPLOADS — Authenticated users ────────
+                                                .requestMatchers(HttpMethod.POST, "/uploads/file").authenticated()
+                                                .requestMatchers("/uploads/**").permitAll()
 
                                                 // ── H2 CONSOLE — Development only ─────────────
                                                 .requestMatchers("/h2-console/**").permitAll()
@@ -72,6 +79,12 @@ public class SecurityConfig {
                                                                 "/v3/api-docs/**",
                                                                 "/v3/api-docs")
                                                 .permitAll()
+                                                .requestMatchers("/error").permitAll()
+
+                                                // ── DECLARATION DETAIL — USER and ADMIN ───────
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/declaration/*")
+                                                .hasAnyRole("USER", "ADMIN")
 
                                                 // ── USER ENDPOINTS — ROLE_USER only ───────────
                                                 .requestMatchers(
@@ -124,7 +137,8 @@ public class SecurityConfig {
 
         @Bean
         public AuthenticationProvider authenticationProvider() {
-                DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+                DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+                provider.setUserDetailsService(userDetailsService);
                 provider.setPasswordEncoder(passwordEncoder());
                 return provider;
         }

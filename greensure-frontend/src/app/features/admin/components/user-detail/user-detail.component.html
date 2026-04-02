@@ -4,8 +4,9 @@
             <h2 class="text-2xl font-bold text-gs-text flex items-center gap-3">
                 User Profile
                 @if (user()) {
-                <span class="px-2 py-0.5 rounded text-xs font-medium border uppercase bg-gs-dark/10 text-gs-dark border-gs-dark/20">
-                    ACTIVE
+                <span class="px-2 py-0.5 rounded text-xs font-medium border uppercase"
+                    [ngClass]="user()!.status === 'SUSPENDED' ? 'bg-red-500/10 text-red-400 border-red-500/30' : 'bg-gs-dark/10 text-gs-dark border-gs-dark/20'">
+                    {{ user()?.status || 'ACTIVE' }}
                 </span>
                 }
             </h2>
@@ -87,9 +88,15 @@
             </div>
 
             <div class="flex flex-col gap-3 w-full md:w-auto">
-                <button disabled
-                    class="w-full px-6 py-2 border font-semibold rounded transition-colors disabled:opacity-50 border-gs-dark/20 text-gs-dark bg-gs-dark/10">
-                    Active Account
+                <button (click)="toggleStatus()" [disabled]="actioning()"
+                    class="w-full px-6 py-2 border font-semibold rounded transition-colors disabled:opacity-50"
+                    [ngClass]="user()!.status === 'SUSPENDED' ? 'border-gs-dark/20 text-gs-dark bg-gs-dark/10 hover:bg-gs-dark/20' : 'border-red-500/50 text-red-400 bg-red-500/10 hover:bg-red-500/20'">
+                    {{ user()!.status === 'SUSPENDED' ? 'Activate User' : 'Suspend User' }}
+                </button>
+
+                <button (click)="unlockResubmission()" [disabled]="actioning()"
+                    class="w-full px-6 py-2 border border-blue-500/50 text-blue-400 bg-blue-500/10 font-semibold rounded hover:bg-blue-500/20 transition-colors disabled:opacity-50">
+                    Unlock Resubmission
                 </button>
             </div>
         </div>
@@ -98,3 +105,23 @@
 
     }
 </div>
+
+@if (confirmModalOpen()) {
+<div class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-gs-surface border border-gs-border rounded-xl p-6 shadow-xl">
+        <h3 class="text-lg font-semibold text-gs-text mb-2">{{ confirmTitle() }}</h3>
+        <p class="text-sm text-gs-muted mb-6">{{ confirmMessage() }}</p>
+
+        <div class="flex justify-end gap-3">
+            <button (click)="closeConfirmModal()" [disabled]="actioning()"
+                class="px-4 py-2 border border-gs-border text-gs-text rounded-lg hover:bg-gs-bg transition-colors disabled:opacity-50">
+                Cancel
+            </button>
+            <button (click)="confirmAction()" [disabled]="actioning()"
+                class="px-4 py-2 bg-gs-dark text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50">
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
+}

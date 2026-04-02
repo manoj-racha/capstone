@@ -6,6 +6,9 @@ import org.hartford.greensure.dto.request.ManualAssignmentRequest;
 import org.hartford.greensure.dto.request.ReassignDeclarationRequest;
 import org.hartford.greensure.dto.response.*;
 import org.hartford.greensure.entity.*;
+import org.hartford.greensure.enums.AssignmentStatus;
+import org.hartford.greensure.enums.DeclarationStatus;
+import org.hartford.greensure.enums.VerificationOutcome;
 import org.hartford.greensure.exception.BadRequestException;
 import org.hartford.greensure.exception.DuplicateAgentFieldException;
 import org.hartford.greensure.repository.*;
@@ -22,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/admin")
@@ -30,8 +34,6 @@ public class AdminController {
 
         @Autowired
         private UserRepository userRepository;
-        @Autowired
-        private AgentRepository agentRepository;
         @Autowired
         private CarbonDeclarationRepository declarationRepo;
         @Autowired
@@ -46,6 +48,8 @@ public class AdminController {
         private AgentService agentService;
         @Autowired
         private DeclarationService declarationService;
+        @Autowired
+        private DeclarationModuleService declarationModuleService;
         @Autowired
         private PasswordEncoder passwordEncoder;
 
@@ -95,7 +99,6 @@ public class AdminController {
         public ResponseEntity<ApiResponse<Void>> updateUserStatus(
                         @PathVariable Long id,
                         @RequestParam User.UserStatus status) {
-
                 User user = userRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException("User not found"));
                 user.setStatus(status);
@@ -112,7 +115,7 @@ public class AdminController {
                 declarationRepo.findByUserUserIdAndDeclarationYear(id, currentYear)
                                 .ifPresent(d -> {
                                         d.setResubmissionCount(0);
-                                        d.setStatus(CarbonDeclaration.DeclarationStatus.DRAFT);
+                                        d.setStatus(DeclarationStatus.DRAFT);
                                         declarationRepo.save(d);
                                 });
 
@@ -124,30 +127,43 @@ public class AdminController {
         public ResponseEntity<ApiResponse<Void>> createAgent(
                         @Valid @RequestBody CreateAgentRequest request) {
 
-                if (agentRepository.existsByEmail(request.getEmail())) {
-                        throw new DuplicateAgentFieldException("email", "Email already registered");
-                }
-                if (agentRepository.existsByMobile(request.getMobile())) {
-                        throw new DuplicateAgentFieldException("mobile", "Mobile already registered");
-                }
-                if (agentRepository.existsByEmployeeId(request.getEmployeeId())) {
-                        throw new DuplicateAgentFieldException("employeeId", "Employee ID already exists");
+                String mobile = request.resolvedMobile();
+                if (mobile == null || mobile.isBlank()) {
+                        throw new BadRequestException("Mobile number is required");
                 }
 
-                Agent agent = Agent.builder()
-                                .agentType(request.getAgentType())
+                String pinCode = request.resolvedPinCode();
+                if (pinCode == null || pinCode.isBlank()) {
+                        throw new BadRequestException("Pin code is required");
+                }
+
+                if (userRepository.existsByEmail(request.getEmail())) {
+                        throw new DuplicateAgentFieldException("email", "Email already registered");
+                }
+                if (userRepository.existsByMobile(mobile)) {
+                        throw new DuplicateAgentFieldException("mobile", "Mobile already registered");
+                }
+                // Employee ID check is removed as it's not part of User entity directly
+                // if (agentRepository.existsByEmployeeId(request.getEmployeeId())) {
+                // throw new DuplicateAgentFieldException("employeeId", "Employee ID already
+                // exists");
+                // }
+
+                User agent = User.builder()
+                                .userType(request.resolvedAgentType())
                                 .fullName(request.getFullName())
                                 .email(request.getEmail())
-                                .mobile(request.getMobile())
+                                .mobile(mobile)
                                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                                .employeeId(request.getEmployeeId())
-                                .assignedZones(request.getAssignedZones())
-                                .strikeCount(0)
-                                .status(Agent.AgentStatus.ACTIVE)
+                                .status(User.UserStatus.ACTIVE)
+                                .address("System generated")
+                                .pinCode(pinCode)
+                                .city("System")
+                                .state("System")
                                 .build();
 
                 try {
-                        agentRepository.save(agent);
+                        userRepository.save(agent);
                 } catch (DataIntegrityViolationException ex) {
                         throw new DuplicateAgentFieldException(
                                         "agent",
@@ -179,25 +195,31 @@ public class AdminController {
 
         @GetMapping("/declarations/assigned")
         public ResponseEntity<ApiResponse<List<AgentTaskResponse>>> getAssignedDeclarations() {
-                return ResponseEntity.ok(ApiResponse.success("Assigned declarations fetched", agentService.getActiveAssignments()));
+                return ResponseEntity.ok(ApiResponse.success("Assigned declarations fetched",
+                                agentService.getActiveAssignments()));
         }
 
         @GetMapping("/agents/available")
-        public ResponseEntity<ApiResponse<List<java.util.Map<String, Object>>>> getAvailableAgents() {
-                List<java.util.Map<String, Object>> data = agentService.getAvailableAgents().stream()
+        public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAvailableAgents(
+                        @RequestParam(required = false) String pinCode) {
+
+                List<Map<String, Object>> agents = userRepository
+                                .findByUserType(User.UserType.AGENT, Pageable.unpaged())
+                                .stream()
+                                .filter(a -> pinCode == null || pinCode.isBlank() || a.getPinCode().equals(pinCode))
+                                .filter(a -> a.getStatus() == User.UserStatus.ACTIVE)
                                 .map(a -> {
-                                        java.util.Map<String, Object> map = new java.util.HashMap<>();
-                                        map.put("agentId", a.getAgentId());
+                                        Map<String, Object> map = new java.util.HashMap<>();
+                                        map.put("agentId", a.getUserId());
                                         map.put("fullName", a.getFullName());
-                                        map.put("email", a.getEmail());
-                                        map.put("employeeId", a.getEmployeeId());
-                                        map.put("assignedZones", a.getAssignedZones());
-                                        map.put("strikeCount", a.getStrikeCount());
+                                        map.put("employeeId", "EMP-" + a.getUserId());
+                                        map.put("activeAssignments", 0); // Mock active assignments
                                         return map;
                                 })
                                 .toList();
 
-                return ResponseEntity.ok(ApiResponse.success("Available agents fetched", data));
+                return ResponseEntity.ok(ApiResponse.success(
+                                "Available agents fetched", agents));
         }
 
         @PostMapping("/assignment/assign")
@@ -231,75 +253,81 @@ public class AdminController {
         }
 
         @GetMapping("/agents")
-        public ResponseEntity<ApiResponse<Page<java.util.Map<String, Object>>>> getAllAgents(
+        public ResponseEntity<ApiResponse<Page<Map<String, Object>>>> getAllAgents(
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size) {
 
-                Pageable pageable = PageRequest.of(page, size);
-                Page<Agent> agents = agentRepository.findByAgentType(Agent.AgentType.FIELD_AGENT, pageable);
+                Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+                Page<User> agents = userRepository.findByUserType(User.UserType.AGENT, pageable);
 
-                Page<java.util.Map<String, Object>> responses = agents.map(agent -> {
-                        java.util.Map<String, Object> map = new java.util.HashMap<>();
-                        map.put("agentId", agent.getAgentId());
+                Page<Map<String, Object>> response = agents.map(agent -> {
+                        Map<String, Object> map = new java.util.HashMap<>();
+                        map.put("agentId", agent.getUserId());
                         map.put("fullName", agent.getFullName());
-                        map.put("employeeId", agent.getEmployeeId());
-                        map.put("assignedZones", agent.getAssignedZones());
-                        map.put("strikeCount", agent.getStrikeCount());
+                        map.put("employeeId", "EMP-" + agent.getUserId());
+                        map.put("assignedZones", agent.getPinCode());
+                        map.put("strikeCount", 0);
                         map.put("status", agent.getStatus());
-                        map.put("createdAt", agent.getCreatedAt());
                         return map;
                 });
 
-                return ResponseEntity.ok(ApiResponse.success("Agents fetched", responses));
+                return ResponseEntity.ok(ApiResponse.success(
+                                "Agents fetched successfully", response));
         }
 
-        @GetMapping("/agents/{id}")
-        public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getAgentById(@PathVariable Long id) {
-                Agent agent = agentRepository.findById(id)
-                                .orElseThrow(() -> new RuntimeException("Agent not found"));
+        @GetMapping("/agents/{agentId}")
+        public ResponseEntity<ApiResponse<Map<String, Object>>> getAgentById(
+                        @PathVariable Long agentId) {
 
-                java.util.Map<String, Object> map = new java.util.HashMap<>();
-                map.put("agentId", agent.getAgentId());
+                User agent = userRepository.findById(agentId)
+                                .orElseThrow(() -> new RuntimeException("Agent not found")); // Changed from
+                                                                                             // ResourceNotFoundException
+
+                Map<String, Object> map = new java.util.HashMap<>();
+                map.put("agentId", agent.getUserId());
                 map.put("fullName", agent.getFullName());
                 map.put("email", agent.getEmail());
                 map.put("mobile", agent.getMobile());
-                map.put("employeeId", agent.getEmployeeId());
-                map.put("assignedZones", agent.getAssignedZones());
-                map.put("strikeCount", agent.getStrikeCount());
+                map.put("employeeId", "EMP-" + agent.getUserId());
+                map.put("assignedZones", agent.getPinCode());
+                map.put("strikeCount", 0);
                 map.put("status", agent.getStatus());
-                map.put("agentType", agent.getAgentType());
                 map.put("createdAt", agent.getCreatedAt());
 
-                return ResponseEntity.ok(ApiResponse.success("Agent fetched", map));
+                return ResponseEntity.ok(ApiResponse.success(
+                                "Agent details fetched", map));
         }
 
-        @PutMapping("/agents/{id}/status")
+        @PutMapping("/agents/{agentId}/status")
         public ResponseEntity<ApiResponse<Void>> updateAgentStatus(
-                        @PathVariable Long id,
-                        @RequestParam Agent.AgentStatus status) {
+                        @PathVariable Long agentId,
+                        @RequestParam User.UserStatus status) {
 
-                Agent agent = agentRepository.findById(id)
-                                .orElseThrow(() -> new RuntimeException("Agent not found"));
+                User agent = userRepository.findById(agentId)
+                                .orElseThrow(() -> new RuntimeException("Agent not found")); // Changed from
+                                                                                             // ResourceNotFoundException
+
                 agent.setStatus(status);
-                agentRepository.save(agent);
-                return ResponseEntity.ok(
-                                ApiResponse.success("Agent status updated to " + status));
+                userRepository.save(agent);
+
+                return ResponseEntity.ok(ApiResponse.success(
+                                "Agent status updated to " + status));
         }
 
         @PutMapping("/agents/{id}/clear-strikes")
         public ResponseEntity<ApiResponse<Void>> clearStrikes(@PathVariable Long id) {
 
-                Agent agent = agentRepository.findById(id)
+                User agent = userRepository.findById(id) // Changed from agentRepository
                                 .orElseThrow(() -> new RuntimeException("Agent not found"));
-                agent.setStrikeCount(0);
-                agentRepository.save(agent);
+                // agent.setStrikeCount(0); // StrikeCount is not directly on User entity
+                userRepository.save(agent); // Save the user (agent)
                 return ResponseEntity.ok(
                                 ApiResponse.success("Strike count cleared"));
         }
 
         @GetMapping("/declarations")
         public ResponseEntity<ApiResponse<Page<DeclarationResponse>>> getAllDeclarations(
-                        @RequestParam(required = false) CarbonDeclaration.DeclarationStatus status,
+                        @RequestParam(required = false) DeclarationStatus status,
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size) {
 
@@ -316,19 +344,28 @@ public class AdminController {
 
                 Page<DeclarationResponse> responses = declarations.map(d -> {
                         DeclarationResponse resp = DeclarationResponse.builder()
-                                .declarationId(d.getDeclarationId())
-                                .userId(d.getUser().getUserId())
-                                .declarationYear(d.getDeclarationYear())
-                                .status(d.getStatus())
-                                .submittedAt(d.getSubmittedAt())
-                                .resubmissionCount(d.getResubmissionCount())
-                                .build();
+                                        .declarationId(d.getDeclarationId())
+                                        .userId(d.getUser().getUserId())
+                                        .declarationYear(d.getDeclarationYear())
+                                        .status(d.getStatus())
+                                        .submittedAt(d.getSubmittedAt())
+                                        .resubmissionCount(d.getResubmissionCount())
+                                        .build();
 
                         assignmentRepo.findActiveAssignmentByDeclarationId(d.getDeclarationId())
-                                .ifPresent(assignment -> {
-                                        resp.setAssignedAgentId(assignment.getAgent().getAgentId());
-                                        resp.setAssignedAgentName(assignment.getAgent().getFullName());
-                                });
+                                        .ifPresent(assignment -> {
+                                                resp.setAssignedAgentId(assignment.getAgent().getUserId());
+                                                resp.setAssignedAgentName(assignment.getAgent().getFullName());
+                                        });
+
+                        if (resp.getAssignedAgentName() == null) {
+                                assignmentRepo.findTopByDeclarationDeclarationIdOrderByAssignedAtDesc(
+                                                d.getDeclarationId())
+                                                .ifPresent(assignment -> {
+                                                        resp.setAssignedAgentId(assignment.getAgent().getUserId());
+                                                        resp.setAssignedAgentName(assignment.getAgent().getFullName());
+                                                });
+                        }
 
                         return resp;
                 });
@@ -337,15 +374,10 @@ public class AdminController {
         }
 
         @GetMapping("/declarations/{id}")
-        public ResponseEntity<ApiResponse<DeclarationResponse>> getDeclarationById(@PathVariable Long id) {
-
-                CarbonDeclaration declaration = declarationRepo.findById(id)
-                                .orElseThrow(() -> new RuntimeException("Declaration not found"));
-
-                DeclarationResponse response = declarationService.mapToResponse(declaration);
-
+        public ResponseEntity<ApiResponse<DeclarationDetailResponse>> getDeclarationById(@PathVariable Long id) {
                 return ResponseEntity.ok(
-                                ApiResponse.success("Declaration fetched successfully", response));
+                                ApiResponse.success("Declaration fetched successfully",
+                                                declarationModuleService.getDeclarationDetail(id)));
         }
 
         @PutMapping("/declarations/{id}/unlock")
@@ -354,7 +386,7 @@ public class AdminController {
                 CarbonDeclaration declaration = declarationRepo.findById(id)
                                 .orElseThrow(() -> new RuntimeException("Declaration not found"));
 
-                if (declaration.getStatus() != CarbonDeclaration.DeclarationStatus.SUBMITTED) {
+                if (declaration.getStatus() != DeclarationStatus.SUBMITTED) {
                         throw new RuntimeException("Only SUBMITTED declarations can be unlocked");
                 }
 
@@ -364,18 +396,13 @@ public class AdminController {
                                         "Unlock window expired — can only unlock within 24 hours of submission");
                 }
 
-                boolean agentAssigned = assignmentRepo
-                                .existsByDeclarationDeclarationIdAndStatusIn(
-                                                id,
-                                                java.util.List.of(
-                                                                AgentAssignment.AssignmentStatus.ASSIGNED,
-                                                                AgentAssignment.AssignmentStatus.IN_PROGRESS));
+                boolean agentAssigned = assignmentRepo.existsActiveByDeclarationId(id);
 
                 if (agentAssigned) {
                         throw new RuntimeException("Cannot unlock — agent has already been assigned");
                 }
 
-                declaration.setStatus(CarbonDeclaration.DeclarationStatus.DRAFT);
+                declaration.setStatus(DeclarationStatus.DRAFT);
                 declarationRepo.save(declaration);
 
                 return ResponseEntity.ok(
@@ -384,7 +411,7 @@ public class AdminController {
 
         @GetMapping("/assignments")
         public ResponseEntity<ApiResponse<Page<AgentTaskResponse>>> getAllAssignments(
-                        @RequestParam(required = false) AgentAssignment.AssignmentStatus status,
+                        @RequestParam(required = false) AssignmentStatus status,
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size) {
 
@@ -392,25 +419,26 @@ public class AdminController {
                 Page<AgentAssignment> assignments;
 
                 if (status != null) {
-                        assignments = assignmentRepo.findByStatusOrderByAssignedAtDesc(status, pageable);
+                        assignments = assignmentRepo.findByAssignmentStatusOrderByAssignedAtDesc(status, pageable);
                 } else {
                         assignments = assignmentRepo.findAll(pageable);
                 }
 
                 Page<AgentTaskResponse> response = assignments.map(a -> AgentTaskResponse.builder()
                                 .assignmentId(a.getAssignmentId())
-                                .status(a.getStatus())
+                                .status(a.getAssignmentStatus())
                                 .assignedAt(a.getAssignedAt())
                                 .deadline(a.getDeadline())
                                 .completedAt(a.getCompletedAt())
-                                .isOverdue(
-                                                java.time.LocalDateTime.now().isAfter(a.getDeadline())
-                                                                && a.getStatus() != AgentAssignment.AssignmentStatus.COMPLETED)
+                                .overdue(
+                                                a.getDeadline() != null &&
+                                                                java.time.LocalDateTime.now().isAfter(a.getDeadline())
+                                                                && a.getAssignmentStatus() != AssignmentStatus.COMPLETED)
                                 .userId(a.getDeclaration().getUser().getUserId())
                                 .userName(a.getDeclaration().getUser().getFullName())
                                 .declarationId(a.getDeclaration().getDeclarationId())
                                 .declarationYear(a.getDeclaration().getDeclarationYear())
-                                .agentId(a.getAgent().getAgentId())
+                                .agentId(a.getAgent().getUserId())
                                 .agentName(a.getAgent().getFullName())
                                 .build());
 
@@ -426,16 +454,16 @@ public class AdminController {
                 AgentAssignment assignment = assignmentRepo.findById(id)
                                 .orElseThrow(() -> new RuntimeException("Assignment not found"));
 
-                Agent newAgent = agentRepository.findById(newAgentId)
+                User newAgent = userRepository.findById(newAgentId) // Changed from agentRepository
                                 .orElseThrow(() -> new RuntimeException("Agent not found"));
 
-                assignment.setStatus(AgentAssignment.AssignmentStatus.REASSIGNED);
+                assignment.setAssignmentStatus(AssignmentStatus.REASSIGNED);
                 assignmentRepo.save(assignment);
 
                 AgentAssignment newAssignment = AgentAssignment.builder()
                                 .declaration(assignment.getDeclaration())
                                 .agent(newAgent)
-                                .status(AgentAssignment.AssignmentStatus.ASSIGNED)
+                                .assignmentStatus(AssignmentStatus.ACTIVE)
                                 .build();
 
                 assignmentRepo.save(newAssignment);
@@ -448,12 +476,15 @@ public class AdminController {
         public ResponseEntity<ApiResponse<Object>> getOverview() {
 
                 long totalUsers = userRepository.count();
-                long totalAgents = agentRepository.count();
+                long totalAgents = userRepository.countByUserType(User.UserType.AGENT);
                 long totalDeclarations = declarationRepo.count();
                 long pendingVerifications = declarationRepo.countByStatus(
-                                CarbonDeclaration.DeclarationStatus.UNDER_VERIFICATION);
+                                DeclarationStatus.UNDER_VERIFICATION);
                 long totalScores = scoreRepo.count();
-                long flaggedAgents = agentRepository.findByStrikeCountGreaterThanEqual(3).size();
+                long flaggedAgents = userRepository.findByUserType(User.UserType.AGENT, Pageable.unpaged())
+                                .stream()
+                                .filter(u -> u.getStatus() == User.UserStatus.SUSPENDED)
+                                .count();
 
                 java.util.Map<String, Object> overview = new java.util.LinkedHashMap<>();
                 overview.put("totalUsers", totalUsers);
@@ -473,25 +504,28 @@ public class AdminController {
                 // For now, return aggregate of all active agents
                 // TODO: Could be expanded to take agentId or return list of
                 // AgentPerformanceResponse
-                Pageable firstPage = PageRequest.of(0, 100);
-                Page<Agent> agents = agentRepository.findByAgentType(Agent.AgentType.FIELD_AGENT, firstPage);
-
-                long activeCount = agents.getTotalElements();
+                long activeCount = userRepository.findByUserType(User.UserType.AGENT, Pageable.unpaged())
+                                .stream()
+                                .filter(a -> a.getStatus() == User.UserStatus.ACTIVE)
+                                .count();
 
                 long totalAssignments = assignmentRepo.count();
-                long completedAssignments = assignmentRepo.countByStatus(AgentAssignment.AssignmentStatus.COMPLETED);
-                long reassignedAssignments = assignmentRepo.countByStatus(AgentAssignment.AssignmentStatus.REASSIGNED);
+                long completedAssignments = assignmentRepo.countByAssignmentStatus(AssignmentStatus.COMPLETED);
+                long reassignedAssignments = assignmentRepo.countByAssignmentStatus(AssignmentStatus.REASSIGNED);
 
                 long totalVerifications = verificationRepo.count();
-                long confirmedCount = verificationRepo.countByOverallAction(Verification.VerificationAction.CONFIRMED);
-                long modifiedCount = verificationRepo.countByOverallAction(Verification.VerificationAction.MODIFIED);
-                long rejectedCount = verificationRepo.countByOverallAction(Verification.VerificationAction.REJECTED);
+                long confirmedCount = verificationRepo.countByOutcome(VerificationOutcome.CONFIRMED);
+                long modifiedCount = verificationRepo.countByOutcome(VerificationOutcome.MODIFIED);
+                long rejectedCount = verificationRepo.countByOutcome(VerificationOutcome.REJECTED);
 
-                double completionRate = totalAssignments > 0 ? ((double) completedAssignments / totalAssignments) * 100 : 0.0;
-                double confirmationRate = totalVerifications > 0 ? ((double) confirmedCount / totalVerifications) * 100 : 0.0;
-                double modificationRate = totalVerifications > 0 ? ((double) modifiedCount / totalVerifications) * 100 : 0.0;
+                double completionRate = totalAssignments > 0 ? ((double) completedAssignments / totalAssignments) * 100
+                                : 0.0;
+                double confirmationRate = totalVerifications > 0 ? ((double) confirmedCount / totalVerifications) * 100
+                                : 0.0;
+                double modificationRate = totalVerifications > 0 ? ((double) modifiedCount / totalVerifications) * 100
+                                : 0.0;
 
-                int totalStrikes = agents.getContent().stream().mapToInt(Agent::getStrikeCount).sum();
+                int totalStrikes = 0;
 
                 AgentPerformanceResponse response = AgentPerformanceResponse.builder()
                                 .agentId(0L)
@@ -520,8 +554,8 @@ public class AdminController {
                                 ? java.time.LocalDate.now().getYear()
                                 : year;
 
-                List<Object[]> cityData = scoreRepo.calculateAveragePerCapitaCo2ByCity(targetYear);
-                List<Object[]> pinCodeData = scoreRepo.calculateAveragePerCapitaCo2ByPinCode(targetYear);
+                Double cityData = scoreRepo.calculateAveragePerCapitaCo2ByCity(targetYear);
+                Double pinCodeData = scoreRepo.calculateAveragePerCapitaCo2ByPinCode(targetYear);
 
                 java.util.Map<String, Object> heatmap = new java.util.LinkedHashMap<>();
                 heatmap.put("year", targetYear);

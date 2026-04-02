@@ -1,132 +1,72 @@
 package org.hartford.greensure.repository;
 
 import org.hartford.greensure.entity.AgentAssignment;
+import org.hartford.greensure.enums.AssignmentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AgentAssignmentRepository
-                extends JpaRepository<AgentAssignment, Long> {
+public interface AgentAssignmentRepository extends JpaRepository<AgentAssignment, Long> {
 
-        // Used by AGENT DASHBOARD — get all assignments for
-        // a specific agent ordered by deadline (urgent first)
-        List<AgentAssignment> findByAgentAgentIdOrderByDeadlineAsc(
-                        Long agentId);
+        List<AgentAssignment> findByAgentUserIdOrderByDeadlineAsc(Long userId);
 
-        // Used by AGENT DASHBOARD — get assignments for an agent
-        // filtered by status
-        // e.g. show only ASSIGNED tasks not completed ones
-        List<AgentAssignment> findByAgentAgentIdAndStatus(
-                        Long agentId, AgentAssignment.AssignmentStatus status);
+        List<AgentAssignment> findByAgentUserIdAndAssignmentStatus(Long userId, AssignmentStatus assignmentStatus);
 
-        // Used by DECLARATION FLOW — get the current active
-        // assignment for a specific declaration
-        // Active means ASSIGNED or IN_PROGRESS
+        List<AgentAssignment> findByAgentUserId(Long userId);
+
+        List<AgentAssignment> findTop10ByAgentUserIdOrderByAssignedAtDesc(Long userId);
+
         @Query("SELECT aa FROM AgentAssignment aa " +
                         "WHERE aa.declaration.declarationId = :declarationId " +
-                        "AND aa.assignmentStatus = 'ACTIVE' " +
-                        "AND aa.status IN ('ASSIGNED', 'IN_PROGRESS')")
-        Optional<AgentAssignment> findActiveAssignmentByDeclarationId(
-                        @Param("declarationId") Long declarationId);
+                        "AND aa.assignmentStatus = 'ACTIVE'")
+        Optional<AgentAssignment> findActiveAssignmentByDeclarationId(@Param("declarationId") Long declarationId);
 
-        // Used by ADMIN — get all assignments for a declaration
-        // including past REASSIGNED ones for full audit trail
-        List<AgentAssignment> findByDeclarationDeclarationId(
-                        Long declarationId);
+        Optional<AgentAssignment> findTopByDeclarationDeclarationIdOrderByAssignedAtDesc(Long declarationId);
 
-        // Used by DEADLINE MONITOR — find all assignments
-        // that have breached the 72 hour deadline
-        // and are still not completed
-        @Query("SELECT aa FROM AgentAssignment aa " +
-                        "WHERE aa.assignmentStatus = 'ACTIVE' " +
-                        "AND aa.status IN ('ASSIGNED', 'IN_PROGRESS') " +
-                        "AND aa.deadline < :now")
-        List<AgentAssignment> findOverdueAssignments(
-                        @Param("now") LocalDateTime now);
+        @Query("SELECT CASE WHEN COUNT(aa) > 0 THEN true ELSE false END FROM AgentAssignment aa " +
+                        "WHERE aa.declaration.declarationId = :declarationId " +
+                        "AND aa.assignmentStatus = 'ACTIVE'")
+        boolean existsActiveByDeclarationId(@Param("declarationId") Long declarationId);
 
-        // Used by DEADLINE MONITOR — find assignments approaching
-        // the 48 hour reminder window
-        // These agents need a reminder notification
-        @Query("SELECT aa FROM AgentAssignment aa " +
-                        "WHERE aa.assignmentStatus = 'ACTIVE' " +
-                        "AND aa.status IN ('ASSIGNED', 'IN_PROGRESS') " +
-                        "AND aa.deadline BETWEEN :reminderStart AND :reminderEnd")
-        List<AgentAssignment> findAssignmentsNeedingReminder(
-                        @Param("reminderStart") LocalDateTime reminderStart,
-                        @Param("reminderEnd") LocalDateTime reminderEnd);
+        @Query("SELECT aa FROM AgentAssignment aa WHERE aa.assignmentStatus = 'ACTIVE' ORDER BY aa.assignedAt DESC")
+        List<AgentAssignment> findActiveAssignments();
 
-        // Used by ADMIN — get all assignments filtered by status
-        Page<AgentAssignment> findByStatusOrderByAssignedAtDesc(
-                        AgentAssignment.AssignmentStatus status, Pageable pageable);
+        @Query("SELECT aa FROM AgentAssignment aa WHERE aa.assignmentStatus = 'ACTIVE' ORDER BY aa.assignedAt DESC")
+        Page<AgentAssignment> findActiveAssignments(Pageable pageable);
 
-        // Used by AGENT PERFORMANCE — count completed assignments
-        // for a specific agent
-        long countByAgentAgentIdAndStatus(
-                        Long agentId, AgentAssignment.AssignmentStatus status);
+        List<AgentAssignment> findByDeclarationDeclarationId(Long declarationId);
 
-        // Used by AGENT PERFORMANCE — count reassigned assignments
-        // for an agent — high reassigned count = poor performance
-        // long countByAgentAgentIdAndStatus(
-        // Long agentId, AgentAssignment.AssignmentStatus status);
+        @Query("SELECT aa FROM AgentAssignment aa WHERE aa.assignmentStatus = 'ACTIVE' AND aa.deadline < :now")
+        List<AgentAssignment> findOverdueAssignments(@Param("now") LocalDateTime now);
 
-        // Used by AUTO ASSIGNMENT ENGINE — count active assignments
-        // for an agent to check if they are under max workload
-        @Query("SELECT COUNT(aa) FROM AgentAssignment aa " +
-                        "WHERE aa.agent.agentId = :agentId " +
-                        "AND aa.assignmentStatus = 'ACTIVE' " +
-                        "AND aa.status IN ('ASSIGNED', 'IN_PROGRESS')")
-        long countActiveAssignmentsByAgentId(
-                        @Param("agentId") Long agentId);
+        @Query("SELECT aa FROM AgentAssignment aa WHERE aa.assignmentStatus = 'ACTIVE' AND aa.deadline BETWEEN :start AND :end")
+        List<AgentAssignment> findAssignmentsNeedingReminder(@Param("start") LocalDateTime start,
+                        @Param("end") LocalDateTime end);
 
-        // Used by ADMIN REPORTS — count all assignments by status
-        long countByStatus(AgentAssignment.AssignmentStatus status);
+        Page<AgentAssignment> findByAssignmentStatusOrderByAssignedAtDesc(AssignmentStatus assignmentStatus,
+                        Pageable pageable);
 
-        // Used by AGENT PERFORMANCE — get all completed assignments
-        // for an agent within a date range
-        // Used to calculate monthly performance metrics
-        @Query("SELECT aa FROM AgentAssignment aa " +
-                        "WHERE aa.agent.agentId = :agentId " +
-                        "AND aa.status = 'COMPLETED' " +
-                        "AND aa.completedAt BETWEEN :startDate AND :endDate")
+        long countByAgentUserIdAndAssignmentStatus(Long userId, AssignmentStatus assignmentStatus);
+
+        @Query("SELECT COUNT(aa) FROM AgentAssignment aa WHERE aa.agent.userId = :userId AND aa.assignmentStatus = 'ACTIVE'")
+        long countActiveAssignmentsByUserId(@Param("userId") Long userId);
+
+        long countByAssignmentStatus(AssignmentStatus assignmentStatus);
+
+        @Query("SELECT aa FROM AgentAssignment aa WHERE aa.agent.userId = :userId AND aa.assignmentStatus = 'COMPLETED' AND aa.completedAt BETWEEN :startDate AND :endDate")
         List<AgentAssignment> findCompletedAssignmentsByAgentInRange(
-                        @Param("agentId") Long agentId,
+                        @Param("userId") Long userId,
                         @Param("startDate") LocalDateTime startDate,
                         @Param("endDate") LocalDateTime endDate);
 
-        // Used by ADMIN — check if a declaration already has
-        // a pending assignment before creating a new one
-        // Prevents duplicate assignments for same declaration
-        boolean existsByDeclarationDeclarationIdAndStatusIn(
-                        Long declarationId, List<AgentAssignment.AssignmentStatus> statuses);
-
-        boolean existsByDeclarationDeclarationIdAndAssignmentStatus(
-                        Long declarationId,
-                        AgentAssignment.AssignmentLifecycleStatus assignmentStatus);
-
-        Page<AgentAssignment> findByAssignmentStatusOrderByAssignedAtDesc(
-                        AgentAssignment.AssignmentLifecycleStatus assignmentStatus,
-                        Pageable pageable);
-
-        List<AgentAssignment> findByAssignmentStatusOrderByAssignedAtDesc(
-                        AgentAssignment.AssignmentLifecycleStatus assignmentStatus);
-
-        @Modifying
-        @Transactional
-        @Query("UPDATE AgentAssignment aa SET aa.assignedBy = 'SYSTEM' WHERE aa.assignedBy IS NULL OR TRIM(aa.assignedBy) = ''")
-        int backfillAssignedBy();
-
-        @Modifying
-        @Transactional
-        @Query("UPDATE AgentAssignment aa SET aa.assignmentStatus = org.hartford.greensure.entity.AgentAssignment.AssignmentLifecycleStatus.ACTIVE WHERE aa.assignmentStatus IS NULL")
-        int backfillAssignmentStatus();
+        boolean existsByDeclarationDeclarationIdAndAssignmentStatusIn(Long declarationId,
+                        List<AssignmentStatus> statuses);
 }

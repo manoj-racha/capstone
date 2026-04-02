@@ -1,5 +1,7 @@
 package org.hartford.greensure.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -20,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Service
 public class OtpService {
+    private static final Logger log = LoggerFactory.getLogger(OtpService.class);
 
     private static final long OTP_TTL_SECONDS = 10 * 60; // 10 minutes
     private static final int  OTP_LENGTH      = 6;
@@ -33,6 +36,7 @@ public class OtpService {
     public String generateAndStoreOtp(String email) {
         String otp = buildOtp();
         store.put(email.toLowerCase(), new OtpEntry(otp, Instant.now().plusSeconds(OTP_TTL_SECONDS)));
+        log.info("OTP for {}: {}", email, otp);
         return otp;
     }
 

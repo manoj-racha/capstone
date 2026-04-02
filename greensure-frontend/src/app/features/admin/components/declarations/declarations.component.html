@@ -70,6 +70,8 @@
                                 <span class="w-6 h-6 rounded-full bg-gs-dark/10 text-gs-dark flex items-center justify-center text-xs font-bold">{{ dec.assignedAgentName.charAt(0) }}</span>
                                 <span class="text-gs-text text-sm font-medium">{{ dec.assignedAgentName }}</span>
                             </div>
+                        } @else if (dec.status === 'VERIFIED' || dec.status === 'REJECTED') {
+                            <span class="text-gs-dark text-xs font-semibold">Completed</span>
                         } @else {
                             <span class="text-gs-muted text-xs italic">Unassigned</span>
                         }
@@ -119,8 +121,8 @@
     }
 
     @if (assignmentModalOpen() && selectedDeclaration()) {
-    <div class="fixed inset-0 z-40 bg-black/40 flex items-center justify-center p-4">
-        <div class="w-full max-w-lg bg-white border border-gs-border rounded-xl p-6 space-y-4">
+    <div class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+        <div class="w-full max-w-lg bg-gs-surface border border-gs-border rounded-xl p-6 space-y-4 shadow-xl">
             <h3 class="text-lg font-semibold text-gs-text">
                 {{ reassignMode() ? 'Reassign Agent' : 'Assign Agent' }}
             </h3>

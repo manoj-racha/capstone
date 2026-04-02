@@ -1,5 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { vi } from 'vitest';
+import { AuthService } from '../../../../core/services/auth.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 import { RegisterComponent } from './register.component';
 
@@ -7,16 +11,41 @@ describe('RegisterComponent', () => {
   let component: RegisterComponent;
   let fixture: ComponentFixture<RegisterComponent>;
 
+  const authServiceSpy = {
+    register: vi.fn()
+  };
+
+  const toastServiceSpy = {
+    warning: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn()
+  };
+
   beforeEach(async () => {
+    authServiceSpy.register.mockReturnValue(of({ success: true, data: 'ok' }));
+
     await TestBed.configureTestingModule({
       imports: [RegisterComponent],
-      providers: [provideRouter([])]
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: authServiceSpy },
+        { provide: ToastService, useValue: toastServiceSpy }
+      ]
     })
     .compileComponents();
 
     fixture = TestBed.createComponent(RegisterComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    authServiceSpy.register.mockReset();
+    toastServiceSpy.warning.mockReset();
+    toastServiceSpy.success.mockReset();
+    toastServiceSpy.error.mockReset();
+    toastServiceSpy.info.mockReset();
   });
 
   it('should create', () => {
@@ -30,50 +59,65 @@ describe('RegisterComponent', () => {
   });
 
   it('should show error when passwords do not match', () => {
-    component.password.set('password123');
-    component.confirmPassword.set('different123');
+    component.registerForm.patchValue({
+      password: 'password123',
+      confirmPassword: 'different123'
+    });
 
-    component.onRegister();
+    component.registerForm.updateValueAndValidity();
 
-    expect(component.errorMessage()).toBe('Passwords do not match');
+    expect(component.registerForm.errors?.['passwordsMismatch']).toBe(true);
   });
 
   it('should show pin code validation error for invalid pin', () => {
-    component.password.set('password123');
-    component.confirmPassword.set('password123');
-    component.pinCode.set('1234');
+    component.registerForm.patchValue({ pinCode: '1234' });
+    const pinCodeControl = component.registerForm.controls.pinCode;
 
-    component.onRegister();
-
-    expect(component.errorMessage()).toContain('6-digit pin code');
+    expect(pinCodeControl.invalid).toBe(true);
+    expect(pinCodeControl.errors?.['pattern']).toBeTruthy();
   });
 
   it('should show required pin code validation message when pin is empty', () => {
-    component.password.set('password123');
-    component.confirmPassword.set('password123');
-    component.pinCode.set('');
+    component.registerForm.patchValue({ pinCode: '' });
+    const pinCodeControl = component.registerForm.controls.pinCode;
 
-    component.onRegister();
-
-    expect(component.errorMessage()).toBe('Pin code is required');
+    expect(pinCodeControl.invalid).toBe(true);
+    expect(pinCodeControl.errors?.['required']).toBeTruthy();
   });
 
   it('should require dwelling type for household registration', () => {
-    component.userType.set('HOUSEHOLD');
-    component.password.set('password123');
-    component.confirmPassword.set('password123');
-    component.pinCode.set('123456');
-    component.dwellingType.set('');
+    component.registerForm.patchValue({ dwellingType: '' });
+    const dwellingTypeControl = component.registerForm.controls.dwellingType;
 
-    component.onRegister();
-
-    expect(component.errorMessage()).toBe('Please select your dwelling type');
+    expect(dwellingTypeControl.invalid).toBe(true);
+    expect(dwellingTypeControl.errors?.['required']).toBeTruthy();
   });
 
   it('should return early with invalid template form input', () => {
-    component.onRegister({ invalid: true });
+    component.onRegister();
 
     expect(component.errorMessage()).toBe('Please fill out all required fields correctly.');
+    expect(toastServiceSpy.warning).toHaveBeenCalled();
+  });
+
+  it('should call register for valid form submission', () => {
+    component.registerForm.patchValue({
+      fullName: 'John Doe',
+      email: 'john@example.com',
+      mobile: '9876543210',
+      address: '123 Main Street',
+      pinCode: '560001',
+      city: 'Bangalore',
+      state: 'Karnataka',
+      numberOfMembers: 4,
+      dwellingType: 'APARTMENT',
+      password: 'password123',
+      confirmPassword: 'password123'
+    });
+
+    component.onRegister();
+
+    expect(authServiceSpy.register).toHaveBeenCalled();
   });
 
 });

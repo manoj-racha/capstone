@@ -90,6 +90,10 @@ public class CarbonScore {
     @Column(name = "discount_breakdown", columnDefinition = "TEXT")
     private String discountBreakdown;
 
+    /** Plain-language AI summary (Gemini); optional. */
+    @Column(name = "ai_explanation", columnDefinition = "TEXT")
+    private String aiExplanation;
+
     @Column(name = "generated_at", updatable = false)
     private LocalDateTime generatedAt;
 

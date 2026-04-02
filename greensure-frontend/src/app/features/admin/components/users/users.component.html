@@ -17,6 +17,7 @@
                 class="bg-gs-bg border border-gs-border text-gs-text rounded px-3 py-1 text-sm focus:outline-none focus:border-gs-dark">
                 <option value="ALL">All Status</option>
                 <option value="ACTIVE">Active</option>
+                <option value="SUSPENDED">Suspended</option>
             </select>
         </div>
     </div>
@@ -62,8 +63,9 @@
                             user.role }}</span></p>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="px-2 py-0.5 rounded text-xs font-medium border bg-gs-dark/10 text-gs-dark border-gs-dark/20">
-                            ACTIVE
+                        <span class="px-2 py-0.5 rounded text-xs font-medium border"
+                            [ngClass]="user.status === 'SUSPENDED' ? 'bg-red-500/10 text-red-400 border-red-500/30' : 'bg-gs-dark/10 text-gs-dark border-gs-dark/20'">
+                            {{ user.status || 'ACTIVE' }}
                         </span>
                     </td>
                     <td class="px-6 py-4 text-gs-muted">

@@ -3,16 +3,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DeclarationService } from '../../../../core/services/declaration.service';
-import { FileUploadService, UploadedFile } from '../../../../core/services/file-upload.service';
+import { FileUploadService } from '../../../../core/services/file-upload.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { DeclarationProgressComponent } from '../../../../shared/components/declaration-progress/declaration-progress.component';
 
 interface BillEntry {
   file: File;
   fileUrl: string | null;
-  billingMonth: string;
-  unitsKwh: number | null;
-  amount: number | null;
   isUploading: boolean;
   uploadError: string | null;
 }
@@ -66,55 +63,63 @@ interface BillEntry {
                 </h3>
               </div>
               
-              <p class="text-xs text-blue-700">Upload up to 12 months of bills. We will extract usage data and compute your annual average.</p>
+              <p class="text-xs text-blue-700">Upload one PDF containing the previous 12 months electricity bills.</p>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white border border-blue-100 rounded-lg p-3">
+                <div>
+                  <label class="text-[10px] uppercase font-bold text-blue-800 block mb-1">Starting Month</label>
+                  <input
+                    type="month"
+                    [max]="currentMonth"
+                    [ngModel]="billingStartMonth()"
+                    [ngModelOptions]="{standalone: true}"
+                    (ngModelChange)="onBillingRangeChange($event, billingEndMonth())"
+                    class="w-full text-xs border border-blue-200 rounded px-2 py-1.5 focus:border-blue-400 outline-none bg-white" />
+                </div>
+                <div>
+                  <label class="text-[10px] uppercase font-bold text-blue-800 block mb-1">Ending Month</label>
+                  <input
+                    type="month"
+                    [max]="currentMonth"
+                    [ngModel]="billingEndMonth()"
+                    [ngModelOptions]="{standalone: true}"
+                    (ngModelChange)="onBillingRangeChange(billingStartMonth(), $event)"
+                    class="w-full text-xs border border-blue-200 rounded px-2 py-1.5 focus:border-blue-400 outline-none bg-white" />
+                </div>
+              </div>
+              @if (billingRangeError()) {
+                <p class="text-xs text-red-600 font-medium">{{ billingRangeError() }}</p>
+              } @else if (billingStartMonth() && billingEndMonth()) {
+                <p class="text-xs text-blue-700">Billing period validated for 12 months.</p>
+              }
               
               <div class="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center hover:bg-blue-100/50 transition cursor-pointer relative">
-                <input type="file" (change)="onBillFilesSelected($event)" accept=".pdf,.jpg,.jpeg,.png" multiple
+                <input type="file" (change)="onBillFilesSelected($event)" accept=".pdf"
                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                 <div class="text-blue-600">
-                  <p class="text-sm font-bold">Click to upload electricity bills</p>
-                  <p class="text-[10px] opacity-75 mt-1">PDF, JPG, PNG allowed (Max 10MB per file)</p>
+                  <p class="text-sm font-bold">Click to upload one PDF (12 bills)</p>
+                  <p class="text-[10px] opacity-75 mt-1">PDF only (Max 10MB)</p>
                 </div>
               </div>
 
-              <!-- Uploaded Bills List -->
-              @if (uploadedBills().length > 0) {
-                <div class="space-y-3 mt-4">
-                  @for (bill of uploadedBills(); track $index) {
-                    <div class="bg-white border border-blue-100 rounded-lg p-3 shadow-sm">
-                      <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center gap-2 truncate">
-                          <span class="text-blue-500">📄</span>
-                          <span class="text-xs font-medium text-gray-700 truncate max-w-[150px]">{{ bill.file.name }}</span>
-                          @if (bill.isUploading) {
-                            <span class="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></span>
-                          }
-                          @if (bill.fileUrl && !bill.isUploading) {
-                            <span class="text-green-600 text-[10px] font-bold">✓ Uploaded</span>
-                          }
-                        </div>
-                        <button type="button" (click)="removeBill($index)" class="text-red-400 hover:text-red-600">✕</button>
-                      </div>
-
-                      <div class="grid grid-cols-2 gap-3">
-                        <div>
-                          <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Billing Month</label>
-                          <input type="month" [(ngModel)]="bill.billingMonth" [ngModelOptions]="{standalone: true}"
-                            (change)="recalculateAverage()"
-                            class="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:border-blue-400 outline-none" />
-                        </div>
-                        <div>
-                          <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Units (kWh)</label>
-                          <input type="number" [(ngModel)]="bill.unitsKwh" [ngModelOptions]="{standalone: true}"
-                            (change)="recalculateAverage()"
-                            class="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:border-blue-400 outline-none" />
-                        </div>
-                      </div>
-                      
-                      @if (bill.uploadError) {
-                        <p class="text-[10px] text-red-500 mt-1 font-medium">{{ bill.uploadError }}</p>
+              @if (uploadedBill()) {
+                <div class="bg-white border border-blue-100 rounded-lg p-3 shadow-sm mt-4">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 truncate">
+                      <span class="text-blue-500">📄</span>
+                      <span class="text-xs font-medium text-gray-700 truncate max-w-[200px]">{{ uploadedBill()!.file.name }}</span>
+                      @if (uploadedBill()!.isUploading) {
+                        <span class="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></span>
+                      }
+                      @if (uploadedBill()!.fileUrl && !uploadedBill()!.isUploading) {
+                        <span class="text-green-600 text-[10px] font-bold">✓ Uploaded</span>
                       }
                     </div>
+                    <button type="button" (click)="removeBill()" class="text-red-400 hover:text-red-600">✕</button>
+                  </div>
+
+                  @if (uploadedBill()!.uploadError) {
+                    <p class="text-[10px] text-red-500 mt-2 font-medium">{{ uploadedBill()!.uploadError }}</p>
                   }
                 </div>
               }
@@ -145,13 +150,18 @@ export class DeclarationElectricityComponent implements OnInit {
 
   loading = signal(false);
   declarationId = 0;
-  uploadedBills = signal<BillEntry[]>([]);
+  uploadedBill = signal<BillEntry | null>(null);
+  billingStartMonth = signal<string>('');
+  billingEndMonth = signal<string>('');
+  billingRangeError = signal<string | null>(null);
 
   readonly providers = [
     'BESCOM', 'MESCOM', 'HESCOM', 'GESCOM', 'CESC',
     'TPDDL', 'BSES Rajdhani', 'BSES Yamuna', 'MSEDCL',
     'TNEB', 'KSEB', 'APEPDCL', 'TSSPDCL', 'Other'
   ];
+
+  readonly currentMonth = new Date().toISOString().slice(0, 7);
 
   form = this.fb.group({
     provider: ['', [Validators.required]],
@@ -161,6 +171,7 @@ export class DeclarationElectricityComponent implements OnInit {
 
   ngOnInit(): void {
     this.declarationId = Number(this.route.snapshot.paramMap.get('id'));
+    this.initializeFixedBillingRange();
     this.loadExistingData();
   }
 
@@ -179,56 +190,146 @@ export class DeclarationElectricityComponent implements OnInit {
     });
   }
 
+  onBillingRangeChange(startMonth: string, endMonth: string): void {
+    this.billingStartMonth.set(startMonth || '');
+    this.billingEndMonth.set(endMonth || '');
+    this.validateBillingRange();
+  }
+
   onBillFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (!input.files) return;
+    const file = input.files?.[0];
+    if (!file) return;
 
-    Array.from(input.files).forEach(file => {
-      const entry: BillEntry = {
-        file,
-        fileUrl: null,
-        billingMonth: '',
-        unitsKwh: null,
-        amount: null,
-        isUploading: true,
-        uploadError: null
-      };
-      
-      this.uploadedBills.update(prev => [...prev, entry]);
-      const index = this.uploadedBills().length - 1;
+    const entry: BillEntry = {
+      file,
+      fileUrl: null,
+      isUploading: true,
+      uploadError: null
+    };
 
-      this.fileUploadService.uploadFile(file, 'electricity').subscribe({
-        next: (uploaded) => {
-          this.uploadedBills.update(bills => bills.map((b, i) => 
-            i === index ? { ...b, fileUrl: uploaded.fileUrl, isUploading: false } : b
-          ));
-        },
-        error: (err: Error) => {
-          this.uploadedBills.update(bills => bills.map((b, i) => 
-            i === index ? { ...b, isUploading: false, uploadError: err.message } : b
-          ));
-        }
-      });
+    this.uploadedBill.set(entry);
+
+    this.fileUploadService.uploadFile(file, 'electricity').subscribe({
+      next: (uploaded) => {
+        this.uploadedBill.update(current => {
+          if (!current) return current;
+          return { ...current, fileUrl: uploaded.fileUrl, isUploading: false, uploadError: null };
+        });
+      },
+      error: (err: Error) => {
+        this.uploadedBill.update(current => {
+          if (!current) return current;
+          return { ...current, isUploading: false, uploadError: err.message };
+        });
+      }
     });
+
     input.value = '';
   }
 
-  recalculateAverage(): void {
-    // Intentionally no-op: do not override userDeclaredMonthlyKwh with bill data.
+  private initializeFixedBillingRange(): void {
+    const months = this.previous12Months();
+    if (months.length === 0) {
+      this.billingStartMonth.set('');
+      this.billingEndMonth.set('');
+      return;
+    }
+
+    this.billingStartMonth.set(months[0]);
+    this.billingEndMonth.set(months[months.length - 1]);
+    this.validateBillingRange();
   }
 
-  removeBill(index: number): void {
-    this.uploadedBills.update(bills => bills.filter((_, i) => i !== index));
-    this.recalculateAverage();
+  private toMonthIndex(value: string): number {
+    const [y, m] = value.split('-').map(Number);
+    return (y * 12) + (m - 1);
+  }
+
+  private isFutureMonth(value: string): boolean {
+    return this.toMonthIndex(value) > this.toMonthIndex(this.currentMonth);
+  }
+
+  private validateBillingRange(): boolean {
+    const start = this.billingStartMonth();
+    const end = this.billingEndMonth();
+
+    if (!start || !end) {
+      this.billingRangeError.set('Please select both starting and ending months.');
+      return false;
+    }
+
+    if (this.isFutureMonth(start) || this.isFutureMonth(end)) {
+      this.billingRangeError.set('Future months are not allowed.');
+      return false;
+    }
+
+    const startIndex = this.toMonthIndex(start);
+    const endIndex = this.toMonthIndex(end);
+
+    if (startIndex > endIndex) {
+      this.billingRangeError.set('Starting month must be before ending month.');
+      return false;
+    }
+
+    if ((endIndex - startIndex + 1) !== 12) {
+      this.billingRangeError.set('Billing period must span exactly 12 months.');
+      return false;
+    }
+
+    this.billingRangeError.set(null);
+    return true;
+  }
+
+  private monthRangeFromIndexes(startIndex: number, endIndex: number): string[] {
+    const result: string[] = [];
+    let i = startIndex;
+    const max = endIndex;
+
+    while (i <= max) {
+      const year = Math.floor(i / 12);
+      const month = (i % 12) + 1;
+      result.push(`${year}-${String(month).padStart(2, '0')}`);
+      i += 1;
+    }
+
+    return result;
+  }
+
+  private previous12Months(): string[] {
+    const endIndex = this.toMonthIndex(this.currentMonth);
+    const startIndex = endIndex - 11;
+    return this.monthRangeFromIndexes(startIndex, endIndex);
+  }
+
+  private selected12Months(): string[] {
+    if (!this.validateBillingRange()) {
+      return [];
+    }
+
+    const start = this.billingStartMonth();
+    const end = this.billingEndMonth();
+    const startIndex = this.toMonthIndex(start);
+    const endIndex = this.toMonthIndex(end);
+    return this.monthRangeFromIndexes(startIndex, endIndex);
+  }
+
+  removeBill(): void {
+    this.uploadedBill.set(null);
   }
 
   isAnyUploading(): boolean {
-    return this.uploadedBills().some(b => b.isUploading);
+    return this.uploadedBill()?.isUploading ?? false;
   }
 
   onSave(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     if (this.isAnyUploading()) return;
+
+    if (!this.validateBillingRange()) {
+      this.toastService.error(this.billingRangeError() || 'Invalid billing period.');
+      return;
+    }
 
     this.loading.set(true);
     const f = this.form.controls;
@@ -240,12 +341,31 @@ export class DeclarationElectricityComponent implements OnInit {
       userDeclaredMonthlyKwh: f.userDeclaredMonthlyKwh.value!
     }).subscribe({
       next: () => {
-        // Save each bill record independently
-        const billSaves = this.uploadedBills()
-          .filter(b => b.fileUrl && b.billingMonth && b.unitsKwh)
-          .map(b => this.declarationService.addElectricityBill(
-            this.declarationId, b.billingMonth, b.unitsKwh!, b.amount || undefined, b.fileUrl!
-          ));
+        const uploaded = this.uploadedBill();
+        const billUrl = uploaded?.fileUrl;
+
+        if (!billUrl) {
+          this.completeNavigation();
+          return;
+        }
+
+        const usage = f.userDeclaredMonthlyKwh.value!;
+        const selectedMonths = this.selected12Months();
+        if (selectedMonths.length !== 12) {
+          this.loading.set(false);
+          this.toastService.error('Billing period must span exactly 12 months.');
+          return;
+        }
+
+        const billSaves = selectedMonths.map(month =>
+          this.declarationService.addElectricityBill(
+            this.declarationId,
+            month,
+            usage,
+            undefined,
+            billUrl
+          )
+        );
 
         if (billSaves.length === 0) {
           this.completeNavigation();

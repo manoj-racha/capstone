@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
+import { provideRouter } from '@angular/router';
 
 import { MyPoliciesComponent } from './my-policies.component';
 import { PolicyService } from '../../../../core/services/policy.service';
@@ -17,7 +18,7 @@ describe('MyPoliciesComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MyPoliciesComponent],
-      providers: [{ provide: PolicyService, useValue: mockPolicyService }],
+      providers: [provideRouter([]), { provide: PolicyService, useValue: mockPolicyService }],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 

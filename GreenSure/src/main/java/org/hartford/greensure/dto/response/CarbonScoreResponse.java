@@ -1,12 +1,20 @@
 package org.hartford.greensure.dto.response;
 
 import lombok.*;
+import java.time.LocalDateTime;
 
-/** Carbon score breakdown used inside DeclarationDetailResponse and standalone endpoints. */
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+/**
+ * Carbon score breakdown used inside DeclarationDetailResponse and standalone
+ * endpoints.
+ */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CarbonScoreResponse {
 
-    private Long   scoreId;
+    private Long scoreId;
     private Integer scoreYear;
 
     private Double vehicleCo2;
@@ -20,4 +28,8 @@ public class CarbonScoreResponse {
     private String zone;
     private Double discountPercent;
     private String discountBreakdown;
+    private LocalDateTime generatedAt;
+
+    /** Gemini-generated score summary for the user dashboard; may be null. */
+    private String aiExplanation;
 }

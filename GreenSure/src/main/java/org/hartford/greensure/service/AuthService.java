@@ -3,7 +3,6 @@ package org.hartford.greensure.service;
 import org.hartford.greensure.dto.request.*;
 import org.hartford.greensure.dto.response.*;
 import org.hartford.greensure.entity.*;
-import org.hartford.greensure.exception.AgentNotFoundException;
 import org.hartford.greensure.exception.BadRequestException;
 import org.hartford.greensure.exception.InvalidTokenException;
 import org.hartford.greensure.repository.*;
@@ -18,23 +17,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 @Service
 public class AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
-    private static final Pattern GST_PATTERN = Pattern.compile("^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$");
-
     @Autowired
     private UserRepository userRepository;
     @Autowired
     private HouseholdProfileRepository householdProfileRepository;
-    @Autowired
-    private MsmeProfileRepository msmeProfileRepository;
-    @Autowired
-    private AgentRepository agentRepository;
+
     @Autowired
     private CarbonDeclarationRepository declarationRepository;
     @Autowired
@@ -43,12 +36,14 @@ public class AuthService {
     private JwtUtil jwtUtil;
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private OtpService otpService;
 
     @Value("${app.frontend-url:http://localhost:4200}")
     private String frontendUrl;
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public String register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BadRequestException("Email already registered");
         }
@@ -65,32 +60,9 @@ public class AuthService {
             }
         }
 
-        MsmeProfile.BusinessType parsedBusinessType = null;
-
-        if (request.getUserType() == User.UserType.MSME) {
-            if (request.getBusinessName() == null || request.getBusinessName().isBlank()) {
-                throw new BadRequestException("Business name is required for MSME");
-            }
-            if (request.getGstNumber() == null || request.getGstNumber().isBlank()) {
-                throw new BadRequestException("GST number is required for MSME");
-            }
-            if (!GST_PATTERN.matcher(request.getGstNumber().trim().toUpperCase()).matches()) {
-                throw new BadRequestException("Invalid GST number format");
-            }
-            if (request.getBusinessType() == null || request.getBusinessType().isBlank()) {
-                throw new BadRequestException("Business type is required for MSME");
-            }
-            parsedBusinessType = parseBusinessType(request.getBusinessType());
-            if (request.getNumEmployees() == null) {
-                throw new BadRequestException("Number of employees is required for MSME");
-            }
-            if (msmeProfileRepository.existsByGstNumber(request.getGstNumber())) {
-                throw new BadRequestException("GST number already registered");
-            }
-        }
-
         User user = User.builder()
                 .userType(request.getUserType())
+                .role(mapRole(request.getUserType()))
                 .fullName(request.getFullName())
                 .email(request.getEmail())
                 .mobile(request.getMobile())
@@ -99,7 +71,7 @@ public class AuthService {
                 .pinCode(request.getPinCode())
                 .city(request.getCity())
                 .state(request.getState())
-                .status(User.UserStatus.ACTIVE)
+                .status(User.UserStatus.INACTIVE)
                 .build();
 
         user = userRepository.save(user);
@@ -111,36 +83,10 @@ public class AuthService {
                     .dwellingType(request.getDwellingType())
                     .build();
             householdProfileRepository.save(profile);
-        } else {
-            MsmeProfile profile = MsmeProfile.builder()
-                    .user(user)
-                    .businessName(request.getBusinessName())
-                    .gstNumber(request.getGstNumber())
-                    .businessType(parsedBusinessType)
-                    .numEmployees(request.getNumEmployees())
-                    .build();
-            msmeProfileRepository.save(profile);
         }
 
-        String token = jwtUtil.generateToken(user.getUserId(), user.getEmail(), "USER");
-
-        return AuthResponse.builder()
-                .token(token)
-                .role("USER")
-                .userType(user.getUserType())
-                .id(user.getUserId())
-                .fullName(user.getFullName())
-                .email(user.getEmail())
-                .isFirstLogin(true)
-                .build();
-    }
-
-    private MsmeProfile.BusinessType parseBusinessType(String rawBusinessType) {
-        try {
-            return MsmeProfile.BusinessType.valueOf(rawBusinessType.trim().toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            throw new BadRequestException("Invalid business type. Allowed values: MANUFACTURING, RETAIL, SERVICE, FOOD");
-        }
+        sendRegistrationOtp(user.getEmail());
+        return "OTP sent to your email. Please verify to activate your account.";
     }
 
     public AuthResponse loginUser(LoginRequest request) {
@@ -155,13 +101,19 @@ public class AuthService {
             throw new BadRequestException("Your account has been suspended. Contact support.");
         }
 
+        if (user.getStatus() == User.UserStatus.INACTIVE) {
+            throw new BadRequestException("Please verify your email with OTP before logging in.");
+        }
+
         boolean isFirstLogin = !declarationRepository.existsByUserUserId(user.getUserId());
 
-        String token = jwtUtil.generateToken(user.getUserId(), user.getEmail(), "USER");
+        String role = resolveRole(user);
+
+        String token = jwtUtil.generateToken(user.getUserId(), user.getEmail(), role);
 
         return AuthResponse.builder()
                 .token(token)
-                .role("USER")
+                .role(role)
                 .userType(user.getUserType())
                 .id(user.getUserId())
                 .fullName(user.getFullName())
@@ -170,30 +122,45 @@ public class AuthService {
                 .build();
     }
 
-    public AuthResponse loginAgent(LoginRequest request) {
-        Agent agent = agentRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new AgentNotFoundException("Invalid email or password"));
+    @Transactional
+    public AuthResponse verifyOtp(OtpVerifyRequest request) {
+        otpService.validateOtp(request.getEmail(), request.getOtp());
 
-        if (!passwordEncoder.matches(request.getPassword(), agent.getPasswordHash())) {
-            throw new BadRequestException("Invalid email or password");
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BadRequestException("No account found for this email."));
+
+        if (user.getStatus() == User.UserStatus.SUSPENDED) {
+            throw new BadRequestException("Your account has been suspended. Contact support.");
         }
 
-        if (agent.getStatus() == Agent.AgentStatus.INACTIVE) {
-            throw new BadRequestException("Your account is inactive. Contact admin.");
+        if (user.getStatus() != User.UserStatus.ACTIVE) {
+            user.setStatus(User.UserStatus.ACTIVE);
+            userRepository.save(user);
         }
 
-        String role = agent.getAgentType() == Agent.AgentType.ADMIN ? "ADMIN" : "AGENT";
-
-        String token = jwtUtil.generateToken(agent.getAgentId(), agent.getEmail(), role);
+        boolean isFirstLogin = !declarationRepository.existsByUserUserId(user.getUserId());
+        String role = resolveRole(user);
+        String token = jwtUtil.generateToken(user.getUserId(), user.getEmail(), role);
 
         return AuthResponse.builder()
                 .token(token)
                 .role(role)
-                .id(agent.getAgentId())
-                .fullName(agent.getFullName())
-                .email(agent.getEmail())
-                .isFirstLogin(false)
+                .userType(user.getUserType())
+                .id(user.getUserId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .isFirstLogin(isFirstLogin)
+                .emailVerified(true)
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public void resendOtp(ForgotPasswordRequest request) {
+        userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
+            if (user.getStatus() == User.UserStatus.INACTIVE) {
+                sendRegistrationOtp(user.getEmail());
+            }
+        });
     }
 
     @Transactional
@@ -228,7 +195,8 @@ public class AuthService {
         User user = userRepository.findByPasswordResetToken(request.getToken())
                 .orElseThrow(() -> new InvalidTokenException("Invalid reset link."));
 
-        if (user.getPasswordResetTokenExpiry() == null || user.getPasswordResetTokenExpiry().isBefore(LocalDateTime.now())) {
+        if (user.getPasswordResetTokenExpiry() == null
+                || user.getPasswordResetTokenExpiry().isBefore(LocalDateTime.now())) {
             throw new InvalidTokenException("Reset link has expired. Please request a new one.");
         }
 
@@ -242,5 +210,40 @@ public class AuthService {
                 "Your Password Has Been Reset — GreenSure",
                 "<p>Your GreenSure password has been successfully reset.</p>"
                         + "<p>If you did not do this, contact support immediately.</p>");
+    }
+
+    private String resolveRole(User user) {
+        if (user.getRole() != null) {
+            return user.getRole().name();
+        }
+        return mapRole(user.getUserType()).name();
+    }
+
+    private User.Role mapRole(User.UserType userType) {
+        if (userType == null) {
+            return User.Role.USER;
+        }
+        return switch (userType) {
+            case ADMIN -> User.Role.ADMIN;
+            case AGENT -> User.Role.AGENT;
+            default -> User.Role.USER;
+        };
+    }
+
+    private void sendRegistrationOtp(String email) {
+        String otp = otpService.generateAndStoreOtp(email);
+        try {
+            emailService.sendEmail(
+                    email,
+                    "Verify Your GreenSure Account",
+                    "<p>Welcome to GreenSure.</p>"
+                            + "<p>Your verification code is:</p>"
+                            + "<p style=\"font-size:24px;font-weight:700;letter-spacing:4px;margin:12px 0;\">" + otp
+                            + "</p>"
+                            + "<p>This code expires in 10 minutes.</p>");
+        } catch (RuntimeException ex) {
+            log.error("Failed to send registration OTP to {}: {}", email, ex.getMessage());
+            throw new BadRequestException("Unable to send verification email right now. Please try again in a moment.");
+        }
     }
 }

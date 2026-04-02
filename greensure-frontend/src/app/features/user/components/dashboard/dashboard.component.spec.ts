@@ -31,7 +31,7 @@ describe('DashboardComponent', () => {
   });
 
   it('should set error when dashboard request fails', () => {
-    (component as any).userService.getDashboard = () => of({ success: false, error: 'Dashboard failed' });
+    (component as any).userService.getDashboard = () => of({ success: false, message: 'Dashboard failed' });
 
     component.ngOnInit();
 

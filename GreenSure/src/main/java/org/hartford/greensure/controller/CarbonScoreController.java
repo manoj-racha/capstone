@@ -6,12 +6,11 @@ import org.hartford.greensure.engine.CarbonScoreService;
 import org.hartford.greensure.repository.CarbonScoreRepository;
 import org.hartford.greensure.security.SecurityUser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,17 +28,36 @@ public class CarbonScoreController {
 
     @GetMapping("/my-score")
     public ResponseEntity<ApiResponse<CarbonScoreResponse>> getMyScore(@AuthenticationPrincipal SecurityUser user) {
-        return scoreRepository.findTopByUserUserIdOrderByScoreYearDesc(user.getId())
-                .map(score -> ResponseEntity.ok(ApiResponse.success("Latest score fetched", carbonScoreService.toResponse(score))))
-                .orElseGet(() -> ResponseEntity.ok(ApiResponse.success("No score yet", null)));
+        try {
+            CarbonScoreResponse score = carbonScoreService.getMyScore(user.getId());
+            return ResponseEntity.ok(ApiResponse.success("Latest score fetched", score));
+        } catch (Exception e) {
+            return ResponseEntity.ok(ApiResponse.success("No score yet", null));
+        }
     }
 
     @GetMapping("/my-history")
     public ResponseEntity<ApiResponse<List<CarbonScoreResponse>>> getMyHistory(@AuthenticationPrincipal SecurityUser user) {
-        List<CarbonScoreResponse> history = scoreRepository.findByUserUserIdOrderByScoreYearDesc(user.getId())
-                .stream()
-                .map(carbonScoreService::toResponse)
-                .collect(Collectors.toList());
+        List<CarbonScoreResponse> history = carbonScoreService.getScoreHistory(user.getId());
         return ResponseEntity.ok(ApiResponse.success("Score history fetched", history));
+    }
+
+    @GetMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    public ResponseEntity<ApiResponse<CarbonScoreResponse>> getScoreByUserId(@PathVariable Long userId) {
+        try {
+            CarbonScoreResponse score = carbonScoreService.getMyScore(userId);
+            return ResponseEntity.ok(ApiResponse.success("Score fetched for user", score));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("No score found for this user"));
+        }
+    }
+
+    @PostMapping("/generate/{declarationId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AGENT')")
+    public ResponseEntity<ApiResponse<Void>> generateScore(@PathVariable Long declarationId) {
+        carbonScoreService.generateScore(declarationId);
+        return ResponseEntity.ok(ApiResponse.success("Score generation triggered", null));
     }
 }
